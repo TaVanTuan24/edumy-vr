@@ -68,16 +68,40 @@ public class ApiManager : MonoBehaviour
 
     public async Task<List<CourseData>> GetCoursesAsync()
     {
-        string url = $"{BaseUrl}/api/vr/courses";
+        // Đồng bộ endpoint theo cùng pattern với lessons
+        string url = BuildUrl("api/vr/courses");
+        Debug.Log($"[ApiManager] Fetching courses from: {url}");
         var response = await SendGetRequest<ApiResponse<CourseData>>(url);
         return response?.data;
     }
 
     public async Task<List<LessonData>> GetLessonsAsync(string courseId)
     {
-        string url = $"{BaseUrl}/api/vr/courses/{courseId}/lessons";
-        var response = await SendGetRequest<ApiResponse<LessonData>>(url);
-        return response?.data;
+        string url = BuildUrl($"api/vr/courses/{courseId}/lessons");
+        string jsonResponse = await SendGetRawRequest(url);
+        if (string.IsNullOrWhiteSpace(jsonResponse)) return null;
+
+        List<LessonData> lessons = ParseLessonsFromJson(jsonResponse);
+        Debug.Log($"[ApiManager] Parsed lessons count: {(lessons == null ? 0 : lessons.Count)}");
+        return lessons;
+    }
+
+    public async Task<List<SectionData>> GetCourseSectionsAsync(string courseId)
+    {
+        string url = BuildUrl($"api/vr/courses/{courseId}/lessons");
+        string jsonResponse = await SendGetRawRequest(url);
+        if (string.IsNullOrWhiteSpace(jsonResponse)) return null;
+
+        List<SectionData> sections = ParseSectionsFromJson(jsonResponse);
+        Debug.Log($"[ApiManager] Parsed sections count: {(sections == null ? 0 : sections.Count)}");
+        return sections;
+    }
+
+    private string BuildUrl(string relativePath)
+    {
+        string baseUrl = BaseUrl?.TrimEnd('/') ?? string.Empty;
+        string path = relativePath?.TrimStart('/') ?? string.Empty;
+        return $"{baseUrl}/{path}";
     }
 
     private async Task<T> SendGetRequest<T>(string url)
@@ -86,46 +110,389 @@ public class ApiManager : MonoBehaviour
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
-            // Tự động thêm Authorization header vào mỗi request
             if (!string.IsNullOrEmpty(authToken))
             {
                 webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
             }
             
             var operation = webRequest.SendWebRequest();
-
-            while (!operation.isDone)
-                await Task.Yield();
+            while (!operation.isDone) await Task.Yield();
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
                 string jsonResponse = webRequest.downloadHandler.text;
-                return JsonUtility.FromJson<T>(jsonResponse);
+                Debug.Log($"[ApiManager] Raw JSON: {jsonResponse}");
+                
+                try 
+                {
+                    // Thử parse theo cấu trúc ApiResponse<T>
+                    return JsonUtility.FromJson<T>(jsonResponse);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[ApiManager] JsonUtility fail. Checking if it's a raw array: {ex.Message}");
+                    
+                    // Nếu là mảng JSON thuần túy (e.g. [{}, {}]), JsonUtility không parse được trực tiếp.
+                    // Cần bọc lại để parse.
+                    if (jsonResponse.TrimStart().StartsWith("["))
+                    {
+                        string wrappedJson = "{\"success\":true,\"data\":" + jsonResponse + "}";
+                        return JsonUtility.FromJson<T>(wrappedJson);
+                    }
+                    throw;
+                }
             }
             else
             {
-                long responseCode = webRequest.responseCode;
-                string errorDetail = webRequest.error;
-                
-                Debug.LogError($"[ApiManager] Lỗi API ({responseCode}): {errorDetail} | URL: {url}");
+                long statusCode = webRequest.responseCode;
+                string responseBody = webRequest.downloadHandler?.text;
+                Debug.LogError($"[ApiManager] Request failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
 
-                // XỬ LÝ LỖI 401 UNAUTHORIZED
-                if (responseCode == 401)
+                if (statusCode == 404)
                 {
-                    ShowError("401 Unauthorized - Token không hợp lệ hoặc đã hết hạn.\nVui lòng kiểm tra lại authToken trong ApiManager.");
+                    ShowError("API endpoint không tồn tại (404). Kiểm tra lại BaseUrl và đường dẫn endpoint.");
                 }
-                else if (errorDetail.Contains("Cannot resolve destination host") || webRequest.result == UnityWebRequest.Result.ConnectionError)
-                {
-                    ShowError("Không thể kết nối đến máy chủ.\nVui lòng kiểm tra Base URL hoặc chạy backend locally.");
-                }
-                else
-                {
-                    ShowError($"Lỗi hệ thống ({responseCode}): {errorDetail}");
-                }
-
                 return default;
             }
         }
+    }
+
+    private async Task<string> SendGetRawRequest(string url)
+    {
+        if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
+
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+        {
+            if (!string.IsNullOrEmpty(authToken))
+            {
+                webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
+            }
+
+            var operation = webRequest.SendWebRequest();
+            while (!operation.isDone) await Task.Yield();
+
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                string jsonResponse = webRequest.downloadHandler.text;
+                Debug.Log($"[ApiManager] Raw JSON: {jsonResponse}");
+                return jsonResponse;
+            }
+
+            long statusCode = webRequest.responseCode;
+            string responseBody = webRequest.downloadHandler?.text;
+            Debug.LogError($"[ApiManager] Request failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
+
+            if (statusCode == 404)
+            {
+                ShowError("API endpoint không tồn tại (404). Kiểm tra lại BaseUrl và đường dẫn endpoint.");
+            }
+
+            return null;
+        }
+    }
+
+    private List<LessonData> ParseLessonsFromJson(string jsonResponse)
+    {
+        if (string.IsNullOrWhiteSpace(jsonResponse)) return null;
+
+        string trimmed = jsonResponse.TrimStart();
+
+        // 1) Raw array: [{...}, {...}]
+        if (trimmed.StartsWith("["))
+        {
+            try
+            {
+                RawListWrapper<LessonData> wrapped = JsonUtility.FromJson<RawListWrapper<LessonData>>("{\"data\":" + jsonResponse + "}");
+                if (wrapped != null && wrapped.data != null) return wrapped.data;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[ApiManager] Parse raw lesson array failed: {ex.Message}");
+            }
+        }
+
+        // 2) Standard envelope: { success, data: [...] }
+        try
+        {
+            ApiResponse<LessonData> apiResponse = JsonUtility.FromJson<ApiResponse<LessonData>>(jsonResponse);
+            if (apiResponse != null && apiResponse.data != null && apiResponse.data.Count > 0)
+            {
+                return apiResponse.data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[ApiManager] Parse ApiResponse<LessonData> failed: {ex.Message}");
+        }
+
+        // 3) Alternative envelope: { lessons: [...] }
+        try
+        {
+            LessonsEnvelope lessonsEnvelope = JsonUtility.FromJson<LessonsEnvelope>(jsonResponse);
+            if (lessonsEnvelope != null && lessonsEnvelope.lessons != null && lessonsEnvelope.lessons.Count > 0)
+            {
+                return lessonsEnvelope.lessons;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[ApiManager] Parse LessonsEnvelope failed: {ex.Message}");
+        }
+
+        // 4) Section-based envelope: { sections: [{ section/title/name, lessons|videos|items: [...] }] }
+        try
+        {
+            SectionsEnvelope sectionsEnvelope = JsonUtility.FromJson<SectionsEnvelope>(jsonResponse);
+            List<LessonData> flattened = FlattenSections(sectionsEnvelope != null ? sectionsEnvelope.sections : null);
+            if (flattened != null && flattened.Count > 0)
+            {
+                return flattened;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[ApiManager] Parse SectionsEnvelope failed: {ex.Message}");
+        }
+
+        Debug.LogWarning("[ApiManager] Lessons JSON parsed but no lesson items were found.");
+        return new List<LessonData>();
+    }
+
+    private List<SectionData> ParseSectionsFromJson(string jsonResponse)
+    {
+        if (string.IsNullOrWhiteSpace(jsonResponse)) return null;
+
+        string trimmed = jsonResponse.TrimStart();
+
+        // 1) Raw array
+        if (trimmed.StartsWith("["))
+        {
+            try
+            {
+                RawListWrapper<SectionData> wrapped = JsonUtility.FromJson<RawListWrapper<SectionData>>("{\"data\":" + jsonResponse + "}");
+                if (wrapped != null && wrapped.data != null && wrapped.data.Count > 0 && HasAnyNestedLessons(wrapped.data))
+                {
+                    NormalizeSections(wrapped.data);
+                    return wrapped.data;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[ApiManager] Parse raw section array failed: {ex.Message}");
+            }
+        }
+
+        // 2) { sections: [...] }
+        try
+        {
+            SectionDataEnvelope envelope = JsonUtility.FromJson<SectionDataEnvelope>(jsonResponse);
+            if (envelope != null && envelope.sections != null && envelope.sections.Count > 0 && HasAnyNestedLessons(envelope.sections))
+            {
+                NormalizeSections(envelope.sections);
+                return envelope.sections;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[ApiManager] Parse SectionsEnvelope root failed: {ex.Message}");
+        }
+
+        // 3) { data: { sections:[...] } }
+        try
+        {
+            SectionDataDataEnvelope dataEnvelope = JsonUtility.FromJson<SectionDataDataEnvelope>(jsonResponse);
+            if (dataEnvelope != null && dataEnvelope.data != null && dataEnvelope.data.sections != null && dataEnvelope.data.sections.Count > 0 && HasAnyNestedLessons(dataEnvelope.data.sections))
+            {
+                NormalizeSections(dataEnvelope.data.sections);
+                return dataEnvelope.data.sections;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[ApiManager] Parse SectionsDataEnvelope failed: {ex.Message}");
+        }
+
+        // 4) { success, data:[{section...}] }
+        try
+        {
+            ApiResponse<SectionData> response = JsonUtility.FromJson<ApiResponse<SectionData>>(jsonResponse);
+            if (response != null && response.data != null && response.data.Count > 0 && HasAnyNestedLessons(response.data))
+            {
+                NormalizeSections(response.data);
+                return response.data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[ApiManager] Parse ApiResponse<SectionData> failed: {ex.Message}");
+        }
+
+        return null;
+    }
+
+    private void NormalizeSections(List<SectionData> sections)
+    {
+        if (sections == null) return;
+
+        for (int i = 0; i < sections.Count; i++)
+        {
+            SectionData section = sections[i];
+            if (section == null) continue;
+
+            string sectionLabel = ResolveSectionDataLabel(section, i + 1);
+            List<LessonData> sectionLessons = ResolveSectionLessons(section);
+
+            if (sectionLessons == null) continue;
+
+            foreach (LessonData lesson in sectionLessons)
+            {
+                if (lesson == null) continue;
+                if (string.IsNullOrWhiteSpace(lesson.sectionTitle)) lesson.sectionTitle = sectionLabel;
+                if (string.IsNullOrWhiteSpace(lesson.sectionName)) lesson.sectionName = sectionLabel;
+                if (string.IsNullOrWhiteSpace(lesson.section)) lesson.section = sectionLabel;
+            }
+        }
+    }
+
+    private bool HasAnyNestedLessons(List<SectionData> sections)
+    {
+        if (sections == null || sections.Count == 0) return false;
+
+        for (int i = 0; i < sections.Count; i++)
+        {
+            SectionData s = sections[i];
+            if (s == null) continue;
+
+            bool hasNested = (s.lessons != null && s.lessons.Count > 0)
+                || (s.videos != null && s.videos.Count > 0)
+                || (s.items != null && s.items.Count > 0);
+
+            if (hasNested) return true;
+        }
+
+        return false;
+    }
+
+    private List<LessonData> ResolveSectionLessons(SectionData section)
+    {
+        if (section == null) return null;
+        if (section.lessons != null && section.lessons.Count > 0) return section.lessons;
+        if (section.videos != null && section.videos.Count > 0) return section.videos;
+        if (section.items != null && section.items.Count > 0) return section.items;
+        return null;
+    }
+
+    private string ResolveSectionDataLabel(SectionData section, int index)
+    {
+        if (section != null)
+        {
+            if (!string.IsNullOrWhiteSpace(section.sectionTitle)) return section.sectionTitle.Trim();
+            if (!string.IsNullOrWhiteSpace(section.sectionName)) return section.sectionName.Trim();
+            if (!string.IsNullOrWhiteSpace(section.section)) return section.section.Trim();
+            if (!string.IsNullOrWhiteSpace(section.title)) return section.title.Trim();
+            if (!string.IsNullOrWhiteSpace(section.name)) return section.name.Trim();
+            if (!string.IsNullOrWhiteSpace(section.code)) return section.code.Trim();
+        }
+
+        return $"Section {index:D2}";
+    }
+
+    private List<LessonData> FlattenSections(List<SectionPayload> sections)
+    {
+        if (sections == null || sections.Count == 0) return null;
+
+        List<LessonData> result = new List<LessonData>();
+        for (int i = 0; i < sections.Count; i++)
+        {
+            SectionPayload section = sections[i];
+            string sectionLabel = ResolveSectionLabel(section, i + 1);
+
+            List<LessonData> source = null;
+            if (section != null)
+            {
+                if (section.lessons != null && section.lessons.Count > 0) source = section.lessons;
+                else if (section.videos != null && section.videos.Count > 0) source = section.videos;
+                else if (section.items != null && section.items.Count > 0) source = section.items;
+            }
+
+            if (source == null) continue;
+
+            foreach (LessonData lesson in source)
+            {
+                if (lesson == null) continue;
+
+                if (string.IsNullOrWhiteSpace(lesson.sectionTitle)) lesson.sectionTitle = sectionLabel;
+                if (string.IsNullOrWhiteSpace(lesson.sectionName)) lesson.sectionName = sectionLabel;
+                if (string.IsNullOrWhiteSpace(lesson.section)) lesson.section = sectionLabel;
+
+                result.Add(lesson);
+            }
+        }
+
+        return result;
+    }
+
+    private string ResolveSectionLabel(SectionPayload section, int index)
+    {
+        if (section != null)
+        {
+            if (!string.IsNullOrWhiteSpace(section.sectionTitle)) return section.sectionTitle.Trim();
+            if (!string.IsNullOrWhiteSpace(section.sectionName)) return section.sectionName.Trim();
+            if (!string.IsNullOrWhiteSpace(section.section)) return section.section.Trim();
+            if (!string.IsNullOrWhiteSpace(section.title)) return section.title.Trim();
+            if (!string.IsNullOrWhiteSpace(section.name)) return section.name.Trim();
+        }
+
+        return $"Section {index:D2}";
+    }
+
+    [Serializable]
+    private class RawListWrapper<T>
+    {
+        public List<T> data;
+    }
+
+    [Serializable]
+    private class LessonsEnvelope
+    {
+        public List<LessonData> lessons;
+    }
+
+    [Serializable]
+    private class SectionsEnvelope
+    {
+        public List<SectionPayload> sections;
+    }
+
+    [Serializable]
+    private class SectionsDataEnvelope
+    {
+        public SectionsEnvelope data;
+    }
+
+    [Serializable]
+    private class SectionDataEnvelope
+    {
+        public List<SectionData> sections;
+    }
+
+    [Serializable]
+    private class SectionDataDataEnvelope
+    {
+        public SectionDataEnvelope data;
+    }
+
+    [Serializable]
+    private class SectionPayload
+    {
+        public string sectionTitle;
+        public string sectionName;
+        public string section;
+        public string title;
+        public string name;
+        public List<LessonData> lessons;
+        public List<LessonData> videos;
+        public List<LessonData> items;
     }
 
     private void ShowError(string message)

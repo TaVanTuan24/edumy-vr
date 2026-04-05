@@ -2181,7 +2181,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1495391332921633704, guid: 8cb93f9450ccfca4681b802db30aca1c, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 1.5
+      value: 21.5
       objectReference: {fileID: 0}
     - target: {fileID: 1495391332921633704, guid: 8cb93f9450ccfca4681b802db30aca1c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -2199,10 +2199,18 @@ PrefabInstance:
       propertyPath: m_PresetInfoIsWorld
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5354855513703547805, guid: 8cb93f9450ccfca4681b802db30aca1c, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6249921234525899284, guid: 8cb93f9450ccfca4681b802db30aca1c, type: 3}
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 475607413}
+    - target: {fileID: 6249921234525899284, guid: 8cb93f9450ccfca4681b802db30aca1c, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 8590024225705668652, guid: 8cb93f9450ccfca4681b802db30aca1c, type: 3}
       propertyPath: m_Name
       value: LessonListPanel
@@ -10008,15 +10016,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8147440179330771674, guid: 0cd4bd98de2b0d04b9b2070e6e0c3ceb, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.00002
+      value: 0.000002
       objectReference: {fileID: 0}
     - target: {fileID: 8147440179330771674, guid: 0cd4bd98de2b0d04b9b2070e6e0c3ceb, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.00002
+      value: 0.000002
       objectReference: {fileID: 0}
     - target: {fileID: 8147440179330771674, guid: 0cd4bd98de2b0d04b9b2070e6e0c3ceb, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.00002
+      value: 0.000002
       objectReference: {fileID: 0}
     - target: {fileID: 8147440179330771674, guid: 0cd4bd98de2b0d04b9b2070e6e0c3ceb, type: 3}
       propertyPath: m_LocalPosition.x
@@ -10192,7 +10200,7 @@ MonoBehaviour:
   localUrl: http://localhost:3000
   productionUrl: https://api.edumy-vr.com
   useProduction: 0
-  authToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE2OWIwYTA1NTA3MWI3ZTQ0MTBiOGYiLCJlbWFpbCI6ImFAZ2cuY29tIiwicm9sZSI6bnVsbCwiaWF0IjoxNzc1MzYyMTU0LCJleHAiOjE3Nzc5NTQxNTR9.QwtpOrEt_UaTFXZQLLE_QXZW6DGKFSMflrUH_17QHeg
+  authToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE2OWIwYTA1NTA3MWI3ZTQ0MTBiOGYiLCJlbWFpbCI6ImFAZ2cuY29tIiwicm9sZSI6bnVsbCwiaWF0IjoxNzc1MzcyMzQwLCJleHAiOjE3Nzc5NjQzNDB9.FubmIs93MmJiqRbkJ7n7RyHPqLJsOVA-L2VMRRTi3sM
   errorTextDisplay: {fileID: 1206660092}
   debugUrlText: {fileID: 875018842}
 --- !u!4 &1091226086
@@ -14285,10 +14293,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef62c6349cc81ca499e3227f4a7ec7c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TokenInputPanel
-  tokenInputField: {fileID: 1611106931}
-  saveButton: {fileID: 1017768372}
-  clearButton: {fileID: 674964832}
-  statusText: {fileID: 675731984}
 --- !u!114 &1564613309
 MonoBehaviour:
   m_ObjectHideFlags: 0

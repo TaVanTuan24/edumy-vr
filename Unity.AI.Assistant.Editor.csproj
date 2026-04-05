@@ -44,8 +44,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Analyzer Include="C:\Users\tavan\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
-    <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\org.nuget.microsoft.extensions.logging.abstractions@18bd7e0fc865\analyzers\dotnet\roslyn4.0\cs\Microsoft.Extensions.Logging.Generators.dll" />
-    <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\org.nuget.system.text.json@4fbd98a0949f\analyzers\dotnet\roslyn4.0\cs\System.Text.Json.SourceGeneration.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -148,8 +146,8 @@
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Acp\AcpTracing.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\GraphGeneration\AssistantGraphGenerator.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Markup\Links\LinkHandlerAttribute.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\CodeAnalyze\ExpressionEvaluator.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Relay\Bus\RelayChannels.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\CodeAnalyze\ExpressionEvaluator.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Checkpoint\Events\EventCheckpointDeleteRequested.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Serialization\BuiltinOverrides\PlayerSettingsOverrides.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\RunCommand\RunCommandCodeAnalyzer.cs" />
@@ -166,8 +164,8 @@
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\CodeAnalyze\FixMissingSquareBracket.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Service\AssistantGlobal.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\CodeFormat.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\CodeBlockUtils.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Assistant.Conversation.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\CodeBlockUtils.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\ServerCompatibility\NotificationsState.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Data\ScreenContextData.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\CodeAnalyze\FixMissingParenthesis.cs" />
@@ -889,11 +887,11 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.codeanalysis.common@34ebd91b67de\lib\netstandard2.0\Microsoft.CodeAnalysis.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp">
-      <HintPath>Library\PackageCache\org.nuget.microsoft.codeanalysis.csharp@db8bc9eda0cd\lib\netstandard2.0\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Collections.Immutable">
@@ -1422,8 +1420,8 @@
     <ProjectReference Include="Unity.AI.Toolkit.Asset.csproj" />
     <ProjectReference Include="Unity.AI.Assistant.Runtime.csproj" />
     <ProjectReference Include="Unity.AI.Tracing.csproj" />
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.TestRunner.csproj" />
     <ProjectReference Include="UnityEditor.TestRunner.csproj" />
   </ItemGroup>

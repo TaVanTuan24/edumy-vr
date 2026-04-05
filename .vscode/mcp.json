@@ -1,11 +1,11 @@
-{
-  "servers": {
-    "ai-game-developer": {
-      "headers": {
-        "Authorization": "Bearer BsE64SjwmJURXtsSb8bXgrWd1wBDUmQzTF_wpRn_cGk"
-      },
-      "type": "http",
-      "url": "https://ai-game.dev/mcp"
-    }
-  }
-}
+// {
+//   "servers": {
+//     "ai-game-developer": {
+//       "headers": {
+//         "Authorization": "Bearer BsE64SjwmJURXtsSb8bXgrWd1wBDUmQzTF_wpRn_cGk"
+//       },
+//       "type": "http",
+//       "url": "https://ai-game.dev/mcp"
+//     }
+//   }
+// }

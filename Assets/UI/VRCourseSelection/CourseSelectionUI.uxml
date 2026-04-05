@@ -1,0 +1,27 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="root" class="root">
+        <ui:VisualElement name="courses-page" class="page">
+            <ui:Label name="title-label" text="Các khóa học đã đăng ký" class="page-title" />
+            <ui:ListView name="course-list" class="course-list" />
+            <ui:Label name="status-label" text="Đang tải dữ liệu..." class="status-label" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="sections-page" class="page hidden">
+            <ui:VisualElement name="sections-header" class="sections-header">
+                <ui:Button name="back-button" text="Back" class="back-button" />
+                <ui:Label name="sections-title" text="Sections" class="sections-title" />
+            </ui:VisualElement>
+            <ui:ScrollView name="sections-scroll" class="sections-scroll" />
+            <ui:Label name="sections-status" text="" class="status-label" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="video-page" class="page hidden">
+            <ui:VisualElement name="video-header" class="sections-header">
+                <ui:Button name="video-back-button" text="Back" class="back-button" />
+                <ui:Label name="video-title" text="Video" class="sections-title" />
+            </ui:VisualElement>
+            <ui:VisualElement name="video-surface" class="video-surface" />
+            <ui:Label name="video-status" text="" class="status-label" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

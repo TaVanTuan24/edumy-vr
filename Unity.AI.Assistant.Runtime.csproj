@@ -44,8 +44,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Analyzer Include="C:\Users\tavan\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
-    <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\org.nuget.microsoft.extensions.logging.abstractions@18bd7e0fc865\analyzers\dotnet\roslyn4.0\cs\Microsoft.Extensions.Logging.Generators.dll" />
-    <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\org.nuget.system.text.json@4fbd98a0949f\analyzers\dotnet\roslyn4.0\cs\System.Text.Json.SourceGeneration.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -214,8 +212,8 @@
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Runtime\FunctionCalling\Permissions\ToolPermissions.FileSystem.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Runtime\Socket\Workflows\WebSocketFactory.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Runtime\Skills\ISkillResource.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Runtime\Socket\Protocol\REST\Client\Configuration.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Runtime\FunctionCalling\DefaultFunctionCallRenderer.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Runtime\Socket\Protocol\REST\Client\Configuration.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Runtime\Socket\Protocol\REST\Client\ConnectionException.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Runtime\Data\ICredentialsContext.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Runtime\ApplicationModels\SelectedContextMetadataItems.cs" />
@@ -1317,8 +1315,8 @@
   <ItemGroup>
     <ProjectReference Include="Unity.Serialization.csproj" />
     <ProjectReference Include="Unity.AI.Tracing.csproj" />
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>

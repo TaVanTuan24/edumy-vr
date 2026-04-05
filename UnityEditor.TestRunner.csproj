@@ -44,8 +44,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Analyzer Include="C:\Users\tavan\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
-    <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\org.nuget.microsoft.extensions.logging.abstractions@18bd7e0fc865\analyzers\dotnet\roslyn4.0\cs\Microsoft.Extensions.Logging.Generators.dll" />
-    <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\org.nuget.system.text.json@4fbd98a0949f\analyzers\dotnet\roslyn4.0\cs\System.Text.Json.SourceGeneration.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -82,8 +80,8 @@
     <Compile Include="Library\PackageCache\com.unity.test-framework@629486125cfc\UnityEditor.TestRunner\TestRunner\EditorEnumeratorTestWorkItem.cs" />
     <Compile Include="Library\PackageCache\com.unity.test-framework@629486125cfc\UnityEditor.TestRunner\UnityTestProtocol\UtpDebuglogger.cs" />
     <Compile Include="Library\PackageCache\com.unity.test-framework@629486125cfc\UnityEditor.TestRunner\TestRun\Tasks\Events\RunStartedInvocationEvent.cs" />
-    <Compile Include="Library\PackageCache\com.unity.test-framework@629486125cfc\UnityEditor.TestRunner\GUI\TestAssets\ICustomScriptAssembly.cs" />
     <Compile Include="Library\PackageCache\com.unity.test-framework@629486125cfc\UnityEditor.TestRunner\CommandLineTest\IRunData.cs" />
+    <Compile Include="Library\PackageCache\com.unity.test-framework@629486125cfc\UnityEditor.TestRunner\GUI\TestAssets\ICustomScriptAssembly.cs" />
     <Compile Include="Library\PackageCache\com.unity.test-framework@629486125cfc\UnityEditor.TestRunner\GUI\Controls\ISelectionDropDownContentProvider.cs" />
     <Compile Include="Library\PackageCache\com.unity.test-framework@629486125cfc\UnityEditor.TestRunner\TestRun\Tasks\Platform\PlatformSpecificSuccessfulBuildTask.cs" />
     <Compile Include="Library\PackageCache\com.unity.test-framework@629486125cfc\UnityEditor.TestRunner\Api\ICallbacksDelegator.cs" />
