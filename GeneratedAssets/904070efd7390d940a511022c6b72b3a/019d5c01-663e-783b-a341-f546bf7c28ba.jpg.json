@@ -1,0 +1,27 @@
+{
+    "asset": "904070efd7390d940a511022c6b72b3a",
+    "fileName": "019d5c01-663e-783b-a341-f546bf7c28ba.jpg",
+    "prompt": "A professional 4K VR UI mockup for Edumy e-learning. A large floating holographic World Space Canvas in a futuristic dark VR classroom with blue neon accents. Split layout: Left 45% has a glowing vertical 16:9 high-res coding course thumbnail (laptop and code). Right 55% has a scrollable list of course rows. Each row: bold white title, description line, green progress bar, and a vibrant 'Continue' button. Top header: 'My Courses' with a sleek search bar. Bottom bar: minimalist 'Back' and 'Settings' buttons. Cyber-learning aesthetic, glassmorphism, dark mode, high contrast, particle glow. Front-on perspective. Minimalist and immersive.",
+    "negativePrompt": "",
+    "model": "f722aea3-8760-4eb1-a516-e2fce6476303",
+    "modelName": "Seedream 4",
+    "customSeed": -1,
+    "w3CTraceId": "b0eb92d5d11862eb2caf0417df7ea1f5",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}
