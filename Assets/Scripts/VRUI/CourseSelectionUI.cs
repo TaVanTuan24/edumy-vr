@@ -22,6 +22,9 @@ public class CourseSelectionUI : MonoBehaviour
     [SerializeField] private bool alwaysUseMockData = false;
     [SerializeField] private bool fallbackToMockOnApiErrorInEditor = false;
 
+    [Header("VR World Placement")]
+    [SerializeField] private VRPanelAnchorManager anchorManager;
+
     private UIDocument uiDocument;
     private VisualElement coursesPage;
     private VisualElement sectionsPage;
@@ -39,11 +42,24 @@ public class CourseSelectionUI : MonoBehaviour
     private readonly List<CourseData> courses = new List<CourseData>();
     private VideoPlayer videoPlayer;
     private RenderTexture videoRenderTexture;
+    private Vector3 defaultPanelScale;
 
     private async void Start()
     {
+        defaultPanelScale = transform.localScale;
+        
+        if (anchorManager == null)
+        {
+            anchorManager = GetComponent<VRPanelAnchorManager>();
+        }
+
         BuildUi();
         await RefreshCourses();
+    }
+
+    private void LateUpdate()
+    {
+        // VRPanelAnchorManager handles placement now
     }
 
     public async Task RefreshCourses()
@@ -242,6 +258,16 @@ public class CourseSelectionUI : MonoBehaviour
             Label title = new Label();
             title.AddToClassList("course-title");
 
+            Label progressLabel = new Label();
+            progressLabel.AddToClassList("course-progress-label");
+
+            VisualElement progressTrack = new VisualElement();
+            progressTrack.AddToClassList("course-progress-track");
+
+            VisualElement progressFill = new VisualElement();
+            progressFill.AddToClassList("course-progress-fill");
+            progressTrack.Add(progressFill);
+
             Button viewButton = new Button();
             viewButton.text = "View";
             viewButton.AddToClassList("course-view-button");
@@ -250,6 +276,8 @@ public class CourseSelectionUI : MonoBehaviour
             {
                 thumb = thumb,
                 title = title,
+                progressLabel = progressLabel,
+                progressFill = progressFill,
                 viewButton = viewButton,
                 bindVersion = 0
             };
@@ -264,6 +292,8 @@ public class CourseSelectionUI : MonoBehaviour
             };
 
             content.Add(title);
+            content.Add(progressLabel);
+            content.Add(progressTrack);
             content.Add(viewButton);
 
             row.Add(thumb);
@@ -285,6 +315,22 @@ public class CourseSelectionUI : MonoBehaviour
             int version = refs.bindVersion;
 
             refs.title.text = string.IsNullOrWhiteSpace(course.title) ? "(Không có tiêu đề)" : course.title;
+            int percent = Mathf.Clamp(course.progress, 0, 100);
+            int total = Mathf.Max(0, course.totalLessons);
+            int completed = Mathf.Clamp(course.completedLessons, 0, total > 0 ? total : int.MaxValue);
+
+            if (refs.progressLabel != null)
+            {
+                refs.progressLabel.text = total > 0
+                    ? $"Tiến trình: {percent}% ({completed}/{total} bài)"
+                    : $"Tiến trình: {percent}%";
+            }
+
+            if (refs.progressFill != null)
+            {
+                refs.progressFill.style.width = Length.Percent(percent);
+            }
+
             refs.viewButton.userData = course;
             refs.thumb.style.backgroundImage = StyleKeyword.None;
 
@@ -873,6 +919,9 @@ public class CourseSelectionUI : MonoBehaviour
     {
         if (coursesPage != null) coursesPage.RemoveFromClassList("hidden");
         if (sectionsPage != null) sectionsPage.AddToClassList("hidden");
+        if (videoPage != null) videoPage.AddToClassList("hidden");
+
+        if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Browsing);
     }
 
     private void ShowSectionsPage()
@@ -880,6 +929,8 @@ public class CourseSelectionUI : MonoBehaviour
         if (coursesPage != null) coursesPage.AddToClassList("hidden");
         if (sectionsPage != null) sectionsPage.RemoveFromClassList("hidden");
         if (videoPage != null) videoPage.AddToClassList("hidden");
+
+        if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Browsing);
     }
 
     private void ShowVideoPage()
@@ -887,6 +938,8 @@ public class CourseSelectionUI : MonoBehaviour
         if (coursesPage != null) coursesPage.AddToClassList("hidden");
         if (sectionsPage != null) sectionsPage.AddToClassList("hidden");
         if (videoPage != null) videoPage.RemoveFromClassList("hidden");
+
+        if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Video);
     }
 
     private void OnDestroy()
@@ -915,6 +968,8 @@ public class CourseSelectionUI : MonoBehaviour
     {
         public VisualElement thumb;
         public Label title;
+        public Label progressLabel;
+        public VisualElement progressFill;
         public Button viewButton;
         public int bindVersion;
     }

@@ -91,7 +91,31 @@
     font-size: 50px;
     color: rgb(18, 31, 48);
     -unity-font-style: bold;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
+}
+
+.course-progress-label {
+    font-size: 24px;
+    color: rgb(75, 84, 98);
+    margin-bottom: 8px;
+}
+
+.course-progress-track {
+    width: 420px;
+    height: 12px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background-color: rgb(221, 226, 232);
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+
+.course-progress-fill {
+    height: 100%;
+    width: 0%;
+    background-color: rgb(47, 152, 253);
 }
 
 .course-view-button {

@@ -24,7 +24,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <NoWarn>0169;USG0001</NoWarn>
-    <DefineConstants>UNITY_6000_4_0;UNITY_6000_4;UNITY_6000;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_6000_0_OR_NEWER;UNITY_6000_1_OR_NEWER;UNITY_6000_2_OR_NEWER;UNITY_6000_3_OR_NEWER;UNITY_6000_4_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_AUDIO_SCRIPTABLE_PIPELINE;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_UNITY_CONSENT;ENABLE_UNITY_CLOUD_IDENTIFIERS;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_NATIVE_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_MARSHALLING_TESTS;ENABLE_VIDEO;ENABLE_NAVIGATION_OFFMESHLINK_TO_NAVMESHLINK;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_ACCESSIBILITY_SCREEN_READER;TEXTCORE_1_0_OR_NEWER;EDITOR_ONLY_NAVMESH_BUILDER_DEPRECATED;PLATFORM_STANDALONE_WIN;PLATFORM_STANDALONE;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_AMD;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_USES_EXPLICIT_MEMORY_MANAGER_INITIALIZER;PLATFORM_SUPPORTS_WAIT_FOR_PRESENTATION;PLATFORM_SUPPORTS_SPLIT_GRAPHICS_JOBS;ENABLE_MONO;NET_STANDARD_2_0;NET_STANDARD;NET_STANDARD_2_1;NETSTANDARD;NETSTANDARD2_1;ENABLE_PROFILER;ENABLE_PROFILER_ASSISTANT_INTEGRATION;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_INPUT_SYSTEM;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER;TEXTCORE_FONT_ENGINE_1_6_OR_NEWER;USE_INPUT_SYSTEM_POSE_CONTROL;UNITY_POST_PROCESSING_STACK_V2;USE_STICK_CONTROL_THUMBSTICKS;SENTIS_ANALYTICS_ENABLED;APP_UI_EDITOR_ONLY;URP_7_OR_NEWER;URP_17_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
+    <DefineConstants>UNITY_6000_4_0;UNITY_6000_4;UNITY_6000;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_6000_0_OR_NEWER;UNITY_6000_1_OR_NEWER;UNITY_6000_2_OR_NEWER;UNITY_6000_3_OR_NEWER;UNITY_6000_4_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_AUDIO_SCRIPTABLE_PIPELINE;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_UNITY_CONSENT;ENABLE_UNITY_CLOUD_IDENTIFIERS;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_NATIVE_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_MARSHALLING_TESTS;ENABLE_VIDEO;ENABLE_NAVIGATION_OFFMESHLINK_TO_NAVMESHLINK;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_ACCESSIBILITY_SCREEN_READER;TEXTCORE_1_0_OR_NEWER;EDITOR_ONLY_NAVMESH_BUILDER_DEPRECATED;PLATFORM_STANDALONE_WIN;PLATFORM_STANDALONE;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_AMD;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_USES_EXPLICIT_MEMORY_MANAGER_INITIALIZER;PLATFORM_SUPPORTS_WAIT_FOR_PRESENTATION;PLATFORM_SUPPORTS_SPLIT_GRAPHICS_JOBS;ENABLE_MONO;NET_STANDARD_2_0;NET_STANDARD;NET_STANDARD_2_1;NETSTANDARD;NETSTANDARD2_1;ENABLE_PROFILER;ENABLE_PROFILER_ASSISTANT_INTEGRATION;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_INPUT_SYSTEM;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER;TEXTCORE_FONT_ENGINE_1_6_OR_NEWER;USE_INPUT_SYSTEM_POSE_CONTROL;UNITY_POST_PROCESSING_STACK_V2;USE_STICK_CONTROL_THUMBSTICKS;SENTIS_ANALYTICS_ENABLED;APP_UI_EDITOR_ONLY;OVR_DISABLE_HAND_PINCH_BUTTON_MAPPING;URP_7_OR_NEWER;URP_17_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
@@ -50,79 +50,79 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\EnvironmentProbe\SimulationEnvironmentProbeSubsystem.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ImageTracking\TrackedImageDiscoveryParams.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CameraTextureFrameEventArgs.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\PlaneVoxelGrid.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\BaseSimulationSceneManager.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulationSessionSubsystem.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\AssemblyInfo.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\BoundingBox\SimulationBoundingBoxDiscoverer.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulationEnvironmentScanner.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedBoundedPlane.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulationEnvironment.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedEnvironmentProbe.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\BoundingBox\SimulationBoundingBoxSubsystem.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedLight.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\XRSimulationPreferences.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\Visualizers\SimulationPlaneVisualizer.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Meshing\SimulationMesh.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Occlusion\SimulationOcclusionSubsystem.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CpuImage\SimulationXRCpuImageApi.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Analytics\SimulationSubsystemAnalytics.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ImageTracking\SimulationImageTrackingSubsystem.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulationCameraTextureReadbackPass.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedBoundingBox.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\PlaneRaycaster.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\SimulationApi.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\DiscoveredPlane.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\VoxelGridOrientation.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CpuImage\SimulationImageInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CpuImage\SimulationPlatformInterface.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedAnchor.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulationCameraSubsystem.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\EnvironmentScanParams.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\PlaneVoxel.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Raycast\SimulationRaycasterRegistry.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CameraTextureProvider.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Anchors\SimulationAnchorSubsystem.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\XREnvironmentViewCamera.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Raycast\SimulationRaycastSubsystem.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedMeshClassification.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ISimulationSessionResetHandler.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\BoundingBox\BoundingBoxDiscoveryParams.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\SimulationSceneManager.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ImageTracking\TrackedImageDiscoveryStrategy.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\SimulationPlaneSubsystem.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\XRayRuntimeUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Raycast\IRaycaster.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\PointCloud\SimulationPointCloudSubsystem.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\SimulationConstants.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\XRayRegion.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CameraTextureFrameEventArgs.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ImageTracking\TrackedImageDiscoveryParams.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulationEnvironmentScanner.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedBoundedPlane.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\BoundingBox\SimulationBoundingBoxSubsystem.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Meshing\SimulationMesh.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CpuImage\SimulationXRCpuImageApi.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulationCameraTextureReadbackPass.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ImageTracking\SimulationImageTrackingSubsystem.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CameraFPSModeHandler.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Input\XRSimulationInputActions.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Input\InputLayoutLoader.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulatedExifData.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\DiscoveredPlane.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\PointCloud\PointCloudRaycaster.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\XRSimulationRuntimeSettings.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\PlaneFindingParams.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\SimulationXRayManager.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Anchors\SimulationAnchorParams.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulationUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\VoxelGridOrientation.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulationCameraPoseProvider.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CpuImage\SimulationImageInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CpuImage\SimulationPlatformInterface.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\PlaneDiscoveryVoxelGrid.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\EnvironmentProbe\SimulationEnvironmentProbeDiscoverer.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedAnchor.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Meshing\SimulationMeshSubsystem.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\SimulationCameraSubsystem.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\EnvironmentScanParams.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\PlaneVoxel.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Raycast\SimulationRaycasterRegistry.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Anchors\SimulationAnchorImpl.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\CameraTextureProvider.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Anchors\SimulationAnchorSubsystem.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\XREnvironmentViewCamera.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Raycast\SimulationRaycastSubsystem.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedTrackedImage.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulatedMeshClassification.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ISimulationSessionResetHandler.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ImageTracking\SimulationRuntimeImageLibrary.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\BoundingBox\BoundingBoxDiscoveryParams.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\SimulationSceneManager.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\BoundingBox\BoundingBoxRaycaster.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ImageTracking\SimulationTrackedImageDiscoverer.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\SimulationLoader.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ImageTracking\TrackedImageDiscoveryStrategy.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\LayerPlaneData.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\SimulationPlaneSubsystem.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\XRayRuntimeUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Raycast\IRaycaster.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\PointCloud\SimulationPointCloudSubsystem.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\ImageTracking\ITrackedImageDiscoveryParams.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\SimulationRenderSettings.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\SimulationConstants.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\Plane\Visualizers\SimulationVoxelVisualizer.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Subsystems\EnvironmentProbe\EnvironmentProbeParams.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Environment\XRayRegion.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Library\PackageCache\com.unity.xr.arfoundation@ad22dea2a3eb\Runtime\Simulation\Unity.XR.Simulation.asmdef" />

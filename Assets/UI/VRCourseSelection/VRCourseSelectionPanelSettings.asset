@@ -15,12 +15,12 @@ MonoBehaviour:
   themeUss: {fileID: -4733365628477956816, guid: 802fd004092e5cd43a4fb586604ea2f2, type: 3}
   m_DisableNoThemeWarning: 0
   m_TargetTexture: {fileID: 0}
-  m_RenderMode: 0
+  m_RenderMode: 1
   m_ColliderUpdateMode: 0
   m_ColliderIsTrigger: 1
-  m_ScaleMode: 1
+  m_ScaleMode: 0
   m_ReferenceSpritePixelsPerUnit: 100
-  m_PixelsPerUnit: 100
+  m_PixelsPerUnit: 2000
   m_Scale: 1
   m_ReferenceDpi: 96
   m_FallbackDpi: 96
@@ -31,7 +31,7 @@ MonoBehaviour:
   m_TargetDisplay: 0
   m_BindingLogLevel: 0
   m_ClearDepthStencil: 1
-  m_ClearColor: 0
+  m_ClearColor: 1
   m_ColorClearValue: {r: 0, g: 0, b: 0, a: 0}
   m_VertexBudget: 0
   m_TextureSlotCount: 8
