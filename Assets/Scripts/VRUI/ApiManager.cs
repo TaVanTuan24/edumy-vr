@@ -28,6 +28,10 @@ public class ApiManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI debugUrlText;    
 
     public string BaseUrl => useProduction ? productionUrl : localUrl;
+    private bool lessonProgressSyncDisabled;
+    private bool lessonProgressSyncDisableLogged;
+    public string LastStreamResolveErrorCode { get; private set; }
+    public string LastStreamResolveErrorMessage { get; private set; }
 
     private void Awake()
     {
@@ -95,6 +99,105 @@ public class ApiManager : MonoBehaviour
         List<SectionData> sections = ParseSectionsFromJson(jsonResponse);
         Debug.Log($"[ApiManager] Parsed sections count: {(sections == null ? 0 : sections.Count)}");
         return sections;
+    }
+
+    public async Task<bool> UpdateLessonCompletionAsync(string courseId, string lessonId, string videoUrl, bool completed)
+    {
+        if (lessonProgressSyncDisabled)
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(courseId) || string.IsNullOrWhiteSpace(lessonId))
+        {
+            Debug.LogWarning("[ApiManager] UpdateLessonCompletionAsync missing courseId/lessonId.");
+            return false;
+        }
+
+        ProgressUpdateRequest payload = new ProgressUpdateRequest
+        {
+            lessonId = lessonId,
+            video = string.IsNullOrWhiteSpace(videoUrl) ? string.Empty : videoUrl,
+            completed = completed
+        };
+
+        string body = JsonUtility.ToJson(payload);
+        string[] candidates = new[]
+        {
+            BuildUrl($"api/vr/courses/{courseId}/progress"),
+            BuildUrl($"api/courses/{courseId}/progress"),
+            BuildUrl($"courses/{courseId}/progress")
+        };
+
+        bool all404 = true;
+        foreach (string url in candidates)
+        {
+            PostStatus status = await SendPostJsonRequest(url, body);
+            if (status == PostStatus.Success)
+            {
+                return true;
+            }
+
+            if (status != PostStatus.NotFound)
+            {
+                all404 = false;
+            }
+        }
+
+        if (all404)
+        {
+            lessonProgressSyncDisabled = true;
+            if (!lessonProgressSyncDisableLogged)
+            {
+                lessonProgressSyncDisableLogged = true;
+                Debug.LogWarning("[ApiManager] Lesson progress sync endpoint not found (404). Auto disable server sync and keep local realtime update.");
+            }
+
+            // Keep UI interaction smooth even when backend endpoint has not been deployed yet.
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<string> ResolvePlayableStreamUrlAsync(string sourceUrl, string courseId, string lessonId, string preferredFormat = "m3u8")
+    {
+        if (string.IsNullOrWhiteSpace(sourceUrl)) return null;
+
+        LastStreamResolveErrorCode = null;
+        LastStreamResolveErrorMessage = null;
+
+        string url = BuildUrl("api/vr/stream/resolve");
+        StreamResolveRequest payload = new StreamResolveRequest
+        {
+            sourceUrl = sourceUrl,
+            preferredFormat = string.IsNullOrWhiteSpace(preferredFormat) ? "m3u8" : preferredFormat,
+            courseId = courseId,
+            lessonId = lessonId
+        };
+
+        string body = JsonUtility.ToJson(payload);
+        StreamResolveResponse response = await SendPostJsonRequestForResponse<StreamResolveResponse>(url, body);
+
+        if (response != null && response.success && response.data != null && !string.IsNullOrWhiteSpace(response.data.resolvedUrl))
+        {
+            return response.data.resolvedUrl;
+        }
+
+        if (response != null && response.error != null && !string.IsNullOrWhiteSpace(response.error.message))
+        {
+            LastStreamResolveErrorCode = response.error.code;
+            LastStreamResolveErrorMessage = string.IsNullOrWhiteSpace(response.error.details)
+                ? response.error.message
+                : $"{response.error.message} | {response.error.details}";
+            Debug.Log($"[ApiManager] Stream resolve failed ({response.error.code}): {LastStreamResolveErrorMessage}");
+        }
+        else
+        {
+            LastStreamResolveErrorMessage = "Không resolve được stream khả dụng từ backend.";
+        }
+
+        return null;
     }
 
     private string BuildUrl(string relativePath)
@@ -189,6 +292,110 @@ public class ApiManager : MonoBehaviour
 
             return null;
         }
+    }
+
+    private async Task<PostStatus> SendPostJsonRequest(string url, string jsonBody)
+    {
+        if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
+
+        using (UnityWebRequest webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(string.IsNullOrWhiteSpace(jsonBody) ? "{}" : jsonBody);
+            webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            webRequest.downloadHandler = new DownloadHandlerBuffer();
+            webRequest.SetRequestHeader("Content-Type", "application/json");
+
+            if (!string.IsNullOrEmpty(authToken))
+            {
+                webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
+            }
+
+            var operation = webRequest.SendWebRequest();
+            while (!operation.isDone) await Task.Yield();
+
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                return PostStatus.Success;
+            }
+
+            long statusCode = webRequest.responseCode;
+            string responseBody = webRequest.downloadHandler?.text;
+            Debug.LogWarning($"[ApiManager] POST failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
+            return statusCode == 404 ? PostStatus.NotFound : PostStatus.Failed;
+        }
+    }
+
+    private async Task<T> SendPostJsonRequestForResponse<T>(string url, string jsonBody)
+    {
+        if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
+
+        using (UnityWebRequest webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(string.IsNullOrWhiteSpace(jsonBody) ? "{}" : jsonBody);
+            webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            webRequest.downloadHandler = new DownloadHandlerBuffer();
+            webRequest.SetRequestHeader("Content-Type", "application/json");
+
+            if (!string.IsNullOrEmpty(authToken))
+            {
+                webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
+            }
+
+            var operation = webRequest.SendWebRequest();
+            while (!operation.isDone) await Task.Yield();
+
+            string responseBody = webRequest.downloadHandler?.text;
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                if (string.IsNullOrWhiteSpace(responseBody)) return default;
+
+                try
+                {
+                    return JsonUtility.FromJson<T>(responseBody);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[ApiManager] Parse POST response failed: {ex.Message} | URL: {url} | Body: {responseBody}");
+                    return default;
+                }
+            }
+
+            long statusCode = webRequest.responseCode;
+            if (!string.IsNullOrWhiteSpace(responseBody))
+            {
+                try
+                {
+                    T parsedErrorResponse = JsonUtility.FromJson<T>(responseBody);
+                    if (parsedErrorResponse != null)
+                    {
+                        return parsedErrorResponse;
+                    }
+                }
+                catch
+                {
+                    // Ignore parse errors and continue with generic logging below.
+                }
+            }
+
+            bool isStreamResolve = url.IndexOf("/api/vr/stream/resolve", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (isStreamResolve)
+            {
+                Debug.Log($"[ApiManager] Stream resolve endpoint returned HTTP {statusCode}. Backend resolver may be missing ytdl/yt-dlp. Body: {responseBody}");
+            }
+            else
+            {
+                Debug.LogWarning($"[ApiManager] POST failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
+            }
+
+            return default;
+        }
+    }
+
+    private enum PostStatus
+    {
+        Success,
+        NotFound,
+        Failed
     }
 
     private List<LessonData> ParseLessonsFromJson(string jsonResponse)
@@ -493,6 +700,14 @@ public class ApiManager : MonoBehaviour
         public List<LessonData> lessons;
         public List<LessonData> videos;
         public List<LessonData> items;
+    }
+
+    [Serializable]
+    private class ProgressUpdateRequest
+    {
+        public string lessonId;
+        public string video;
+        public bool completed;
     }
 
     private void ShowError(string message)

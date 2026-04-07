@@ -24,7 +24,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <NoWarn>0169;USG0001</NoWarn>
-    <DefineConstants>UNITY_6000_4_0;UNITY_6000_4;UNITY_6000;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_6000_0_OR_NEWER;UNITY_6000_1_OR_NEWER;UNITY_6000_2_OR_NEWER;UNITY_6000_3_OR_NEWER;UNITY_6000_4_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_AUDIO_SCRIPTABLE_PIPELINE;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_UNITY_CONSENT;ENABLE_UNITY_CLOUD_IDENTIFIERS;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_NATIVE_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_MARSHALLING_TESTS;ENABLE_VIDEO;ENABLE_NAVIGATION_OFFMESHLINK_TO_NAVMESHLINK;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_ACCESSIBILITY_SCREEN_READER;TEXTCORE_1_0_OR_NEWER;EDITOR_ONLY_NAVMESH_BUILDER_DEPRECATED;PLATFORM_STANDALONE_WIN;PLATFORM_STANDALONE;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_AMD;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_USES_EXPLICIT_MEMORY_MANAGER_INITIALIZER;PLATFORM_SUPPORTS_WAIT_FOR_PRESENTATION;PLATFORM_SUPPORTS_SPLIT_GRAPHICS_JOBS;ENABLE_MONO;NET_STANDARD_2_0;NET_STANDARD;NET_STANDARD_2_1;NETSTANDARD;NETSTANDARD2_1;ENABLE_PROFILER;ENABLE_PROFILER_ASSISTANT_INTEGRATION;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_INPUT_SYSTEM;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER;TEXTCORE_FONT_ENGINE_1_6_OR_NEWER;USE_INPUT_SYSTEM_POSE_CONTROL;UNITY_POST_PROCESSING_STACK_V2;USE_STICK_CONTROL_THUMBSTICKS;SENTIS_ANALYTICS_ENABLED;APP_UI_EDITOR_ONLY;OVR_DISABLE_HAND_PINCH_BUTTON_MAPPING;UNITY_OPENXR_PACKAGE;UNITY_OPENXR_PACKAGE_1_2;UNITY_OPENXR_PACKAGE_1_6;UNITY_OPENXR_PACKAGE_1_8;BURST_PRESENT;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
+    <DefineConstants>UNITY_6000_4_0;UNITY_6000_4;UNITY_6000;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_6000_0_OR_NEWER;UNITY_6000_1_OR_NEWER;UNITY_6000_2_OR_NEWER;UNITY_6000_3_OR_NEWER;UNITY_6000_4_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_AUDIO_SCRIPTABLE_PIPELINE;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_UNITY_CONSENT;ENABLE_UNITY_CLOUD_IDENTIFIERS;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_NATIVE_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_MARSHALLING_TESTS;ENABLE_VIDEO;ENABLE_NAVIGATION_OFFMESHLINK_TO_NAVMESHLINK;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_ACCESSIBILITY_SCREEN_READER;TEXTCORE_1_0_OR_NEWER;EDITOR_ONLY_NAVMESH_BUILDER_DEPRECATED;PLATFORM_STANDALONE_WIN;PLATFORM_STANDALONE;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_AMD;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_USES_EXPLICIT_MEMORY_MANAGER_INITIALIZER;PLATFORM_SUPPORTS_WAIT_FOR_PRESENTATION;PLATFORM_SUPPORTS_SPLIT_GRAPHICS_JOBS;ENABLE_MONO;NET_STANDARD_2_0;NET_STANDARD;NET_STANDARD_2_1;NETSTANDARD;NETSTANDARD2_1;ENABLE_PROFILER;ENABLE_PROFILER_ASSISTANT_INTEGRATION;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;UNITY_PRO_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_INPUT_SYSTEM;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER;TEXTCORE_FONT_ENGINE_1_6_OR_NEWER;USE_INPUT_SYSTEM_POSE_CONTROL;UNITY_POST_PROCESSING_STACK_V2;USE_STICK_CONTROL_THUMBSTICKS;SENTIS_ANALYTICS_ENABLED;APP_UI_EDITOR_ONLY;OVR_DISABLE_HAND_PINCH_BUTTON_MAPPING;UNITY_OPENXR_PACKAGE;UNITY_OPENXR_PACKAGE_1_2;UNITY_OPENXR_PACKAGE_1_6;UNITY_OPENXR_PACKAGE_1_8;BURST_PRESENT;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
@@ -50,32 +50,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\OpenXR\Meshing\IOpenXRHandMeshDataSupplier.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandProviderUtility.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingBase.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\IXRHandProcessor.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSubsystem.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\AssemblyInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\OpenXR\OpenXRHandProvider.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingSaveArgs.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingFrameCapturedEventArgs.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRFingerShape.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandTrackingEvents.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSubsystemDescriptor.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandJointsUpdatedEventArgs.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSubsystemProvider.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\Impl\RawFrame.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingInitializeArgs.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingStatusChangedEventArgs.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSkeletonDriver.deprecated.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\OpenXR\MetaHandTrackingAim.deprecated.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHelpURLConstants.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\Enums.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRHandOrientationUtility.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandMeshController.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandAnalyticsFlags.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandProviderUtility.deprecated.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandProcessingUtility.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandProviderUtility.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\IXRHandProcessor.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\OpenXR\MetaHandTrackingAim.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingBase.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\OpenXR\HandTracking.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Meshing\XRHandMeshDataQueryParams.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Enums.cs" />
@@ -83,28 +64,47 @@
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\XRHandCaptureFrame.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandAnalyticsData.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\XRHandCaptureSequence.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSubsystem.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\OpenXR\OpenXRHandProvider.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\MetaAim.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingSaveArgs.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRHandShape.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\Impl\FrameBuffer.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingFrameCapturedEventArgs.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandFeatureUsageData.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRFingerShape.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRCommonHandGestures.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSkeletonDriverUtility.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandTrackingEvents.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Meshing\XRHandMeshData.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRHandRelativeOrientation.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRFingerShapeMath.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSubsystemDescriptor.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandDevice.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandJointsUpdatedEventArgs.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandDeviceState.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\Impl\BinaryFileFormatConfigs.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRFingerShapeConfiguration.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSubsystemProvider.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\Impl\RawFrame.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingInitializeArgs.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingSettings.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRFingerShapeCondition.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingStatusChangedEventArgs.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSkeletonDriver.deprecated.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandJoint.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\OpenXR\MetaHandTrackingAim.deprecated.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHelpURLConstants.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSubsystem.deprecated.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHand.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\Enums.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRHandOrientationUtility.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandSubsystemConfiguration.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Meshing\XRHandMeshDataQueryResult.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingMetadata.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Capture\Recording\XRHandRecordingBlob.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\XRHandMeshController.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\Gestures\XRHandPose.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.hands@3e241be20642\Runtime\MetaAim.deprecated.cs" />
   </ItemGroup>
@@ -1210,8 +1210,8 @@
     <ProjectReference Include="Unity.XR.OpenXR.csproj" />
     <ProjectReference Include="Unity.XR.OpenXR.Features.OculusQuestSupport.csproj" />
     <ProjectReference Include="Unity.Mathematics.csproj" />
-    <ProjectReference Include="UnityEngine.UI.csproj" />
     <ProjectReference Include="UnityEditor.UI.csproj" />
+    <ProjectReference Include="UnityEngine.UI.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>

@@ -53,3 +53,37 @@ public class ApiResponse<T>
     public bool success;
     public List<T> data;
 }
+
+[Serializable]
+public class ApiError
+{
+    public string code;
+    public string message;
+    public string details;
+}
+
+[Serializable]
+public class StreamResolveRequest
+{
+    public string sourceUrl;
+    public string preferredFormat;
+    public string courseId;
+    public string lessonId;
+}
+
+[Serializable]
+public class StreamResolveData
+{
+    public string resolvedUrl;
+    public string format;
+    public string provider;
+    public string expiresAt;
+}
+
+[Serializable]
+public class StreamResolveResponse
+{
+    public bool success;
+    public StreamResolveData data;
+    public ApiError error;
+}
