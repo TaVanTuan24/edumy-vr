@@ -22,6 +22,10 @@ public class VideoPopupWindow : MonoBehaviour
     [Header("Editor Preview")]
     [SerializeField] private bool autoCreateWindowInEditor = true;
     [SerializeField] private Color editorPreviewColor = new Color(0.08f, 0.08f, 0.08f, 1f);
+    [Header("Audio")]
+    [SerializeField] private AudioSource videoAudioSource;
+    [SerializeField, Range(0f, 1f)] private float audioVolume = 1f;
+    [SerializeField] private bool spatialAudio = false;
 
     private VideoPlayer videoPlayer;
     private RenderTexture renderTexture;
@@ -170,8 +174,10 @@ public class VideoPopupWindow : MonoBehaviour
             videoPlayer.source = VideoSource.Url;
             videoPlayer.url = sourceUrl;
             videoPlayer.isLooping = false;
+            ConfigureVideoAudio();
             videoPlayer.Prepare();
             await tcs.Task;
+            ConfigureVideoAudio();
             videoPlayer.Play();
         }
         finally
@@ -427,8 +433,23 @@ public class VideoPopupWindow : MonoBehaviour
             videoPlayer.playOnAwake = false;
             videoPlayer.waitForFirstFrame = true;
             videoPlayer.skipOnDrop = true;
-            videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
         }
+
+        if (videoAudioSource == null)
+        {
+            videoAudioSource = GetComponent<AudioSource>();
+            if (videoAudioSource == null)
+            {
+                videoAudioSource = gameObject.AddComponent<AudioSource>();
+            }
+        }
+
+        videoAudioSource.playOnAwake = false;
+        videoAudioSource.loop = false;
+        videoAudioSource.spatialBlend = spatialAudio ? 1f : 0f;
+        videoAudioSource.volume = Mathf.Clamp01(audioVolume);
+
+        ConfigureVideoAudio();
 
         if (renderTexture == null)
         {
@@ -456,6 +477,23 @@ public class VideoPopupWindow : MonoBehaviour
         if (windowRenderer != null)
         {
             windowRenderer.sharedMaterial = windowMaterial;
+        }
+    }
+
+    private void ConfigureVideoAudio()
+    {
+        if (videoPlayer == null) return;
+
+        videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
+        videoPlayer.controlledAudioTrackCount = 1;
+        videoPlayer.EnableAudioTrack(0, true);
+
+        if (videoAudioSource != null)
+        {
+            videoAudioSource.mute = false;
+            videoAudioSource.volume = Mathf.Clamp01(audioVolume);
+            videoAudioSource.spatialBlend = spatialAudio ? 1f : 0f;
+            videoPlayer.SetTargetAudioSource(0, videoAudioSource);
         }
     }
 
