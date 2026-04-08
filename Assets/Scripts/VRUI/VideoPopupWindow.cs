@@ -34,6 +34,8 @@ public class VideoPopupWindow : MonoBehaviour
     private bool createdRuntimeWindow;
     private string cachedLocalVideoPath;
 
+    public VideoPlayer Player => videoPlayer;
+
     private void Reset()
     {
         EnsureWindowExists(forceEditorCreation: true);
@@ -343,6 +345,22 @@ public class VideoPopupWindow : MonoBehaviour
         if (windowRenderer != null)
         {
             windowRenderer.enabled = false;
+        }
+    }
+
+    public void PausePlayback()
+    {
+        if (videoPlayer != null && videoPlayer.isPlaying)
+        {
+            videoPlayer.Pause();
+        }
+    }
+
+    public void ResumePlayback()
+    {
+        if (videoPlayer != null && !videoPlayer.isPlaying)
+        {
+            videoPlayer.Play();
         }
     }
 

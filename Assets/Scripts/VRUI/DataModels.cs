@@ -34,6 +34,10 @@ public class LessonData
     public List<QuizQuestionData> questions;
     public List<QuizQuestionData> quizzes;
     public QuizQuestionData quizQuestion;
+    public List<TimedQuizData> timedQuizzes;
+    public List<TimedQuizData> interactiveQuizzes;
+    public List<TimedQuizData> popupQuizzes;
+    public List<TimedQuizData> videoQuizzes;
 }
 
 [Serializable]
@@ -47,6 +51,38 @@ public class QuizQuestionData
     public List<string> choices;
     public int correctIndex;
     public int correctAnswer;
+}
+
+[Serializable]
+public class TimedQuizData
+{
+    public string id;
+
+    public float triggerTimeSec;
+    public float triggerTime;
+    public float time;
+    public string timecode;
+    public string showAt;
+    public string timestamp;
+    public string startAt;
+
+    public string question;
+    public string text;
+    public string prompt;
+    public string explanation;
+    public string explain;
+    public string reason;
+    public string solution;
+    public string wrongExplanation;
+
+    public List<string> options;
+    public List<string> answers;
+    public List<string> choices;
+
+    public int correctIndex;
+    public int correctAnswer;
+
+    public bool pauseVideo;
 }
 
 [Serializable]

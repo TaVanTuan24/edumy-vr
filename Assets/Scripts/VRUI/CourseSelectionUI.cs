@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Reflection;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -42,6 +43,12 @@ public class CourseSelectionUI : MonoBehaviour
     [SerializeField] private QuizPopupWindow quizPopupWindow;
     [SerializeField, Min(0.5f)] private float quizWindowDistance = 1.7f;
     [SerializeField] private float quizWindowHeightOffset = 0.05f;
+
+    [Header("Timed Video Quiz Popup")]
+    [SerializeField] private TimedQuizPopupWindow timedQuizPopupWindow;
+    [SerializeField] private VideoQuizScheduler videoQuizScheduler;
+    [SerializeField, Min(0.5f)] private float timedQuizWindowDistance = 1.45f;
+    [SerializeField] private float timedQuizWindowHeightOffset = 0.0f;
 
     private UIDocument uiDocument;
     private VisualElement coursesPage;
@@ -85,6 +92,16 @@ public class CourseSelectionUI : MonoBehaviour
         if (quizPopupWindow == null)
         {
             quizPopupWindow = FindAnyObjectByType<QuizPopupWindow>();
+        }
+
+        if (timedQuizPopupWindow == null)
+        {
+            timedQuizPopupWindow = FindAnyObjectByType<TimedQuizPopupWindow>();
+        }
+
+        if (videoQuizScheduler == null)
+        {
+            videoQuizScheduler = FindAnyObjectByType<VideoQuizScheduler>();
         }
 
         BuildUi();
@@ -263,6 +280,16 @@ public class CourseSelectionUI : MonoBehaviour
         {
             ensuredQuizPopupWindow = GetOrCreatePopupComponent<QuizPopupWindow>("QuizPopupWindowHost");
             quizPopupWindow = ensuredQuizPopupWindow;
+        }
+
+        if (timedQuizPopupWindow == null)
+        {
+            timedQuizPopupWindow = GetOrCreatePopupComponent<TimedQuizPopupWindow>("TimedQuizPopupWindowHost");
+        }
+
+        if (videoQuizScheduler == null)
+        {
+            videoQuizScheduler = GetOrCreatePopupComponent<VideoQuizScheduler>("VideoQuizSchedulerHost");
         }
 
         if (backButton != null)
@@ -805,6 +832,12 @@ public class CourseSelectionUI : MonoBehaviour
 
     private void OnLessonClicked(LessonData lesson)
     {
+        if (IsVideoLesson(lesson))
+        {
+            _ = PlayVideoLessonAsync(lesson);
+            return;
+        }
+
         if (quizPopupWindow != null && quizPopupWindow.CanHandle(lesson))
         {
             Transform viewer = GetViewerTransform();
@@ -831,16 +864,10 @@ public class CourseSelectionUI : MonoBehaviour
             return;
         }
 
-        if (!IsVideoLesson(lesson))
+        if (sectionsStatus != null)
         {
-            if (sectionsStatus != null)
-            {
-                sectionsStatus.text = "Bài này không phải video (quiz/slide sẽ làm sau).";
-            }
-            return;
+            sectionsStatus.text = "Bài này chưa có kiểu nội dung hỗ trợ.";
         }
-
-        _ = PlayVideoLessonAsync(lesson);
     }
 
     private bool IsVideoLesson(LessonData lesson)
@@ -962,6 +989,18 @@ public class CourseSelectionUI : MonoBehaviour
 
             await videoPopupWindow.PlayUrlAsync(url, viewer, videoWindowDistance, videoWindowHeightOffset, videoWindowSize);
 
+            if (videoQuizScheduler != null)
+            {
+                videoQuizScheduler.BindVideoPlayer(videoPopupWindow.Player);
+                videoQuizScheduler.BindTimedQuizPopup(timedQuizPopupWindow);
+                videoQuizScheduler.SetPopupPlacement(timedQuizWindowDistance, timedQuizWindowHeightOffset);
+                videoQuizScheduler.SetPauseVideoWhenQuizShown(false);
+
+                // If lesson is YouTube and scene has a bridge component, use bridge time callback; otherwise fallback to VideoPlayer.time.
+                Func<double> ytTimeProvider = BuildYouTubeTimeProvider(url);
+                videoQuizScheduler.StartTracking(lesson, sourceUrl, viewer, ytTimeProvider);
+            }
+
             if (keepMenuVisibleWhenPlaying) ShowSectionsPage();
             else ShowVideoPage();
 
@@ -1073,6 +1112,58 @@ public class CourseSelectionUI : MonoBehaviour
         {
             videoPopupWindow.StopAndHide();
         }
+
+        if (videoQuizScheduler != null)
+        {
+            videoQuizScheduler.StopAndClear();
+        }
+
+        if (timedQuizPopupWindow != null)
+        {
+            timedQuizPopupWindow.HideWindow(resumeVideo: false);
+        }
+    }
+
+    private Func<double> BuildYouTubeTimeProvider(string sourceUrl)
+    {
+        if (!IsYouTubeUrl(sourceUrl)) return null;
+
+        MonoBehaviour[] behaviours = FindObjectsByType<MonoBehaviour>();
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            MonoBehaviour mb = behaviours[i];
+            if (mb == null) continue;
+
+            Type t = mb.GetType();
+
+            MethodInfo method = t.GetMethod("GetCurrentTimeSeconds", BindingFlags.Public | BindingFlags.Instance);
+            if (method != null && method.ReturnType == typeof(double) && method.GetParameters().Length == 0)
+            {
+                return () => (double)method.Invoke(mb, null);
+            }
+
+            method = t.GetMethod("GetCurrentTime", BindingFlags.Public | BindingFlags.Instance);
+            if (method != null && method.ReturnType == typeof(float) && method.GetParameters().Length == 0)
+            {
+                return () => (float)method.Invoke(mb, null);
+            }
+
+            PropertyInfo prop = t.GetProperty("CurrentTimeSeconds", BindingFlags.Public | BindingFlags.Instance);
+            if (prop != null && prop.CanRead)
+            {
+                if (prop.PropertyType == typeof(double))
+                {
+                    return () => (double)prop.GetValue(mb);
+                }
+
+                if (prop.PropertyType == typeof(float))
+                {
+                    return () => (float)prop.GetValue(mb);
+                }
+            }
+        }
+
+        return null;
     }
 
     private Transform GetViewerTransform()

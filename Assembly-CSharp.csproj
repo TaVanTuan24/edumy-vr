@@ -67,6 +67,7 @@
     <Compile Include="Assets\Scripts\VRUI\VRPanelAnchorManager.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\HandSubsystemManager.cs" />
     <Compile Include="Assets\Scripts\VRUI\SlidePopupWindow.cs" />
+    <Compile Include="Assets\Scripts\VRUI\VideoQuizScheduler.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\DestroyObject.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\VideoTimeScrubControl.cs" />
     <Compile Include="Assets\Scripts\VRUI\QuizPopupPanel.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Assets\VRTemplateAssets\Scripts\CalloutGazeController.cs" />
     <Compile Include="Assets\Scripts\VRUI\VideoPopupWindow.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelectionUI.cs" />
+    <Compile Include="Assets\Scripts\VRUI\TimedQuizPopupWindow.cs" />
     <Compile Include="Assets\Scripts\VRUI\QuizPopupWindow.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\StepManager.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\AnchorVisuals.cs" />
