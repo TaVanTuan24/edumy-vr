@@ -52,6 +52,7 @@
     <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\com.unity.dt.app-ui@8ac7e730dd5d\Runtime\MVVM\SourceGenerators\netstandard2.0\MVVMSourceGenerators.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Editor\VRUI\VRUIPopupPrefabCreator.cs" />
     <Compile Include="Assets\Editor\VRUI\VRHttpSetupTool.cs" />
     <Compile Include="Assets\Editor\VRUI\VRUICleanupUtility.cs" />
   </ItemGroup>

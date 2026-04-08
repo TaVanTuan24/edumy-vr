@@ -168,6 +168,12 @@ MonoBehaviour:
   videoWindowDistance: 2.1
   videoWindowHeightOffset: 0
   videoWindowSize: {x: 3.2, y: 1.8}
+  slidePopupWindow: {fileID: 0}
+  slideWindowDistance: 1.7
+  slideWindowHeightOffset: 0.05
+  quizPopupWindow: {fileID: 0}
+  quizWindowDistance: 1.7
+  quizWindowHeightOffset: 0.05
 --- !u!114 &8039051
 MonoBehaviour:
   m_ObjectHideFlags: 0

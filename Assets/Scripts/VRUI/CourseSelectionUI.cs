@@ -33,10 +33,22 @@ public class CourseSelectionUI : MonoBehaviour
     [SerializeField] private float videoWindowHeightOffset = 0.0f;
     [SerializeField] private Vector2 videoWindowSize = new Vector2(3.2f, 1.8f);
 
+    [Header("Slide Popup Window")]
+    [SerializeField] private SlidePopupWindow slidePopupWindow;
+    [SerializeField, Min(0.5f)] private float slideWindowDistance = 1.7f;
+    [SerializeField] private float slideWindowHeightOffset = 0.05f;
+
+    [Header("Quiz Popup Window")]
+    [SerializeField] private QuizPopupWindow quizPopupWindow;
+    [SerializeField, Min(0.5f)] private float quizWindowDistance = 1.7f;
+    [SerializeField] private float quizWindowHeightOffset = 0.05f;
+
     private UIDocument uiDocument;
     private VisualElement coursesPage;
     private VisualElement sectionsPage;
     private VisualElement videoPage;
+    private VisualElement slidePage;
+    private VisualElement quizPage;
     private ListView courseList;
     private Label statusLabel;
     private Button backButton;
@@ -50,6 +62,8 @@ public class CourseSelectionUI : MonoBehaviour
     private readonly List<CourseData> courses = new List<CourseData>();
     private readonly List<LessonData> activeLessons = new List<LessonData>();
     private CourseData activeCourse;
+    private SlidePopupWindow ensuredSlidePopupWindow;
+    private QuizPopupWindow ensuredQuizPopupWindow;
 
     private async void Start()
     {
@@ -61,6 +75,16 @@ public class CourseSelectionUI : MonoBehaviour
         if (videoPopupWindow == null)
         {
             videoPopupWindow = FindAnyObjectByType<VideoPopupWindow>();
+        }
+
+        if (slidePopupWindow == null)
+        {
+            slidePopupWindow = FindAnyObjectByType<SlidePopupWindow>();
+        }
+
+        if (quizPopupWindow == null)
+        {
+            quizPopupWindow = FindAnyObjectByType<QuizPopupWindow>();
         }
 
         BuildUi();
@@ -222,10 +246,24 @@ public class CourseSelectionUI : MonoBehaviour
         sectionsScroll = root.Q<ScrollView>("sections-scroll");
         sectionsStatus = root.Q<Label>("sections-status");
         videoPage = root.Q<VisualElement>("video-page");
+        slidePage = root.Q<VisualElement>("slide-page");
+        quizPage = root.Q<VisualElement>("quiz-page");
         videoBackButton = root.Q<Button>("video-back-button");
         videoTitle = root.Q<Label>("video-title");
         videoSurface = root.Q<VisualElement>("video-surface");
         videoStatus = root.Q<Label>("video-status");
+
+        if (slidePopupWindow == null)
+        {
+            ensuredSlidePopupWindow = GetOrCreatePopupComponent<SlidePopupWindow>("SlidePopupWindowHost");
+            slidePopupWindow = ensuredSlidePopupWindow;
+        }
+
+        if (quizPopupWindow == null)
+        {
+            ensuredQuizPopupWindow = GetOrCreatePopupComponent<QuizPopupWindow>("QuizPopupWindowHost");
+            quizPopupWindow = ensuredQuizPopupWindow;
+        }
 
         if (backButton != null)
         {
@@ -767,6 +805,32 @@ public class CourseSelectionUI : MonoBehaviour
 
     private void OnLessonClicked(LessonData lesson)
     {
+        if (quizPopupWindow != null && quizPopupWindow.CanHandle(lesson))
+        {
+            Transform viewer = GetViewerTransform();
+            if (quizPopupWindow.Show(lesson, viewer, quizWindowDistance, quizWindowHeightOffset))
+            {
+                if (sectionsStatus != null)
+                {
+                    sectionsStatus.text = "Đã mở cửa sổ quiz riêng.";
+                }
+            }
+            return;
+        }
+
+        if (slidePopupWindow != null && slidePopupWindow.CanHandle(lesson))
+        {
+            Transform viewer = GetViewerTransform();
+            if (slidePopupWindow.Show(lesson, viewer, slideWindowDistance, slideWindowHeightOffset))
+            {
+                if (sectionsStatus != null)
+                {
+                    sectionsStatus.text = "Đã mở cửa sổ slide riêng.";
+                }
+            }
+            return;
+        }
+
         if (!IsVideoLesson(lesson))
         {
             if (sectionsStatus != null)
@@ -1011,6 +1075,16 @@ public class CourseSelectionUI : MonoBehaviour
         }
     }
 
+    private Transform GetViewerTransform()
+    {
+        if (anchorManager != null && anchorManager.cameraAnchor != null)
+        {
+            return anchorManager.cameraAnchor;
+        }
+
+        return Camera.main != null ? Camera.main.transform : transform;
+    }
+
     private static string GetExplicitSectionName(LessonData lesson)
     {
         if (lesson == null) return null;
@@ -1089,6 +1163,10 @@ public class CourseSelectionUI : MonoBehaviour
         if (coursesPage != null) coursesPage.RemoveFromClassList("hidden");
         if (sectionsPage != null) sectionsPage.AddToClassList("hidden");
         if (videoPage != null) videoPage.AddToClassList("hidden");
+        if (slidePage != null) slidePage.AddToClassList("hidden");
+        if (quizPage != null) quizPage.AddToClassList("hidden");
+        if (slidePopupWindow != null) slidePopupWindow.HideWindow();
+        if (quizPopupWindow != null) quizPopupWindow.HideWindow();
 
         if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Browsing);
     }
@@ -1098,6 +1176,10 @@ public class CourseSelectionUI : MonoBehaviour
         if (coursesPage != null) coursesPage.AddToClassList("hidden");
         if (sectionsPage != null) sectionsPage.RemoveFromClassList("hidden");
         if (videoPage != null) videoPage.AddToClassList("hidden");
+        if (slidePage != null) slidePage.AddToClassList("hidden");
+        if (quizPage != null) quizPage.AddToClassList("hidden");
+        if (slidePopupWindow != null) slidePopupWindow.HideWindow();
+        if (quizPopupWindow != null) quizPopupWindow.HideWindow();
 
         if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Browsing);
     }
@@ -1107,6 +1189,10 @@ public class CourseSelectionUI : MonoBehaviour
         if (coursesPage != null) coursesPage.AddToClassList("hidden");
         if (sectionsPage != null) sectionsPage.AddToClassList("hidden");
         if (videoPage != null) videoPage.RemoveFromClassList("hidden");
+        if (slidePage != null) slidePage.AddToClassList("hidden");
+        if (quizPage != null) quizPage.AddToClassList("hidden");
+        if (slidePopupWindow != null) slidePopupWindow.HideWindow();
+        if (quizPopupWindow != null) quizPopupWindow.HideWindow();
 
         if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Video);
     }
@@ -1135,5 +1221,24 @@ public class CourseSelectionUI : MonoBehaviour
         public VisualElement progressFill;
         public Button viewButton;
         public int bindVersion;
+    }
+
+    private T GetOrCreatePopupComponent<T>(string hostName) where T : Component
+    {
+        Transform host = transform.Find(hostName);
+        if (host == null)
+        {
+            GameObject go = new GameObject(hostName);
+            go.transform.SetParent(transform, false);
+            host = go.transform;
+        }
+
+        T comp = host.GetComponent<T>();
+        if (comp == null)
+        {
+            comp = host.gameObject.AddComponent<T>();
+        }
+
+        return comp;
     }
 }

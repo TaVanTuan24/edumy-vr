@@ -21,6 +21,7 @@ public class LessonData
     public string title;
     public string type;
     public string videoUrl;
+    public string slideText;
     public string duration;
     public int order;
     public int sectionOrder;
@@ -28,6 +29,24 @@ public class LessonData
     public string sectionTitle;
     public string section;
     public string sectionName;
+    public List<string> slides;
+    public List<QuizQuestionData> quizQuestions;
+    public List<QuizQuestionData> questions;
+    public List<QuizQuestionData> quizzes;
+    public QuizQuestionData quizQuestion;
+}
+
+[Serializable]
+public class QuizQuestionData
+{
+    public string question;
+    public string text;
+    public string prompt;
+    public List<string> options;
+    public List<string> answers;
+    public List<string> choices;
+    public int correctIndex;
+    public int correctAnswer;
 }
 
 [Serializable]

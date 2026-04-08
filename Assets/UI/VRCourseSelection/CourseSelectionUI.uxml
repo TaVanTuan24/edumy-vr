@@ -23,5 +23,39 @@
             <ui:VisualElement name="video-surface" class="video-surface" />
             <ui:Label name="video-status" text="" class="status-label" />
         </ui:VisualElement>
+
+        <ui:VisualElement name="slide-page" class="page hidden">
+            <ui:VisualElement class="sections-header">
+                <ui:Button name="slide-close-button" text="Close" class="back-button" />
+                <ui:Label name="slide-title" text="Slide" class="sections-title" />
+            </ui:VisualElement>
+            <ui:VisualElement class="content-card">
+                <ui:Label name="slide-page-indicator" text="Slide 1/1" class="slide-page-indicator" />
+                <ui:Label name="slide-content" text="" class="slide-content" />
+            </ui:VisualElement>
+            <ui:VisualElement class="pager-row">
+                <ui:Button name="slide-prev-button" text="Prev" class="pager-button" />
+                <ui:Button name="slide-next-button" text="Next" class="pager-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="quiz-page" class="page hidden">
+            <ui:VisualElement class="sections-header">
+                <ui:Button name="quiz-close-button" text="Close" class="back-button" />
+                <ui:Label name="quiz-title" text="Quiz" class="sections-title" />
+            </ui:VisualElement>
+            <ui:VisualElement class="content-card">
+                <ui:Label name="quiz-page-indicator" text="Question 1/1" class="slide-page-indicator" />
+                <ui:Label name="quiz-question" text="" class="slide-content" />
+                <ui:Button name="quiz-option-0" text="Option A" class="quiz-option" />
+                <ui:Button name="quiz-option-1" text="Option B" class="quiz-option" />
+                <ui:Button name="quiz-option-2" text="Option C" class="quiz-option" />
+                <ui:Button name="quiz-option-3" text="Option D" class="quiz-option" />
+                <ui:Label name="quiz-feedback" text="" class="quiz-feedback" />
+            </ui:VisualElement>
+            <ui:VisualElement class="pager-row">
+                <ui:Button name="quiz-next-button" text="Next Question" class="pager-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

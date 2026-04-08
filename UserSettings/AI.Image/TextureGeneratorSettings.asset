@@ -17,98 +17,98 @@ MonoBehaviour:
       lastSelectedModels:
         serializedData:
         - key:
-            rid: 3844350213212340249
+            rid: 3844350233145507865
           value:
-            rid: 3844350220649889792
+            rid: 3844350233145507866
         - key:
-            rid: 3844350213212340251
+            rid: 3844350233145507867
           value:
-            rid: 3844350220649889793
+            rid: 3844350233145507868
         - key:
-            rid: 3844350213212340253
+            rid: 3844350233145507869
           value:
-            rid: 3844350220649889794
+            rid: 3844350233145507870
         - key:
-            rid: 3844350213212340255
+            rid: 3844350233145507871
           value:
-            rid: 3844350220649889795
+            rid: 3844350233145507872
         - key:
-            rid: 3844350213212340257
+            rid: 3844350233145507873
           value:
-            rid: 3844350220649889796
+            rid: 3844350233145507874
         - key:
-            rid: 3844350213212340259
+            rid: 3844350233145507875
           value:
-            rid: 3844350220649889797
+            rid: 3844350233145507876
         - key:
-            rid: 3844350213212340261
+            rid: 3844350233145507877
           value:
-            rid: 3844350220649889798
+            rid: 3844350233145507878
       previewSettings:
         sizeFactor: 1
   references:
     version: 2
     RefIds:
-    - rid: 3844350213212340249
+    - rid: 3844350233145507865
       type: {class: LastSelectedModelKey, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
       data:
         modality: Image
         mode: 0
-    - rid: 3844350213212340251
+    - rid: 3844350233145507866
+      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
+      data:
+        modelID: f722aea3-8760-4eb1-a516-e2fce6476303
+    - rid: 3844350233145507867
       type: {class: LastSelectedModelKey, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
       data:
         modality: Image
         mode: 1
-    - rid: 3844350213212340253
+    - rid: 3844350233145507868
+      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
+      data:
+        modelID: 
+    - rid: 3844350233145507869
       type: {class: LastSelectedModelKey, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
       data:
         modality: Image
         mode: 2
-    - rid: 3844350213212340255
+    - rid: 3844350233145507870
+      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
+      data:
+        modelID: 
+    - rid: 3844350233145507871
       type: {class: LastSelectedModelKey, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
       data:
         modality: Image
         mode: 3
-    - rid: 3844350213212340257
+    - rid: 3844350233145507872
+      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
+      data:
+        modelID: 
+    - rid: 3844350233145507873
       type: {class: LastSelectedModelKey, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
       data:
         modality: Image
         mode: 4
-    - rid: 3844350213212340259
+    - rid: 3844350233145507874
+      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
+      data:
+        modelID: 
+    - rid: 3844350233145507875
       type: {class: LastSelectedModelKey, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
       data:
         modality: Image
         mode: 5
-    - rid: 3844350213212340261
+    - rid: 3844350233145507876
+      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
+      data:
+        modelID: 
+    - rid: 3844350233145507877
       type: {class: LastSelectedModelKey, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
       data:
         modality: Video
         mode: 6
-    - rid: 3844350220649889792
-      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
-      data:
-        modelID: f722aea3-8760-4eb1-a516-e2fce6476303
-    - rid: 3844350220649889793
-      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
-      data:
-        modelID: 
-    - rid: 3844350220649889794
-      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
-      data:
-        modelID: 
-    - rid: 3844350220649889795
-      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
-      data:
-        modelID: 
-    - rid: 3844350220649889796
-      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
-      data:
-        modelID: 
-    - rid: 3844350220649889797
-      type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
-      data:
-        modelID: 
-    - rid: 3844350220649889798
+    - rid: 3844350233145507878
       type: {class: ModelSelection, ns: Unity.AI.Image.Services.Stores.States, asm: Unity.AI.Image}
       data:
         modelID: 

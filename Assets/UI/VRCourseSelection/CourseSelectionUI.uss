@@ -306,3 +306,98 @@
     background-size: contain;
     background-position: center;
 }
+
+.content-card {
+    flex-grow: 1;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgb(194, 202, 214);
+    border-right-color: rgb(194, 202, 214);
+    border-bottom-color: rgb(194, 202, 214);
+    border-left-color: rgb(194, 202, 214);
+    background-color: rgb(255, 255, 255);
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
+.slide-page-indicator {
+    font-size: 22px;
+    color: rgb(67, 76, 93);
+    margin-bottom: 12px;
+}
+
+.slide-content {
+    flex-grow: 1;
+    font-size: 26px;
+    color: rgb(31, 39, 52);
+    white-space: normal;
+    margin-bottom: 12px;
+}
+
+.pager-row {
+    height: 64px;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.pager-button {
+    width: 170px;
+    height: 52px;
+    margin-left: 8px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background-color: rgb(32, 122, 245);
+    color: rgb(255, 255, 255);
+    font-size: 24px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+}
+
+.quiz-option {
+    height: 54px;
+    margin-top: 8px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background-color: rgb(236, 242, 250);
+    color: rgb(24, 33, 46);
+    font-size: 22px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+}
+
+.quiz-option.is-selected {
+    background-color: rgb(187, 228, 255);
+    color: rgb(16, 64, 113);
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-top-color: rgb(41, 130, 222);
+    border-right-color: rgb(41, 130, 222);
+    border-bottom-color: rgb(41, 130, 222);
+    border-left-color: rgb(41, 130, 222);
+}
+
+.quiz-feedback {
+    margin-top: 10px;
+    font-size: 22px;
+    color: rgb(20, 103, 76);
+}
