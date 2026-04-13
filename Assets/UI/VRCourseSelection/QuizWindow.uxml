@@ -1,0 +1,40 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="QuizWindow.uss" />
+
+    <ui:VisualElement name="quiz-window" class="quiz-window">
+        <ui:VisualElement class="quiz-surface">
+            <ui:VisualElement class="quiz-header">
+                <ui:VisualElement class="quiz-header-left">
+                    <ui:Label text="Quiz" class="quiz-eyebrow" />
+                    <ui:Label name="quiz-window-title" text="Lesson Quiz" class="quiz-title" />
+                </ui:VisualElement>
+                <ui:Button name="quiz-close-button" text="Close" class="quiz-close-button" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="quiz-status-row">
+                <ui:Label name="quiz-progress-label" text="Question 1 / 10" class="quiz-progress-label" />
+                <ui:Label name="quiz-score-label" text="Score: 0" class="quiz-score-label" />
+            </ui:VisualElement>
+
+            <ui:ProgressBar name="quiz-progress" class="quiz-progress" title="" />
+
+            <ui:VisualElement class="quiz-card">
+                <ui:Label name="quiz-question" text="Question text" class="quiz-question" />
+
+                <ui:VisualElement name="quiz-answers" class="quiz-answers" />
+
+                <ui:VisualElement class="quiz-feedback-row">
+                    <ui:Label name="quiz-feedback-chip" text="Waiting" class="quiz-feedback-chip" />
+                    <ui:Label name="quiz-feedback" text="Choose one answer." class="quiz-feedback" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="quiz-footer">
+                <ui:Button name="quiz-retry-button" text="Retry" class="quiz-button subtle" />
+                <ui:VisualElement class="quiz-footer-spacer" />
+                <ui:Button name="quiz-prev-button" text="Previous" class="quiz-button subtle" />
+                <ui:Button name="quiz-next-button" text="Next" class="quiz-button primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

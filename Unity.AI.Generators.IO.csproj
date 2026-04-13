@@ -49,28 +49,28 @@
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\VideoPlaybackReflected.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\MediaDecoderReflected.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\EditorUtilityWrapper.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\FileComparison.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\VideoProcessorJob.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\MeshProcessorJob.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\FileTypeSupport.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\FreeImageEncoder.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\AssemblyInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\ImageFileTypeSupport.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\ImageFileUtilities.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\HttpClientManager.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\StreamExtensions.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\VideoClipExtensions.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\UriExtensions.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\HttpClientLease.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\UnityObjectExtensions.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Utilities\FileUtilities.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\VideoPlaybackReflected.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\MediaDecoderReflected.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\EditorUtilityWrapper.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\FileComparison.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\VideoProcessorJob.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\MeshProcessorJob.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\FileTypeSupport.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\FreeImageEncoder.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\ImageFileTypeSupport.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\ImageFileUtilities.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\HttpClientManager.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\StreamExtensions.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\VideoClipExtensions.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\UriExtensions.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\HttpClientLease.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\UnityObjectExtensions.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Utilities\FileUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Unity.AI.Generators.IO.asmdef" />
-    <None Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.IO\Shaders\AlphaToGray.shader" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Unity.AI.Generators.IO.asmdef" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.IO\Shaders\AlphaToGray.shader" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -666,7 +666,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
@@ -1185,15 +1185,11 @@
   <ItemGroup>
     <ProjectReference Include="Unity.AI.Toolkit.Asset.csproj" />
     <ProjectReference Include="Unity.AI.Generators.Asset.csproj" />
-    <ProjectReference Include="Unity.AI.Toolkit.Accounts.csproj" />
-    <ProjectReference Include="Unity.AI.Generators.Redux.csproj" />
-    <ProjectReference Include="Unity.AI.Toolkit.Compliance.csproj" />
     <ProjectReference Include="Unity.AI.Toolkit.Async.csproj" />
-    <ProjectReference Include="Unity.AI.Generators.Contexts.csproj" />
     <ProjectReference Include="Unity.Mathematics.csproj" />
     <ProjectReference Include="Unity.AI.Generators.IO.Srp.csproj" />
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.TestRunner.csproj" />
     <ProjectReference Include="UnityEditor.TestRunner.csproj" />
   </ItemGroup>

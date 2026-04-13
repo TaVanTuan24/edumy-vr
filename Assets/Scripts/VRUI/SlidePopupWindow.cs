@@ -8,6 +8,13 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class SlidePopupWindow : MonoBehaviour
 {
+    private static readonly Vector3 DefaultWindowScale = new Vector3(0.0014f, 0.0014f, 0.0014f);
+    private static readonly Color PanelColor = new Color(0.98f, 0.99f, 1f, 0.98f);
+    private static readonly Color HeaderColor = new Color(0.82f, 0.9f, 1f, 0.99f);
+    private static readonly Color PrimaryButtonColor = new Color(0.16f, 0.58f, 0.93f, 0.98f);
+    private static readonly Color SecondaryButtonColor = new Color(0.92f, 0.95f, 1f, 0.98f);
+    private static readonly Color TitleTextColor = new Color(0.05f, 0.08f, 0.13f, 1f);
+
     [SerializeField] private Transform windowTransform;
     [SerializeField] private Vector2 canvasSize = new Vector2(1100f, 720f);
     [SerializeField] private Vector3 windowScale = new Vector3(0.0014f, 0.0014f, 0.0014f);
@@ -15,6 +22,7 @@ public class SlidePopupWindow : MonoBehaviour
     [SerializeField] private bool autoCreateWindowInEditor = true;
     [SerializeField] private bool showPreviewInEditor = true;
     [SerializeField] private bool autoPlaceInFrontWhenPlaying = false;
+    [SerializeField] private bool enableDebugLogs = true;
 
     private Canvas canvas;
     private RectTransform rootRect;
@@ -67,7 +75,11 @@ public class SlidePopupWindow : MonoBehaviour
         if (Application.isPlaying) return;
         if (!autoCreateWindowInEditor) return;
 
-        EnsureWindowExists(true);
+        // Avoid rebuilding preview every editor frame; create only when missing.
+        if (windowTransform == null)
+        {
+            EnsureWindowExists(true);
+        }
         if (windowTransform != null)
         {
             windowTransform.gameObject.SetActive(showPreviewInEditor);
@@ -99,26 +111,74 @@ public class SlidePopupWindow : MonoBehaviour
     {
         if (lesson == null) return false;
         string t = (lesson.type ?? string.Empty).Trim().ToLowerInvariant();
-        if (t.Contains("slide") || t.Contains("presentation")) return true;
+        if (t.Contains("slide") || t.Contains("presentation") || t.Contains("ppt") || t.Contains("document")) return true;
         if (lesson.slides != null && lesson.slides.Count > 0) return true;
         if (!string.IsNullOrWhiteSpace(lesson.slideText)) return true;
+        if (!string.IsNullOrWhiteSpace(lesson.title) && lesson.title.IndexOf("slide", StringComparison.OrdinalIgnoreCase) >= 0) return true;
         return false;
+    }
+
+    public Transform WindowRootTransform => windowTransform;
+
+    public void PlaceAtAnchor(Transform anchor, bool copyScale = false)
+    {
+        if (anchor == null) return;
+
+        EnsureWindowExists(false);
+        if (windowTransform == null) return;
+
+        windowTransform.position = anchor.position;
+        windowTransform.rotation = anchor.rotation;
+        if (copyScale)
+        {
+            windowTransform.localScale = anchor.lossyScale;
+        }
+    }
+
+    public void PlaceInFrontOf(Transform viewer, float distance, float heightOffset)
+    {
+        EnsureWindowExists(false);
+        Debug.Log($"[SlidePopupWindow] PlaceInFrontOf invoked viewerNull={viewer == null} distance={distance} heightOffset={heightOffset}");
+        if (windowTransform == null || viewer == null) return;
+        PositionWindow(viewer, distance, heightOffset);
     }
 
     public bool Show(LessonData lesson, Transform viewer, float distance, float heightOffset)
     {
         if (lesson == null) return false;
 
+        Debug.Log($"[SlidePopupWindow] Show invoked id={lesson.id} title='{lesson.title}' type='{lesson.type}'");
+
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[SlidePopupWindow] Show start lesson id={lesson.id} title='{lesson.title}' type='{lesson.type}' viewerNull={viewer == null} keepPlaced={keepPlacedTransformOnShow}");
+        }
+
         EnsureWindowExists(false);
-        if (windowTransform == null || canvas == null) return false;
+        if (windowTransform == null || canvas == null)
+        {
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning($"[SlidePopupWindow] Show aborted: windowTransformNull={windowTransform == null}, canvasNull={canvas == null}");
+            }
+            return false;
+        }
+
+        EnsureIndependentWorldRoot();
 
         activeSlides.Clear();
         activeSlides.AddRange(BuildSlidesForLesson(lesson));
         currentSlideIndex = 0;
 
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[SlidePopupWindow] slides prepared count={activeSlides.Count}");
+        }
+
         if (titleText != null)
         {
             titleText.text = string.IsNullOrWhiteSpace(lesson.title) ? "Slide" : lesson.title;
+            titleText.color = TitleTextColor;
         }
         bool shouldAutoPlace = !keepPlacedTransformOnShow
             || (createdRuntimeWindow && Application.isPlaying)
@@ -128,8 +188,31 @@ public class SlidePopupWindow : MonoBehaviour
             PositionWindow(viewer, distance, heightOffset);
         }
 
+        // Recover from broken inspector values (e.g. zero scale) that make the world-space canvas invisible.
+        if (IsNearlyZeroScale(windowTransform.localScale))
+        {
+            Vector3 recovered = SanitizeWindowScale(windowScale);
+            windowScale = recovered;
+            windowTransform.localScale = recovered;
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning($"[SlidePopupWindow] Recovered invalid runtime scale. New scale={recovered}");
+            }
+        }
+
+        if (canvas != null)
+        {
+            canvas.enabled = true;
+        }
+
         windowTransform.gameObject.SetActive(true);
         Render();
+        EnsureVisibleInPlay(viewer, distance, heightOffset);
+
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[SlidePopupWindow] Show success active={windowTransform.gameObject.activeSelf} pos={windowTransform.position} rot={windowTransform.rotation.eulerAngles} scale={windowTransform.localScale}");
+        }
         return true;
     }
 
@@ -151,6 +234,10 @@ public class SlidePopupWindow : MonoBehaviour
             root.transform.SetParent(transform, false);
             windowTransform = root.transform;
             createdRuntimeWindow = true;
+            if (enableDebugLogs)
+            {
+                Debug.Log("[SlidePopupWindow] Created runtime window root.");
+            }
         }
 
         windowTransform = EnsureRectTransformRoot(windowTransform);
@@ -193,7 +280,21 @@ public class SlidePopupWindow : MonoBehaviour
             return;
         }
         rootRect.sizeDelta = canvasSize;
-        windowTransform.localScale = windowScale;
+        Vector3 safeScale = SanitizeWindowScale(windowScale);
+        if (safeScale != windowScale)
+        {
+            windowScale = safeScale;
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning($"[SlidePopupWindow] Invalid windowScale detected. Auto-correct to {safeScale}");
+            }
+        }
+        windowTransform.localScale = safeScale;
+
+        if (enableDebugLogs && Application.isPlaying)
+        {
+            Debug.Log($"[SlidePopupWindow] EnsureWindowExists done size={canvasSize.ToString("F2")} scale={windowScale.ToString("F6")}");
+        }
 
         BuildUiIfMissing();
         BindEventsOnce();
@@ -207,17 +308,25 @@ public class SlidePopupWindow : MonoBehaviour
             panel = CreatePanel(windowTransform).transform;
         }
 
+        EnsurePanelChrome(panel);
+
         RectTransform panelRect = panel.GetComponent<RectTransform>();
 
-        titleText = FindOrCreateText(panel, "Title", new Vector2(0.04f, 0.86f), new Vector2(0.96f, 0.97f), 42, FontStyles.Bold);
-        indicatorText = FindOrCreateText(panel, "Indicator", new Vector2(0.04f, 0.79f), new Vector2(0.45f, 0.85f), 28, FontStyles.Normal);
-        contentText = FindOrCreateText(panel, "Content", new Vector2(0.04f, 0.14f), new Vector2(0.96f, 0.77f), 30, FontStyles.Normal);
+        titleText = FindOrCreateText(panel, "Title", new Vector2(0.05f, 0.88f), new Vector2(0.77f, 0.97f), 38, FontStyles.Bold);
+        titleText.color = TitleTextColor;
+        indicatorText = FindOrCreateText(panel, "Indicator", new Vector2(0.05f, 0.815f), new Vector2(0.47f, 0.875f), 23, FontStyles.Normal);
+        contentText = FindOrCreateText(panel, "Content", new Vector2(0.05f, 0.15f), new Vector2(0.95f, 0.78f), 28, FontStyles.Normal);
         contentText.textWrappingMode = TextWrappingModes.Normal;
         contentText.alignment = TextAlignmentOptions.TopLeft;
+        contentText.color = new Color(0.15f, 0.24f, 0.38f, 1f);
+        indicatorText.color = new Color(0.27f, 0.39f, 0.56f, 1f);
 
-        closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.84f, 0.86f), new Vector2(0.96f, 0.96f));
-        prevButton = FindOrCreateButton(panelRect, "PrevButton", "Prev", new Vector2(0.04f, 0.03f), new Vector2(0.22f, 0.11f));
-        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.24f, 0.03f), new Vector2(0.42f, 0.11f));
+        closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.79f, 0.885f), new Vector2(0.95f, 0.97f));
+        prevButton = FindOrCreateButton(panelRect, "PrevButton", "Prev", new Vector2(0.05f, 0.03f), new Vector2(0.25f, 0.11f));
+        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.27f, 0.03f), new Vector2(0.47f, 0.11f));
+        SetButtonColor(closeButton, SecondaryButtonColor);
+        SetButtonColor(prevButton, SecondaryButtonColor);
+        SetButtonColor(nextButton, PrimaryButtonColor);
     }
 
     private void BindEventsOnce()
@@ -329,8 +438,44 @@ public class SlidePopupWindow : MonoBehaviour
         rect.offsetMax = Vector2.zero;
 
         Image image = panel.GetComponent<Image>();
-        image.color = new Color(0.08f, 0.1f, 0.12f, 0.94f);
+        image.color = PanelColor;
         return panel;
+    }
+
+    private static void EnsurePanelChrome(Transform panel)
+    {
+        Image panelImage = panel.GetComponent<Image>();
+        if (panelImage != null)
+        {
+            panelImage.color = PanelColor;
+        }
+
+        Image headerBg = FindOrCreateFill(panel, "HeaderBg", new Vector2(0f, 0.82f), new Vector2(1f, 1f), HeaderColor);
+        if (headerBg != null)
+        {
+            headerBg.transform.SetAsFirstSibling();
+        }
+    }
+
+    private static Image FindOrCreateFill(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Color color)
+    {
+        Transform existing = parent.Find(name);
+        if (existing == null)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            existing = go.transform;
+        }
+
+        RectTransform rect = existing.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        Image image = existing.GetComponent<Image>();
+        image.color = color;
+        return image;
     }
 
     private static TMP_Text FindOrCreateText(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, float fontSize, FontStyles style)
@@ -377,14 +522,15 @@ public class SlidePopupWindow : MonoBehaviour
         rect.offsetMax = Vector2.zero;
 
         Image image = existing.GetComponent<Image>();
-        image.color = new Color(0.18f, 0.38f, 0.62f, 0.97f);
+        image.color = SecondaryButtonColor;
 
         Button button = existing.GetComponent<Button>();
 
         TextMeshProUGUI text = existing.GetComponentInChildren<TextMeshProUGUI>(true);
         text.text = label;
-        text.color = Color.white;
-        text.fontSize = 26f;
+        text.color = new Color(0.15f, 0.3f, 0.49f, 1f);
+        text.fontSize = 24f;
+        text.fontStyle = FontStyles.Bold;
         text.alignment = TextAlignmentOptions.Center;
 
         RectTransform textRect = text.GetComponent<RectTransform>();
@@ -394,6 +540,16 @@ public class SlidePopupWindow : MonoBehaviour
         textRect.offsetMax = Vector2.zero;
 
         return button;
+    }
+
+    private static void SetButtonColor(Button button, Color color)
+    {
+        if (button == null) return;
+        Image image = button.GetComponent<Image>();
+        if (image != null)
+        {
+            image.color = color;
+        }
     }
 
     private static Transform EnsureRectTransformRoot(Transform root)
@@ -427,5 +583,74 @@ public class SlidePopupWindow : MonoBehaviour
         }
 
         return replacement.transform;
+    }
+
+    private void EnsureVisibleInPlay(Transform viewer, float distance, float heightOffset)
+    {
+        if (!Application.isPlaying || windowTransform == null) return;
+
+        if (!windowTransform.gameObject.activeSelf)
+        {
+            windowTransform.gameObject.SetActive(true);
+        }
+
+        if (IsNearlyZeroScale(windowTransform.localScale) || windowTransform.lossyScale.sqrMagnitude < 0.00000001f)
+        {
+            windowTransform.localScale = SanitizeWindowScale(windowScale);
+        }
+
+        if (viewer == null) return;
+
+        Vector3 toWindow = windowTransform.position - viewer.position;
+        float distanceToViewer = toWindow.magnitude;
+        bool invalidDistance = distanceToViewer < 0.05f || distanceToViewer > 30f;
+
+        bool behindViewer = false;
+        if (distanceToViewer > 0.001f)
+        {
+            behindViewer = Vector3.Dot(viewer.forward.normalized, toWindow.normalized) < 0.15f;
+        }
+
+        if (invalidDistance || behindViewer)
+        {
+            PositionWindow(viewer, distance, heightOffset);
+        }
+    }
+
+    private void EnsureIndependentWorldRoot()
+    {
+        if (!Application.isPlaying || windowTransform == null) return;
+        if (windowTransform.parent == null) return;
+
+        Vector3 lossy = windowTransform.lossyScale;
+        bool brokenByParentScale = IsNearlyZeroScale(lossy) || lossy.sqrMagnitude < 0.00000001f;
+        if (!brokenByParentScale) return;
+
+        windowTransform.SetParent(null, true);
+        if (enableDebugLogs)
+        {
+            Debug.LogWarning("[SlidePopupWindow] Detached popup root from zero-scale parent to keep it visible.");
+        }
+    }
+
+    private static bool IsNearlyZeroScale(Vector3 scale)
+    {
+        const float epsilon = 0.000001f;
+        return Mathf.Abs(scale.x) < epsilon || Mathf.Abs(scale.y) < epsilon || Mathf.Abs(scale.z) < epsilon;
+    }
+
+    private static Vector3 SanitizeWindowScale(Vector3 raw)
+    {
+        const float minAbs = 0.0001f;
+
+        float x = Mathf.Abs(raw.x) < minAbs ? DefaultWindowScale.x : raw.x;
+        float y = Mathf.Abs(raw.y) < minAbs ? DefaultWindowScale.y : raw.y;
+        float z = Mathf.Abs(raw.z) < minAbs ? DefaultWindowScale.z : raw.z;
+
+        if (float.IsNaN(x) || float.IsInfinity(x)) x = DefaultWindowScale.x;
+        if (float.IsNaN(y) || float.IsInfinity(y)) y = DefaultWindowScale.y;
+        if (float.IsNaN(z) || float.IsInfinity(z)) z = DefaultWindowScale.z;
+
+        return new Vector3(x, y, z);
     }
 }

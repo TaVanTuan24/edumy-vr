@@ -88,7 +88,7 @@
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\Dependency-style.uss" />
     <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\function_call_item.uxml" />
     <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\todo_list_view.uss" />
-    <None Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\Dependency.uxml" />
     <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\chat_message.uxml" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\GltfImporter-style.uss" />
@@ -688,7 +688,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">

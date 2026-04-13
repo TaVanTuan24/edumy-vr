@@ -1,0 +1,293 @@
+.video-window {
+    flex-grow: 1;
+    padding-left: 18px;
+    padding-right: 18px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    background-color: rgb(248, 251, 255);
+}
+
+.video-surface-shell {
+    flex-grow: 1;
+    row-gap: 12px;
+    padding: 18px;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgb(219, 229, 243);
+    border-right-color: rgb(219, 229, 243);
+    border-bottom-color: rgb(219, 229, 243);
+    border-left-color: rgb(219, 229, 243);
+    background-color: rgb(255, 255, 255);
+}
+
+.video-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.video-header-left {
+    row-gap: 4px;
+}
+
+.video-eyebrow {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    -unity-font-style: bold;
+    color: rgb(69, 102, 150);
+}
+
+.video-title {
+    font-size: 28px;
+    -unity-font-style: bold;
+    color: rgb(21, 38, 68);
+}
+
+.video-back-button {
+    min-width: 110px;
+    height: 38px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgb(209, 223, 242);
+    border-right-color: rgb(209, 223, 242);
+    border-bottom-color: rgb(209, 223, 242);
+    border-left-color: rgb(209, 223, 242);
+    background-color: rgb(245, 249, 255);
+    color: rgb(43, 78, 134);
+    -unity-font-style: bold;
+}
+
+.video-back-button:hover {
+    background-color: rgb(232, 241, 255);
+}
+
+.video-frame-area {
+    flex-grow: 1;
+}
+
+.video-window .video-surface {
+    flex-grow: 1;
+    min-height: 420px;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgb(204, 221, 243);
+    border-right-color: rgb(204, 221, 243);
+    border-bottom-color: rgb(204, 221, 243);
+    border-left-color: rgb(204, 221, 243);
+    background-color: rgb(232, 243, 255);
+    background-size: contain;
+    background-position: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.video-window .modern-video-surface {
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+}
+
+.video-empty-state {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    justify-content: center;
+    align-items: center;
+    row-gap: 8px;
+    background-color: rgba(240, 248, 255, 0.84);
+}
+
+.video-empty-title {
+    -unity-font-style: bold;
+    font-size: 22px;
+    color: rgb(34, 78, 132);
+}
+
+.video-empty-text {
+    font-size: 14px;
+    color: rgb(88, 118, 156);
+}
+
+.video-window .video-hit-zone {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.video-window .video-controls-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    justify-content: space-between;
+    padding: 14px;
+    background-color: rgba(230, 243, 255, 0.28);
+    opacity: 0;
+}
+
+.video-window .video-controls-overlay.is-visible {
+    opacity: 1;
+}
+
+.video-window .video-controls-overlay.is-hidden {
+    opacity: 0;
+}
+
+.video-window .video-play-center {
+    align-self: center;
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 106px;
+    height: 106px;
+    border-top-left-radius: 53px;
+    border-top-right-radius: 53px;
+    border-bottom-left-radius: 53px;
+    border-bottom-right-radius: 53px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    background-color: rgba(37, 137, 233, 0.92);
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    font-size: 18px;
+}
+
+.video-window .video-play-center:hover {
+    background-color: rgba(23, 120, 217, 0.96);
+}
+
+.video-window .video-controls-bar {
+    flex-direction: row;
+    align-items: center;
+    column-gap: 10px;
+    min-height: 56px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+    background-color: rgba(245, 251, 255, 0.92);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: rgb(206, 224, 245);
+    border-right-color: rgb(206, 224, 245);
+    border-bottom-color: rgb(206, 224, 245);
+    border-left-color: rgb(206, 224, 245);
+}
+
+.video-window .video-control-btn {
+    min-width: 64px;
+    height: 34px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    background-color: rgb(230, 242, 255);
+    color: rgb(43, 95, 157);
+    -unity-font-style: bold;
+    font-size: 12px;
+}
+
+.video-window .video-control-btn:hover {
+    background-color: rgb(216, 233, 255);
+}
+
+.video-window .video-control-btn.ghost {
+    background-color: rgb(240, 248, 255);
+}
+
+.video-window .video-progress {
+    flex-grow: 1;
+    min-width: 170px;
+}
+
+.video-window .video-time {
+    min-width: 108px;
+    color: rgb(64, 96, 140);
+    font-size: 12px;
+}
+
+.video-icon-holder {
+    width: 34px;
+    height: 28px;
+    justify-content: center;
+    align-items: center;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+    background-color: rgb(232, 243, 255);
+}
+
+.video-icon-text {
+    color: rgb(46, 97, 158);
+    font-size: 10px;
+    -unity-font-style: bold;
+}
+
+.video-window .video-volume {
+    width: 92px;
+}
+
+.video-info-row {
+    min-height: 34px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.video-status {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+    background-color: rgb(229, 242, 255);
+    color: rgb(36, 96, 172);
+    font-size: 12px;
+    -unity-font-style: bold;
+}
+
+.video-lesson-info {
+    font-size: 13px;
+    color: rgb(82, 99, 126);
+}
+
+.hidden {
+    display: none;
+}

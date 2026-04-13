@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="quiz-window" class="page hidden">
+        <ui:VisualElement class="sections-header content-window__header">
+            <ui:Button name="quiz-close-button" text="Close" class="back-button" />
+            <ui:Label name="quiz-window-title" text="Quiz" class="sections-title content-window__title" />
+        </ui:VisualElement>
+        <ui:VisualElement class="quiz-shell">
+            <ui:Label name="quiz-progress-label" text="Question 1/1" class="quiz-progress-label" />
+            <ui:ProgressBar name="quiz-progress" class="quiz-progress" title="" />
+            <ui:Label name="quiz-question" text="" class="quiz-question" />
+            <ui:VisualElement name="quiz-answers" class="quiz-answers" />
+            <ui:Label name="quiz-feedback" text="" class="quiz-feedback" />
+        </ui:VisualElement>
+        <ui:VisualElement class="pager-row">
+            <ui:Button name="quiz-prev-button" text="Prev" class="pager-button subtle" />
+            <ui:Button name="quiz-next-button" text="Next" class="pager-button" />
+            <ui:Button name="quiz-retry-button" text="Retry" class="pager-button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

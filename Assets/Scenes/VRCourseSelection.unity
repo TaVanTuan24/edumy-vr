@@ -154,7 +154,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad9edc147fe42764bbd377de76e50231, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CourseSelectionUI
-  courseSelectionTree: {fileID: 9197481963319205126, guid: ba174ed8075764c469e4d4112355c57e, type: 3}
+  lessonSelectionViewTree: {fileID: 9197481963319205126, guid: 533bd316fe9a1bb4ab3f6ee32d4ba472, type: 3}
+  slideViewTree: {fileID: 9197481963319205126, guid: 91bd29aefb61e1240bc6f4032f615025, type: 3}
+  quizViewTree: {fileID: 9197481963319205126, guid: 24af4546b53aa774f80e3eba5f623c1b, type: 3}
+  videoViewTree: {fileID: 9197481963319205126, guid: 9ac085abbba8a844b9e731f25489faba, type: 3}
   courseSelectionStyle: {fileID: 7433441132597879392, guid: f386b10187628df4388b651e00a0d26c, type: 3}
   listItemHeight: 170
   useMockDataInEditor: 1
@@ -168,6 +171,16 @@ MonoBehaviour:
   videoWindowDistance: 2.1
   videoWindowHeightOffset: 0
   videoWindowSize: {x: 3.2, y: 1.8}
+  slidePopupWindow: {fileID: 0}
+  slideWindowDistance: 1.7
+  slideWindowHeightOffset: 0.05
+  quizPopupWindow: {fileID: 0}
+  quizWindowDistance: 1.7
+  quizWindowHeightOffset: 0.05
+  timedQuizPopupWindow: {fileID: 0}
+  videoQuizScheduler: {fileID: 0}
+  timedQuizWindowDistance: 1.45
+  timedQuizWindowHeightOffset: 0
 --- !u!114 &8039051
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -60,9 +60,9 @@
     <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\Decoders\BpeDecoder.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\Padding\IPaddingSizeProvider.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\IManyToManyConverter.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\Normalizers\NmtNormalizer.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\Truncators\Strategies\ITruncationStrategy.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\PreTokenizers\StringSplitPreTokenizer.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\Normalizers\NmtNormalizer.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\PreTokenizers\RuneSplitPreTokenizer.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\Parsers\HuggingFace\Normalizers\PrependNormalizerBuilder.cs" />
     <Compile Include="Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Tokenization\Decoders\FuseDecoder.cs" />
@@ -1303,8 +1303,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>

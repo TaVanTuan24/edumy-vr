@@ -1,0 +1,47 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="VideoWindow.uss" />
+
+    <ui:VisualElement name="video-window" class="video-window">
+        <ui:VisualElement class="video-surface-shell">
+            <ui:VisualElement name="video-header" class="video-header">
+                <ui:VisualElement class="video-header-left">
+                    <ui:Label text="Video" class="video-eyebrow" />
+                    <ui:Label name="video-title" text="Lesson Video" class="video-title" />
+                </ui:VisualElement>
+                <ui:Button name="video-back-button" text="Back" class="video-back-button" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="video-frame-area">
+                <ui:VisualElement name="video-surface" class="video-surface modern-video-surface">
+                    <ui:VisualElement name="video-empty" class="video-empty-state hidden">
+                        <ui:Label text="No video loaded" class="video-empty-title" />
+                        <ui:Label text="Choose a lesson with a video source to start playback." class="video-empty-text" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement name="video-surface-hit-zone" class="video-hit-zone" />
+
+                    <ui:VisualElement name="video-controls-overlay" class="video-controls-overlay is-visible">
+                        <ui:Button name="video-play-center" text="Play" class="video-play-center" />
+
+                        <ui:VisualElement class="video-controls-bar">
+                            <ui:Button name="video-play-toggle" text="Play" class="video-control-btn" />
+                            <ui:Slider name="video-progress" low-value="0" high-value="1" value="0" class="video-progress" />
+                            <ui:Label name="video-time" text="00:00 / 00:00" class="video-time" />
+                            <ui:VisualElement class="video-icon-holder">
+                                <ui:Label text="VOL" class="video-icon-text" />
+                            </ui:VisualElement>
+                            <ui:Slider name="video-volume" low-value="0" high-value="1" value="1" class="video-volume" />
+                            <ui:Button name="video-speed" text="1x" class="video-control-btn ghost" />
+                            <ui:Button name="video-fullscreen" text="Full" class="video-control-btn ghost" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="video-info-row">
+                <ui:Label name="video-status" text="Ready" class="video-status" />
+                <ui:Label name="video-lesson-info" text="Learning dashboard media panel" class="video-lesson-info" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

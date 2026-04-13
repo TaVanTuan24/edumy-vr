@@ -50,67 +50,69 @@
     <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Core\SourceGenerator\SourceGenerators.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\SerializedPropertyJsonAdapter.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\AssetSearchUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Scripting\RunCommandValidatorTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Assistant\UserGuidelineTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\AssetMatchQuality.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Project\GetUnityDependenciesTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\BinarySearchUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\RemoveGameObjectTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\ModifyTagTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\SetComponentPropertyTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Project\SettingsTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Workspace\AssetTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\GetBuiltinAssetsTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Workspace\ObjectTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\ModifyGameObjectTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Scene\PlayModeTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Scene\CameraTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Filesystem\FileTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Scripting\RunCommandTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\AssemblyInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\SerializedPropertyUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Assistant\SkillsTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Console\GetConsoleLogsTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Scene\Capture2DSceneTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\AssetMatchCategories.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Workspace\ImageOutput.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\RequestExtensions.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\TextureUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\SerializedObjectUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\GetGameObjectBoundsTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Scripting\CodeEditTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\WebFetchTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\FileUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\SceneObjectResultMarkdownExporter.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Filesystem\DeleteFileTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\AddComponentTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\CameraUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\CreateGameObjectTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\PrefabTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Project\ProjectTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Project\DependencyTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\BoundsUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Scripting\CompilerTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Project\GetStaticProjectSettingsTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Interactions\UnsafeCommandApprovalInteraction.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\RemoveComponentTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\ModifyLayersTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Scene\SceneTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Project\GetUnityVersionTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\SerializedObjectJsonAdapter.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Project\PackageTools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\AssetResultMarkdownExporter.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Utils\AssetHierarchyUtils.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Assistant\UITools.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Scene\MultiAngleSceneViewTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\GetComponentPropertiesTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\GetSelectionTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\GameObject\GameObjectToolsHelper.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\SerializedPropertyJsonAdapter.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\AssetSearchUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Scripting\RunCommandValidatorTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Assistant\UserGuidelineTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\AssetMatchQuality.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Project\GetUnityDependenciesTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\BinarySearchUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\RemoveGameObjectTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\ModifyTagTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\SetComponentPropertyTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Project\SettingsTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Workspace\AssetTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\GetBuiltinAssetsTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Workspace\ObjectTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\ModifyGameObjectTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Scene\PlayModeTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Scene\CameraTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Filesystem\FileTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Scripting\RunCommandTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\PlanModeTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\SerializedPropertyUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Assistant\SkillsTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Console\GetConsoleLogsTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Scene\Capture2DSceneTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\AssetMatchCategories.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Workspace\ImageOutput.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\RequestExtensions.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\TextureUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\SerializedObjectUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\GetGameObjectBoundsTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Scripting\CodeEditTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\WebFetchTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\FileUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\SceneObjectResultMarkdownExporter.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Filesystem\DeleteFileTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\AddComponentTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\CameraUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\GrepUtility.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\CreateGameObjectTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\PrefabTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Project\ProjectTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Project\DependencyTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\BoundsUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Scripting\CompilerTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Project\GetStaticProjectSettingsTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Interactions\UnsafeCommandApprovalInteraction.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\RemoveComponentTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\ModifyLayersTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Scene\SceneTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Project\GetUnityVersionTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\SerializedObjectJsonAdapter.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Project\PackageTools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\AssetResultMarkdownExporter.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Utils\AssetHierarchyUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Assistant\UITools.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Scene\MultiAngleSceneViewTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\GetComponentPropertiesTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\GetSelectionTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\GameObject\GameObjectToolsHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Assistant.Tools\Unity.AI.Assistant.Tools.Editor.asmdef" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Assistant.Tools\Unity.AI.Assistant.Tools.Editor.asmdef" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -686,7 +688,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Plugins\Shared\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Plugins\Shared\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
@@ -694,15 +696,15 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Collections.Immutable">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Plugins\Shared\System.Collections.Immutable.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Plugins\Shared\System.Collections.Immutable.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
@@ -1226,8 +1228,8 @@
     <ProjectReference Include="Unity.AI.Toolkit.Compliance.csproj" />
     <ProjectReference Include="Unity.AI.Search.Editor.csproj" />
     <ProjectReference Include="Unity.AI.Assistant.Bridge.Editor.csproj" />
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.TestRunner.csproj" />
     <ProjectReference Include="UnityEditor.TestRunner.csproj" />
   </ItemGroup>

@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="video-window" class="page hidden">
+        <ui:VisualElement name="video-header" class="sections-header content-window__header">
+            <ui:Button name="video-back-button" text="Back" class="back-button" />
+            <ui:Label name="video-title" text="Video" class="sections-title content-window__title" />
+        </ui:VisualElement>
+        <ui:VisualElement name="video-surface" class="video-surface modern-video-surface">
+            <ui:VisualElement name="video-surface-hit-zone" class="video-hit-zone" />
+            <ui:VisualElement name="video-controls-overlay" class="video-controls-overlay is-visible">
+                <ui:Button name="video-play-center" text="Play" class="video-play-center" />
+                <ui:VisualElement class="video-controls-bar">
+                    <ui:Button name="video-play-toggle" text="Play" class="video-control-btn" />
+                    <ui:Slider name="video-progress" low-value="0" high-value="1" value="0" class="video-progress" />
+                    <ui:Label name="video-time" text="00:00 / 00:00" class="video-time" />
+                    <ui:Slider name="video-volume" low-value="0" high-value="1" value="1" class="video-volume" />
+                    <ui:Button name="video-speed" text="1x" class="video-control-btn" />
+                    <ui:Button name="video-fullscreen" text="Full" class="video-control-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="video-status" text="" class="status-label" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -6,12 +6,15 @@ using System.Reflection;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [RequireComponent(typeof(UIDocument))]
 public class CourseSelectionUI : MonoBehaviour
 {
     [Header("UI Toolkit Assets")]
-    [SerializeField] private VisualTreeAsset courseSelectionTree;
+    [SerializeField] private VisualTreeAsset lessonSelectionViewTree;
     [SerializeField] private StyleSheet courseSelectionStyle;
 
     [Header("List")]
@@ -44,6 +47,12 @@ public class CourseSelectionUI : MonoBehaviour
     [SerializeField, Min(0.5f)] private float quizWindowDistance = 1.7f;
     [SerializeField] private float quizWindowHeightOffset = 0.05f;
 
+    [Header("Independent Quiz/Slide Screens")]
+    [SerializeField] private bool useIndependentQuizSlideScreens = true;
+    [SerializeField] private Transform slideScreenAnchor;
+    [SerializeField] private Transform quizScreenAnchor;
+    [SerializeField] private bool enableSlideDebugLogs = true;
+
     [Header("Timed Video Quiz Popup")]
     [SerializeField] private TimedQuizPopupWindow timedQuizPopupWindow;
     [SerializeField] private VideoQuizScheduler videoQuizScheduler;
@@ -51,26 +60,20 @@ public class CourseSelectionUI : MonoBehaviour
     [SerializeField] private float timedQuizWindowHeightOffset = 0.0f;
 
     private UIDocument uiDocument;
+    private VisualElement lessonSelectionWindow;
     private VisualElement coursesPage;
     private VisualElement sectionsPage;
-    private VisualElement videoPage;
-    private VisualElement slidePage;
-    private VisualElement quizPage;
     private ListView courseList;
     private Label statusLabel;
     private Button backButton;
     private Label sectionsTitle;
     private ScrollView sectionsScroll;
     private Label sectionsStatus;
-    private Button videoBackButton;
-    private Label videoTitle;
-    private VisualElement videoSurface;
-    private Label videoStatus;
     private readonly List<CourseData> courses = new List<CourseData>();
     private readonly List<LessonData> activeLessons = new List<LessonData>();
+    private readonly List<LessonItemElement> renderedLessonItems = new List<LessonItemElement>();
     private CourseData activeCourse;
-    private SlidePopupWindow ensuredSlidePopupWindow;
-    private QuizPopupWindow ensuredQuizPopupWindow;
+    private string selectedLessonId;
 
     private async void Start()
     {
@@ -238,49 +241,38 @@ public class CourseSelectionUI : MonoBehaviour
             return;
         }
 
-        if (courseSelectionTree == null)
+#if UNITY_EDITOR
+        AutoAssignSeparatedViewTreesInEditor();
+#endif
+
+        if (lessonSelectionViewTree == null)
         {
-            Debug.LogError("[CourseSelectionUI] Chưa gán UXML vào courseSelectionTree.");
+            Debug.LogError("[CourseSelectionUI] Missing lesson selection view tree.");
             return;
         }
 
         VisualElement root = uiDocument.rootVisualElement;
         root.Clear();
+        root.AddToClassList("root");
 
         if (courseSelectionStyle != null)
         {
             root.styleSheets.Add(courseSelectionStyle);
         }
 
-        courseSelectionTree.CloneTree(root);
+        lessonSelectionWindow = new VisualElement { name = "lesson-selection-window-root" };
+        lessonSelectionWindow.AddToClassList("screen-window-root");
+        lessonSelectionViewTree.CloneTree(lessonSelectionWindow);
+        root.Add(lessonSelectionWindow);
 
-        coursesPage = root.Q<VisualElement>("courses-page");
-        sectionsPage = root.Q<VisualElement>("sections-page");
-        statusLabel = root.Q<Label>("status-label");
-        courseList = root.Q<ListView>("course-list");
-        backButton = root.Q<Button>("back-button");
-        sectionsTitle = root.Q<Label>("sections-title");
-        sectionsScroll = root.Q<ScrollView>("sections-scroll");
-        sectionsStatus = root.Q<Label>("sections-status");
-        videoPage = root.Q<VisualElement>("video-page");
-        slidePage = root.Q<VisualElement>("slide-page");
-        quizPage = root.Q<VisualElement>("quiz-page");
-        videoBackButton = root.Q<Button>("video-back-button");
-        videoTitle = root.Q<Label>("video-title");
-        videoSurface = root.Q<VisualElement>("video-surface");
-        videoStatus = root.Q<Label>("video-status");
-
-        if (slidePopupWindow == null)
-        {
-            ensuredSlidePopupWindow = GetOrCreatePopupComponent<SlidePopupWindow>("SlidePopupWindowHost");
-            slidePopupWindow = ensuredSlidePopupWindow;
-        }
-
-        if (quizPopupWindow == null)
-        {
-            ensuredQuizPopupWindow = GetOrCreatePopupComponent<QuizPopupWindow>("QuizPopupWindowHost");
-            quizPopupWindow = ensuredQuizPopupWindow;
-        }
+        coursesPage = lessonSelectionWindow.Q<VisualElement>("courses-page");
+        sectionsPage = lessonSelectionWindow.Q<VisualElement>("sections-page");
+        statusLabel = lessonSelectionWindow.Q<Label>("status-label");
+        courseList = lessonSelectionWindow.Q<ListView>("course-list");
+        backButton = lessonSelectionWindow.Q<Button>("back-button");
+        sectionsTitle = lessonSelectionWindow.Q<Label>("sections-title");
+        sectionsScroll = lessonSelectionWindow.Q<ScrollView>("sections-scroll");
+        sectionsStatus = lessonSelectionWindow.Q<Label>("sections-status");
 
         if (timedQuizPopupWindow == null)
         {
@@ -297,102 +289,37 @@ public class CourseSelectionUI : MonoBehaviour
             backButton.clicked += ShowCoursesPage;
         }
 
-        if (videoBackButton != null)
-        {
-            videoBackButton.clicked += () =>
-            {
-                StopVideo();
-                ShowSectionsPage();
-            };
-        }
-
         ConfigureListView();
         ShowCoursesPage();
     }
+
+#if UNITY_EDITOR
+    private void AutoAssignSeparatedViewTreesInEditor()
+    {
+        if (lessonSelectionViewTree == null)
+        {
+            lessonSelectionViewTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/UI/VRCourseSelection/LessonSelectionView.uxml");
+        }
+
+        if (courseSelectionStyle == null)
+        {
+            courseSelectionStyle = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/UI/VRCourseSelection/CourseSelectionUI.uss");
+        }
+    }
+#endif
 
     private void ConfigureListView()
     {
         if (courseList == null) return;
 
-        courseList.fixedItemHeight = listItemHeight;
+        courseList.fixedItemHeight = Mathf.Max(250f, listItemHeight);
         courseList.virtualizationMethod = CollectionVirtualizationMethod.FixedHeight;
         courseList.selectionType = SelectionType.None;
         courseList.itemsSource = courses;
 
         courseList.makeItem = () =>
         {
-            VisualElement row = new VisualElement();
-            row.AddToClassList("course-row");
-
-            VisualElement thumb = new VisualElement();
-            thumb.AddToClassList("course-thumb");
-
-            VisualElement content = new VisualElement();
-            content.AddToClassList("course-content");
-
-            Label title = new Label();
-            title.AddToClassList("course-title");
-
-            Label progressLabel = new Label();
-            progressLabel.AddToClassList("course-progress-label");
-
-            VisualElement progressTrack = new VisualElement();
-            progressTrack.AddToClassList("course-progress-track");
-
-            VisualElement progressFill = new VisualElement();
-            progressFill.AddToClassList("course-progress-fill");
-            progressTrack.Add(progressFill);
-
-            Button viewButton = new Button();
-            viewButton.text = "View";
-            viewButton.AddToClassList("course-view-button");
-            viewButton.RegisterCallback<PointerEnterEvent>(_ =>
-            {
-                viewButton.AddToClassList("is-hovered");
-            });
-            viewButton.RegisterCallback<PointerLeaveEvent>(_ =>
-            {
-                viewButton.RemoveFromClassList("is-hovered");
-                viewButton.RemoveFromClassList("is-pressed");
-            });
-            viewButton.RegisterCallback<PointerDownEvent>(_ =>
-            {
-                viewButton.AddToClassList("is-pressed");
-            });
-            viewButton.RegisterCallback<PointerUpEvent>(_ =>
-            {
-                viewButton.RemoveFromClassList("is-pressed");
-            });
-
-            CourseRowRefs refs = new CourseRowRefs
-            {
-                thumb = thumb,
-                title = title,
-                progressLabel = progressLabel,
-                progressFill = progressFill,
-                viewButton = viewButton,
-                bindVersion = 0
-            };
-
-            viewButton.clicked += () =>
-            {
-                CourseData selected = viewButton.userData as CourseData;
-                if (selected != null)
-                {
-                    _ = OpenSectionsPageAsync(selected);
-                }
-            };
-
-            content.Add(title);
-            content.Add(progressLabel);
-            content.Add(progressTrack);
-            content.Add(viewButton);
-
-            row.Add(thumb);
-            row.Add(content);
-            row.userData = refs;
-
-            return row;
+            return new CourseCardElement();
         };
 
         courseList.bindItem = (element, index) =>
@@ -400,33 +327,11 @@ public class CourseSelectionUI : MonoBehaviour
             if (index < 0 || index >= courses.Count) return;
 
             CourseData course = courses[index];
-            CourseRowRefs refs = element.userData as CourseRowRefs;
-            if (refs == null) return;
+            CourseCardElement card = element as CourseCardElement;
+            if (card == null) return;
 
-            refs.bindVersion++;
-            int version = refs.bindVersion;
-
-            refs.title.text = string.IsNullOrWhiteSpace(course.title) ? "(Không có tiêu đề)" : course.title;
-            int percent = Mathf.Clamp(course.progress, 0, 100);
-            int total = Mathf.Max(0, course.totalLessons);
-            int completed = Mathf.Clamp(course.completedLessons, 0, total > 0 ? total : int.MaxValue);
-
-            if (refs.progressLabel != null)
-            {
-                refs.progressLabel.text = total > 0
-                    ? $"Tiến trình: {percent}% ({completed}/{total} bài)"
-                    : $"Tiến trình: {percent}%";
-            }
-
-            if (refs.progressFill != null)
-            {
-                refs.progressFill.style.width = Length.Percent(percent);
-            }
-
-            refs.viewButton.userData = course;
-            refs.thumb.style.backgroundImage = StyleKeyword.None;
-
-            _ = LoadThumbnailIntoAsync(refs, course.thumbnailUrl, version);
+            card.Bind(course, selected => _ = OpenSectionsPageAsync(selected));
+            _ = LoadThumbnailIntoAsync(card, course.thumbnailUrl, card.BindVersion);
         };
     }
 
@@ -436,6 +341,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         activeCourse = course;
         activeLessons.Clear();
+        selectedLessonId = null;
 
         if (sectionsTitle != null)
         {
@@ -485,6 +391,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         sectionsScroll.Clear();
         activeLessons.Clear();
+        renderedLessonItems.Clear();
 
         if (sections == null || sections.Count == 0)
         {
@@ -509,12 +416,9 @@ public class CourseSelectionUI : MonoBehaviour
             int lessonCount = sectionLessons != null ? sectionLessons.Count : 0;
             totalLessons += lessonCount;
 
-            Foldout foldout = new Foldout
-            {
-                text = $"{sectionName} ({lessonCount})",
-                value = false
-            };
-            foldout.AddToClassList("section-foldout");
+            SectionItemElement sectionItem = new SectionItemElement();
+            sectionItem.SetHeader(sectionName, lessonCount);
+            sectionItem.SetExpanded(false);
 
             if (sectionLessons != null)
             {
@@ -528,12 +432,12 @@ public class CourseSelectionUI : MonoBehaviour
                     if (lesson == null) continue;
                     activeLessons.Add(lesson);
 
-                    VisualElement row = BuildLessonRow(lesson);
-                    foldout.Add(row);
+                    LessonItemElement row = BuildLessonRow(lesson);
+                    sectionItem.AddLesson(row);
                 }
             }
 
-            sectionsScroll.Add(foldout);
+            sectionsScroll.Add(sectionItem);
         }
 
         if (sectionsStatus != null)
@@ -566,6 +470,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         sectionsScroll.Clear();
         activeLessons.Clear();
+        renderedLessonItems.Clear();
 
         if (lessons == null || lessons.Count == 0)
         {
@@ -598,20 +503,17 @@ public class CourseSelectionUI : MonoBehaviour
                 .ThenBy(l => l != null ? l.title : string.Empty, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            Foldout foldout = new Foldout
-            {
-                text = $"{sectionName} ({sectionLessons.Count})",
-                value = false
-            };
-            foldout.AddToClassList("section-foldout");
+            SectionItemElement sectionItem = new SectionItemElement();
+            sectionItem.SetHeader(sectionName, sectionLessons.Count);
+            sectionItem.SetExpanded(false);
 
             foreach (LessonData lesson in sectionLessons)
             {
-                VisualElement row = BuildLessonRow(lesson);
-                foldout.Add(row);
+                LessonItemElement row = BuildLessonRow(lesson);
+                sectionItem.AddLesson(row);
             }
 
-            sectionsScroll.Add(foldout);
+            sectionsScroll.Add(sectionItem);
         }
 
         if (sectionsStatus != null)
@@ -622,68 +524,27 @@ public class CourseSelectionUI : MonoBehaviour
         UpdateActiveCourseProgressUI();
     }
 
-    private VisualElement BuildLessonRow(LessonData lesson)
+    private LessonItemElement BuildLessonRow(LessonData lesson)
     {
-        VisualElement row = new VisualElement();
-        row.AddToClassList("lesson-row");
-
-        VisualElement left = new VisualElement();
-        left.AddToClassList("lesson-main");
-
-        Label lessonLabel = new Label();
-        lessonLabel.AddToClassList("lesson-label");
-        string lessonTitle = string.IsNullOrWhiteSpace(lesson != null ? lesson.title : null) ? "(Không có tiêu đề)" : lesson.title;
-        lessonLabel.text = lesson != null && lesson.order > 0
-            ? $"{lesson.order:D3} {lessonTitle}"
-            : lessonTitle;
-        left.Add(lessonLabel);
-
-        Label completedPill = new Label(lesson != null && lesson.isCompleted ? "Completed" : "Not yet");
-        completedPill.AddToClassList("lesson-completed-pill");
-        if (lesson != null && lesson.isCompleted)
+        LessonItemElement row = new LessonItemElement();
+        bool selected = lesson != null && !string.IsNullOrWhiteSpace(selectedLessonId) && lesson.id == selectedLessonId;
+        row.Bind(lesson, selected);
+        row.CompletionChanged += (newValue) =>
         {
-            completedPill.AddToClassList("is-completed");
-        }
-        left.Add(completedPill);
-
-        VisualElement right = new VisualElement();
-        right.AddToClassList("lesson-meta");
-
-        Toggle completeToggle = new Toggle();
-        completeToggle.AddToClassList("lesson-checkbox");
-        completeToggle.SetValueWithoutNotify(lesson != null && lesson.isCompleted);
-        completeToggle.tooltip = "Đánh dấu đã học xong";
-
-        completeToggle.RegisterCallback<ClickEvent>(evt =>
-        {
-            evt.StopPropagation();
-        });
-
-        completeToggle.RegisterValueChangedCallback(evt =>
-        {
-            _ = OnLessonCompletionChangedAsync(lesson, evt.newValue, completeToggle, completedPill);
-        });
-
-        right.Add(completeToggle);
-
-        row.RegisterCallback<ClickEvent>(evt =>
-        {
-            evt.StopPropagation();
-            OnLessonClicked(lesson);
-        });
-
-        row.Add(left);
-        row.Add(right);
+            _ = OnLessonCompletionChangedAsync(lesson, newValue, row);
+        };
+        row.Clicked += () => OnLessonClicked(lesson);
+        renderedLessonItems.Add(row);
         return row;
     }
 
-    private async Task OnLessonCompletionChangedAsync(LessonData lesson, bool completed, Toggle sourceToggle, Label completedPill)
+    private async Task OnLessonCompletionChangedAsync(LessonData lesson, bool completed, LessonItemElement row)
     {
         if (lesson == null || activeCourse == null || ApiManager.Instance == null) return;
 
         bool previous = lesson.isCompleted;
         lesson.isCompleted = completed;
-        UpdateCompletedPill(completedPill, completed);
+        row?.Bind(lesson, lesson.id == selectedLessonId);
         UpdateActiveCourseProgressUI();
 
         bool synced = await ApiManager.Instance.UpdateLessonCompletionAsync(activeCourse.id, lesson.id, lesson.videoUrl, completed);
@@ -691,25 +552,13 @@ public class CourseSelectionUI : MonoBehaviour
 
         // Revert when backend sync failed.
         lesson.isCompleted = previous;
-        if (sourceToggle != null)
-        {
-            sourceToggle.SetValueWithoutNotify(previous);
-        }
-        UpdateCompletedPill(completedPill, previous);
+        row?.Bind(lesson, lesson.id == selectedLessonId);
         UpdateActiveCourseProgressUI();
 
         if (sectionsStatus != null)
         {
             sectionsStatus.text = "Không thể lưu tiến độ lên server. Đã hoàn tác thay đổi.";
         }
-    }
-
-    private void UpdateCompletedPill(Label pill, bool isCompleted)
-    {
-        if (pill == null) return;
-        pill.text = isCompleted ? "Completed" : "Not yet";
-        if (isCompleted) pill.AddToClassList("is-completed");
-        else pill.RemoveFromClassList("is-completed");
     }
 
     private void UpdateActiveCourseProgressUI()
@@ -832,34 +681,81 @@ public class CourseSelectionUI : MonoBehaviour
 
     private void OnLessonClicked(LessonData lesson)
     {
+        selectedLessonId = lesson != null ? lesson.id : null;
+        RefreshLessonSelectionVisuals();
+
+        Debug.Log($"[CourseSelectionUI] OnLessonClicked start id={lesson?.id} title='{lesson?.title}' type='{lesson?.type}'");
+
+        if (enableSlideDebugLogs)
+        {
+            Debug.Log($"[CourseSelectionUI] Click lesson id={lesson?.id} title='{lesson?.title}' type='{lesson?.type}' slides={(lesson?.slides != null ? lesson.slides.Count : 0)} slideTextLen={(lesson?.slideText != null ? lesson.slideText.Length : 0)} videoUrlEmpty={string.IsNullOrWhiteSpace(lesson?.videoUrl)}");
+        }
+
+        // IMPORTANT: Route by explicit content type first.
+        // Slide must have precedence over quiz because some backend payloads include quiz stubs on slide lessons.
+        bool slideLesson = IsSlideLesson(lesson);
+        bool quizLesson = IsQuizLesson(lesson);
+        if (enableSlideDebugLogs)
+        {
+            Debug.Log($"[CourseSelectionUI] Route decision slide={slideLesson} quiz={quizLesson} video={IsVideoLesson(lesson)}");
+        }
+
+        if (slideLesson)
+        {
+            Debug.Log($"[CourseSelectionUI] Routing to slide popup id={lesson?.id} title='{lesson?.title}'");
+            if (ShowSlideIndependentScreen(lesson))
+            {
+                return;
+            }
+
+            if (sectionsStatus != null)
+            {
+                sectionsStatus.text = "Bài học slide chưa có dữ liệu hợp lệ hoặc chưa gán SlidePopupWindow.";
+            }
+            return;
+        }
+
+        if (quizLesson)
+        {
+            if (ShowQuizIndependentScreen(lesson))
+            {
+                return;
+            }
+
+            if (sectionsStatus != null)
+            {
+                sectionsStatus.text = "Bài học quiz chưa có dữ liệu hợp lệ hoặc chưa gán QuizPopupWindow.";
+            }
+            return;
+        }
+
         if (IsVideoLesson(lesson))
         {
             _ = PlayVideoLessonAsync(lesson);
             return;
         }
 
-        if (quizPopupWindow != null && quizPopupWindow.CanHandle(lesson))
+        // Last fallback: unknown non-video/non-quiz lessons are treated as slide shells
+        // so the window is still visible and easier to debug real data issues.
+        if (ShowSlideIndependentScreen(lesson))
         {
-            Transform viewer = GetViewerTransform();
-            if (quizPopupWindow.Show(lesson, viewer, quizWindowDistance, quizWindowHeightOffset))
+            return;
+        }
+
+        if (IsQuizLesson(lesson))
+        {
+            if (sectionsStatus != null)
             {
-                if (sectionsStatus != null)
-                {
-                    sectionsStatus.text = "Đã mở cửa sổ quiz riêng.";
-                }
+                sectionsStatus.text = "Bài học được nhận diện là quiz nhưng không có dữ liệu câu hỏi hợp lệ.";
             }
             return;
         }
 
-        if (slidePopupWindow != null && slidePopupWindow.CanHandle(lesson))
+        if (IsSlideLesson(lesson))
         {
-            Transform viewer = GetViewerTransform();
-            if (slidePopupWindow.Show(lesson, viewer, slideWindowDistance, slideWindowHeightOffset))
+            if (sectionsStatus != null)
             {
-                if (sectionsStatus != null)
-                {
-                    sectionsStatus.text = "Đã mở cửa sổ slide riêng.";
-                }
+                sectionsStatus.text = "Bài học được nhận diện là slide nhưng không có nội dung slide hợp lệ.";
             }
             return;
         }
@@ -867,6 +763,185 @@ public class CourseSelectionUI : MonoBehaviour
         if (sectionsStatus != null)
         {
             sectionsStatus.text = "Bài này chưa có kiểu nội dung hỗ trợ.";
+        }
+    }
+
+    private bool ShowSlideIndependentScreen(LessonData lesson)
+    {
+        if (lesson == null) return false;
+
+        Debug.Log($"[CourseSelectionUI] ShowSlideIndependentScreen invoked id={lesson.id} title='{lesson.title}' type='{lesson.type}'");
+
+        try
+        {
+            if (enableSlideDebugLogs)
+            {
+                Debug.Log($"[CourseSelectionUI] ShowSlideIndependentScreen start for lesson id={lesson.id} title='{lesson.title}' type='{lesson.type}'");
+            }
+
+            if (slidePopupWindow == null)
+            {
+                slidePopupWindow = FindAnyObjectByType<SlidePopupWindow>();
+                if (slidePopupWindow == null)
+                {
+                    slidePopupWindow = GetOrCreatePopupComponent<SlidePopupWindow>("SlidePopupWindowHost", false);
+                }
+                if (slidePopupWindow == null)
+                {
+                    Debug.LogError("[CourseSelectionUI] SlidePopupWindow is null after create attempt.");
+                    return false;
+                }
+            }
+
+            Debug.Log($"[CourseSelectionUI] slidePopupWindow instance={slidePopupWindow.name}, active={slidePopupWindow.gameObject.activeInHierarchy}, enabled={slidePopupWindow.enabled}");
+
+            if (enableSlideDebugLogs)
+            {
+                Debug.Log($"[CourseSelectionUI] slidePopupWindow found: {slidePopupWindow.name}, anchor={(slideScreenAnchor != null ? slideScreenAnchor.name : "<none>")}");
+            }
+
+            Transform viewer = GetViewerTransform();
+            if (slideScreenAnchor != null && slideScreenAnchor.gameObject.activeInHierarchy)
+            {
+                slidePopupWindow.PlaceAtAnchor(slideScreenAnchor);
+            }
+            else
+            {
+                // Ensure the slide window is visible even when no anchor is configured.
+                slidePopupWindow.PlaceInFrontOf(viewer, slideWindowDistance, slideWindowHeightOffset);
+            }
+
+            bool shown = slidePopupWindow.Show(lesson, viewer, slideWindowDistance, slideWindowHeightOffset);
+            Debug.Log($"[CourseSelectionUI] slidePopupWindow.Show returned={shown}");
+            if (enableSlideDebugLogs)
+            {
+                Transform rt = slidePopupWindow.WindowRootTransform;
+                Debug.Log($"[CourseSelectionUI] slidePopupWindow.Show returned={shown}, rootNull={rt == null}, active={(rt != null && rt.gameObject.activeSelf)}, pos={(rt != null ? rt.position.ToString() : "<null>")}, scale={(rt != null ? rt.localScale.ToString() : "<null>")}");
+            }
+            if (!shown) return false;
+
+            if (quizPopupWindow != null)
+            {
+                quizPopupWindow.HideWindow();
+            }
+
+            if (sectionsStatus != null)
+            {
+                sectionsStatus.text = "Đã mở màn hình Slide độc lập trong scene.";
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[CourseSelectionUI] ShowSlideIndependentScreen exception: {ex}");
+            if (sectionsStatus != null)
+            {
+                sectionsStatus.text = $"Lỗi mở màn hình Slide: {ex.Message}";
+            }
+            return false;
+        }
+    }
+
+    private bool ShowQuizIndependentScreen(LessonData lesson)
+    {
+        if (lesson == null) return false;
+
+        if (quizPopupWindow == null)
+        {
+            quizPopupWindow = FindAnyObjectByType<QuizPopupWindow>();
+            if (quizPopupWindow == null)
+            {
+                quizPopupWindow = GetOrCreatePopupComponent<QuizPopupWindow>("QuizPopupWindowHost", false);
+            }
+            if (quizPopupWindow == null) return false;
+        }
+
+        if (!quizPopupWindow.CanHandle(lesson)) return false;
+
+        if (quizScreenAnchor != null)
+        {
+            quizPopupWindow.PlaceAtAnchor(quizScreenAnchor);
+        }
+
+        Transform viewer = GetViewerTransform();
+        bool shown = quizPopupWindow.Show(lesson, viewer, quizWindowDistance, quizWindowHeightOffset);
+        if (!shown) return false;
+
+        if (slidePopupWindow != null)
+        {
+            slidePopupWindow.HideWindow();
+        }
+
+        if (sectionsStatus != null)
+        {
+            sectionsStatus.text = "Đã mở màn hình Quiz độc lập trong scene.";
+        }
+
+        return true;
+    }
+
+    private static bool IsSlideLesson(LessonData lesson)
+    {
+        if (lesson == null) return false;
+        string type = string.IsNullOrWhiteSpace(lesson.type) ? string.Empty : lesson.type.Trim().ToLowerInvariant();
+        if (type.Contains("slide") || type.Contains("presentation") || type.Contains("ppt") || type.Contains("document")) return true;
+        if (lesson.slides != null && lesson.slides.Count > 0) return true;
+        if (!string.IsNullOrWhiteSpace(lesson.slideText)) return true;
+
+        // Fallback heuristics for schema drift where slide text may be delivered in title/description-like fields.
+        if (!string.IsNullOrWhiteSpace(lesson.title) && lesson.title.IndexOf("slide", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsQuizLesson(LessonData lesson)
+    {
+        if (lesson == null) return false;
+        string type = string.IsNullOrWhiteSpace(lesson.type) ? string.Empty : lesson.type.Trim().ToLowerInvariant();
+        if (type.Contains("quiz") || type.Contains("question")) return true;
+        if (HasAnyValidQuizQuestions(lesson.quizQuestions)) return true;
+        if (HasAnyValidQuizQuestions(lesson.questions)) return true;
+        if (HasAnyValidQuizQuestions(lesson.quizzes)) return true;
+        return IsMeaningfulQuizQuestion(lesson.quizQuestion);
+    }
+
+    private static bool HasAnyValidQuizQuestions(List<QuizQuestionData> list)
+    {
+        if (list == null || list.Count == 0) return false;
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (IsMeaningfulQuizQuestion(list[i])) return true;
+        }
+        return false;
+    }
+
+    private static bool IsMeaningfulQuizQuestion(QuizQuestionData q)
+    {
+        if (q == null) return false;
+
+        bool hasPrompt = !string.IsNullOrWhiteSpace(q.question)
+            || !string.IsNullOrWhiteSpace(q.text)
+            || !string.IsNullOrWhiteSpace(q.prompt);
+
+        bool hasOptions = (q.options != null && q.options.Count > 0)
+            || (q.answers != null && q.answers.Count > 0)
+            || (q.choices != null && q.choices.Count > 0);
+
+        return hasPrompt || hasOptions;
+    }
+
+    private void RefreshLessonSelectionVisuals()
+    {
+        for (int i = 0; i < renderedLessonItems.Count; i++)
+        {
+            LessonItemElement item = renderedLessonItems[i];
+            if (item == null) continue;
+            bool selected = !string.IsNullOrWhiteSpace(selectedLessonId) && item.LessonId == selectedLessonId;
+            item.SetSelected(selected);
         }
     }
 
@@ -895,9 +970,9 @@ public class CourseSelectionUI : MonoBehaviour
         string sourceUrl = lesson.videoUrl;
         if (string.IsNullOrWhiteSpace(sourceUrl))
         {
-            if (videoStatus != null)
+            if (sectionsStatus != null)
             {
-                videoStatus.text = "Bài video chưa có videoUrl trong API.";
+                sectionsStatus.text = "Bài video chưa có videoUrl trong API.";
             }
             return;
         }
@@ -907,9 +982,9 @@ public class CourseSelectionUI : MonoBehaviour
         if (ApiManager.Instance != null)
         {
             resolverAttempted = true;
-            if (videoStatus != null)
+            if (sectionsStatus != null)
             {
-                videoStatus.text = "Đang phân giải nguồn phát...";
+                sectionsStatus.text = "Đang phân giải nguồn phát...";
             }
 
             try
@@ -931,7 +1006,6 @@ public class CourseSelectionUI : MonoBehaviour
             {
                 Application.OpenURL(url);
                 const string openedMsg = "Đã mở YouTube bên ngoài để phát video (Unity VideoPlayer không hỗ trợ trực tiếp link watch/shorts).";
-                if (videoStatus != null) videoStatus.text = openedMsg;
                 if (sectionsStatus != null) sectionsStatus.text = openedMsg;
                 Debug.Log("[CourseSelectionUI] Opened YouTube URL externally.");
                 return;
@@ -941,7 +1015,6 @@ public class CourseSelectionUI : MonoBehaviour
             string msg = string.IsNullOrWhiteSpace(resolverReason)
                 ? "Link YouTube dạng watch/shorts không phát trực tiếp bằng Unity VideoPlayer. Hãy dùng link stream mp4/m3u8 hoặc URL đã transcode từ backend."
                 : $"Không thể phát YouTube trong Unity vì backend resolve lỗi: {resolverReason}. Hãy cài ytdl-core/yt-dlp trên server hoặc dùng link stream mp4/m3u8.";
-            if (videoStatus != null) videoStatus.text = msg;
             if (sectionsStatus != null) sectionsStatus.text = msg;
             Debug.Log("[CourseSelectionUI] Unsupported YouTube webpage URL for VideoPlayer.");
             return;
@@ -952,10 +1025,6 @@ public class CourseSelectionUI : MonoBehaviour
             videoPopupWindow = FindAnyObjectByType<VideoPopupWindow>();
             if (videoPopupWindow == null)
             {
-                if (videoStatus != null)
-                {
-                    videoStatus.text = "Chưa gán VideoPopupWindow trong scene.";
-                }
                 if (sectionsStatus != null)
                 {
                     sectionsStatus.text = "Chưa có VideoPopupWindow để phát video.";
@@ -964,21 +1033,10 @@ public class CourseSelectionUI : MonoBehaviour
             }
         }
 
-        if (videoTitle != null)
-        {
-            videoTitle.text = string.IsNullOrWhiteSpace(lesson.title) ? "Video" : lesson.title;
-        }
-
-        if (videoStatus != null)
-        {
-            videoStatus.text = !string.IsNullOrWhiteSpace(resolvedUrl)
-                ? "Đang tải stream đã phân giải..."
-                : "Đang tải video...";
-        }
-
         if (sectionsStatus != null)
         {
-            sectionsStatus.text = $"Đang mở video: {videoTitle?.text}";
+            string displayTitle = string.IsNullOrWhiteSpace(lesson.title) ? "Video" : lesson.title;
+            sectionsStatus.text = $"Đang mở video: {displayTitle}";
         }
 
         try
@@ -1001,13 +1059,7 @@ public class CourseSelectionUI : MonoBehaviour
                 videoQuizScheduler.StartTracking(lesson, sourceUrl, viewer, ytTimeProvider);
             }
 
-            if (keepMenuVisibleWhenPlaying) ShowSectionsPage();
-            else ShowVideoPage();
-
-            if (videoStatus != null)
-            {
-                videoStatus.text = "Đang phát video";
-            }
+            if (sectionsStatus != null) sectionsStatus.text = "Đang phát video";
         }
         catch (Exception ex)
         {
@@ -1020,10 +1072,7 @@ public class CourseSelectionUI : MonoBehaviour
                 Debug.LogError($"[CourseSelectionUI] Play video failed: {ex.Message}");
             }
 
-            if (videoStatus != null)
-            {
-                videoStatus.text = $"Không phát được video: {ex.Message}";
-            }
+            if (sectionsStatus != null) sectionsStatus.text = $"Không phát được video: {ex.Message}";
         }
     }
 
@@ -1103,11 +1152,6 @@ public class CourseSelectionUI : MonoBehaviour
 
     private void StopVideo()
     {
-        if (videoSurface != null)
-        {
-            videoSurface.style.backgroundImage = StyleKeyword.None;
-        }
-
         if (videoPopupWindow != null)
         {
             videoPopupWindow.StopAndHide();
@@ -1253,9 +1297,6 @@ public class CourseSelectionUI : MonoBehaviour
     {
         if (coursesPage != null) coursesPage.RemoveFromClassList("hidden");
         if (sectionsPage != null) sectionsPage.AddToClassList("hidden");
-        if (videoPage != null) videoPage.AddToClassList("hidden");
-        if (slidePage != null) slidePage.AddToClassList("hidden");
-        if (quizPage != null) quizPage.AddToClassList("hidden");
         if (slidePopupWindow != null) slidePopupWindow.HideWindow();
         if (quizPopupWindow != null) quizPopupWindow.HideWindow();
 
@@ -1266,26 +1307,10 @@ public class CourseSelectionUI : MonoBehaviour
     {
         if (coursesPage != null) coursesPage.AddToClassList("hidden");
         if (sectionsPage != null) sectionsPage.RemoveFromClassList("hidden");
-        if (videoPage != null) videoPage.AddToClassList("hidden");
-        if (slidePage != null) slidePage.AddToClassList("hidden");
-        if (quizPage != null) quizPage.AddToClassList("hidden");
         if (slidePopupWindow != null) slidePopupWindow.HideWindow();
         if (quizPopupWindow != null) quizPopupWindow.HideWindow();
 
         if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Browsing);
-    }
-
-    private void ShowVideoPage()
-    {
-        if (coursesPage != null) coursesPage.AddToClassList("hidden");
-        if (sectionsPage != null) sectionsPage.AddToClassList("hidden");
-        if (videoPage != null) videoPage.RemoveFromClassList("hidden");
-        if (slidePage != null) slidePage.AddToClassList("hidden");
-        if (quizPage != null) quizPage.AddToClassList("hidden");
-        if (slidePopupWindow != null) slidePopupWindow.HideWindow();
-        if (quizPopupWindow != null) quizPopupWindow.HideWindow();
-
-        if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Video);
     }
 
     private void OnDestroy()
@@ -1293,34 +1318,35 @@ public class CourseSelectionUI : MonoBehaviour
         StopVideo();
     }
 
-    private async Task LoadThumbnailIntoAsync(CourseRowRefs refs, string thumbnailUrl, int version)
+    private async Task LoadThumbnailIntoAsync(CourseCardElement card, string thumbnailUrl, int version)
     {
-        if (refs == null || refs.thumb == null || ApiManager.Instance == null) return;
+        if (card == null || ApiManager.Instance == null) return;
         if (string.IsNullOrWhiteSpace(thumbnailUrl)) return;
 
         Texture2D texture = await ApiManager.Instance.DownloadImageAsync(thumbnailUrl);
-        if (texture == null || refs.bindVersion != version) return;
+        if (texture == null) return;
 
-        refs.thumb.style.backgroundImage = new StyleBackground(texture);
+        card.SetThumbnail(texture, version);
     }
 
-    private class CourseRowRefs
-    {
-        public VisualElement thumb;
-        public Label title;
-        public Label progressLabel;
-        public VisualElement progressFill;
-        public Button viewButton;
-        public int bindVersion;
-    }
-
-    private T GetOrCreatePopupComponent<T>(string hostName) where T : Component
+    private T GetOrCreatePopupComponent<T>(string hostName, bool parentToSelf = true) where T : Component
     {
         Transform host = transform.Find(hostName);
         if (host == null)
         {
+            GameObject existing = GameObject.Find(hostName);
+            if (existing != null)
+            {
+                host = existing.transform;
+            }
+        }
+        if (host == null)
+        {
             GameObject go = new GameObject(hostName);
-            go.transform.SetParent(transform, false);
+            if (parentToSelf)
+            {
+                go.transform.SetParent(transform, false);
+            }
             host = go.transform;
         }
 

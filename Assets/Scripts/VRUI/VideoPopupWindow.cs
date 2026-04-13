@@ -13,6 +13,9 @@ using UnityEngine.Video;
 [DisallowMultipleComponent]
 public class VideoPopupWindow : MonoBehaviour
 {
+    private static readonly Color FrameBackColor = new Color(0.88f, 0.94f, 1f, 1f);
+    private static readonly Color FrameBarColor = new Color(0.79f, 0.88f, 0.99f, 1f);
+
     [SerializeField] private Transform windowTransform;
     [SerializeField] private Vector2 defaultWindowSize = new Vector2(3.2f, 1.8f);
     [SerializeField] private Vector2Int renderTextureSize = new Vector2Int(1920, 1080);
@@ -21,7 +24,7 @@ public class VideoPopupWindow : MonoBehaviour
     [SerializeField] private bool keepPlacedScaleOnPlay = true;
     [Header("Editor Preview")]
     [SerializeField] private bool autoCreateWindowInEditor = true;
-    [SerializeField] private Color editorPreviewColor = new Color(0.08f, 0.08f, 0.08f, 1f);
+    [SerializeField] private Color editorPreviewColor = new Color(0.9f, 0.95f, 1f, 1f);
     [Header("Audio")]
     [SerializeField] private AudioSource videoAudioSource;
     [SerializeField, Range(0f, 1f)] private float audioVolume = 1f;
@@ -417,6 +420,75 @@ public class VideoPopupWindow : MonoBehaviour
                 else DestroyImmediate(col);
             }
         }
+
+        EnsureFrameVisuals();
+    }
+
+    private void EnsureFrameVisuals()
+    {
+        if (windowRenderer == null) return;
+
+        Transform surfaceTx = windowRenderer.transform;
+        Transform backplate = surfaceTx.Find("VideoFrameBackplate");
+        if (backplate == null)
+        {
+            GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            go.name = "VideoFrameBackplate";
+            backplate = go.transform;
+            backplate.SetParent(surfaceTx, false);
+            Collider col = go.GetComponent<Collider>();
+            if (col != null)
+            {
+                if (Application.isPlaying) Destroy(col);
+                else DestroyImmediate(col);
+            }
+        }
+
+        backplate.localPosition = new Vector3(0f, 0f, 0.01f);
+        backplate.localScale = new Vector3(1.08f, 1.14f, 1f);
+        ApplyUnlitColor(backplate.GetComponent<MeshRenderer>(), FrameBackColor);
+
+        Transform topBar = surfaceTx.Find("VideoFrameTopBar");
+        if (topBar == null)
+        {
+            GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            go.name = "VideoFrameTopBar";
+            topBar = go.transform;
+            topBar.SetParent(surfaceTx, false);
+            Collider col = go.GetComponent<Collider>();
+            if (col != null)
+            {
+                if (Application.isPlaying) Destroy(col);
+                else DestroyImmediate(col);
+            }
+        }
+
+        topBar.localPosition = new Vector3(0f, 0.54f, -0.001f);
+        topBar.localScale = new Vector3(1f, 0.08f, 1f);
+        ApplyUnlitColor(topBar.GetComponent<MeshRenderer>(), FrameBarColor);
+    }
+
+    private static void ApplyUnlitColor(MeshRenderer renderer, Color color)
+    {
+        if (renderer == null) return;
+
+        Material target = Application.isPlaying ? renderer.material : renderer.sharedMaterial;
+        if (target == null || target.shader == null || target.shader.name != "Unlit/Color")
+        {
+            Material created = new Material(Shader.Find("Unlit/Color"));
+            if (Application.isPlaying)
+            {
+                renderer.material = created;
+                target = renderer.material;
+            }
+            else
+            {
+                renderer.sharedMaterial = created;
+                target = renderer.sharedMaterial;
+            }
+        }
+
+        target.color = color;
     }
 
     private void EnsureEditorPreviewMaterial()

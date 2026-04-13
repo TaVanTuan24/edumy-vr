@@ -1,0 +1,403 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.4/staging' branch; Version is '6000.4.0f1 (8cf496087c8f) revision 9237654'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) CoreSingleLanguage' Language: 'en' Physical Memory: 16021 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-04-13T10:59:48Z
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-tavan" at "2026-04-13T10:59:48.6953863Z"
+
+COMMAND LINE ARGUMENTS:
+D:\Unity\Hub\Editor\6000.4.0f1\Editor\Unity.exe
+-adb2
+-batchMode
+-noUpm
+-name
+AssetImportWorker1
+-projectPath
+D:/Unity_Project/My project
+-logFile
+Logs/AssetImportWorker1.log
+-srvPort
+53495
+-licensingIpc
+LicenseClient-tavan
+-force-d3d12
+-job-worker-count
+5
+-background-job-worker-count
+8
+-gc-helper-count
+1
+-name
+AssetImport
+Successfully changed project path to: D:/Unity_Project/My project
+D:/Unity_Project/My project
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gfx=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+Player connection [12276]  Target information:
+
+Player connection [12276]  * "[IP] 192.168.225.1 [Port] 0 [Flags] 2 [Guid] 1563727044 [EditorId] 1563727044 [Version] 1048832 [Id] WindowsEditor(7,LAPTOP-RVO404E6) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [12276]  * "[IP] 192.168.1.1 [Port] 0 [Flags] 2 [Guid] 1563727044 [EditorId] 1563727044 [Version] 1048832 [Id] WindowsEditor(7,LAPTOP-RVO404E6) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [12276]  * "[IP] 192.168.1.2 [Port] 0 [Flags] 2 [Guid] 1563727044 [EditorId] 1563727044 [Version] 1048832 [Id] WindowsEditor(7,LAPTOP-RVO404E6) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [12276] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [12276] Host joined alternative multi-casting on [225.0.0.222:34997]...
+JobSystem: Creating JobQueue using job-worker-count value 5
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Library Redirect Path: Library/
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Refreshing native plugins compatible for Editor in 30.68 ms, found 10 plugins.
+Initialize engine version: 6000.4.0f1 (8cf496087c8f)
+[Subsystems] Discovering subsystems at path D:/Unity/Hub/Editor/6000.4.0f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path D:/Unity_Project/My project/Assets
+Forcing GfxDevice: Direct3D 12
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+d3d12: failed to query info queue interface (0x80004002).
+Direct3D:
+    Version:         Direct3D 12 [level 12.2]
+    Renderer:        NVIDIA GeForce RTX 3050 Ti Laptop GPU (ID=0x25a0)
+    Vendor:          NVIDIA
+    VRAM:            3962 MB
+    App VRAM Budget: 3367 MB
+    Driver:          32.0.15.9597
+Initialize mono
+Mono path[0] = 'D:/Unity/Hub/Editor/6000.4.0f1/Editor/Data/Managed'
+Mono path[1] = 'D:/Unity/Hub/Editor/6000.4.0f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'D:/Unity/Hub/Editor/6000.4.0f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56832
+[Licensing::Client] Error: HandshakeResponse reported an error:
+	ResponseCode: 505
+	ResponseStatus: Unsupported protocol version '1.18.1'.
+[Licensing::Module] Error: Failed to handshake to channel: "LicenseClient-tavan"
+[Licensing::IpcConnector] LicenseClient-tavan channel disconnected successfully.
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-tavan-6000.4.0" at "2026-04-13T10:59:50.2892523Z"
+CodeReloadManager initialized
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: D:/Unity/Hub/Editor/6000.4.0f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+[Licensing::Module] Licensing is not yet initialized.
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.1+9fbee8e
+  Session Id:              8fe1595324e0431e973fe1c4c30521cf
+  Correlation Id:          14f5cad42fdcfcbadd7b2b78d7be2b36
+  External correlation Id: 917694758967794727
+  Machine Id:              yT3NUiepadY/jO2p9itGW8c4fdM=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-tavan-6000.4.0" (connect: 0.00s, validation: 0.01s, handshake: 1.16s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-tavan-6000.4.0-notifications" at "2026-04-13T10:59:51.4616654Z"
+[Licensing::Module] Licensing Background thread has ended after 2.77s
+[Licensing::Module] Licensing is initialized (took 0.76s).
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 18968411045924-qadaroien-UnityProStuXXXX
+  Product: Unity Student
+  Type: Assigned
+  Expiration: 2027-04-09T09:02:59Z
+Register platform support module: D:/Unity/Hub/Editor/6000.4.0f1/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Registered in 0.762032 seconds.
+Native extension for Android target not found
+CommandWithNoStdoutInvokationFailure: Unable to start ADB server. Please make sure the Android SDK is installed and is properly configured in the Editor. See the Console for more details.
+  at UnityEditor.Android.Command.RunWithShellExecute (System.String command, System.String args, System.String workingdir, System.String errorMsg) [0x0005a] in /home/bokken/build/output/unity/unity/PlatformDependent/AndroidPlayer/Editor/Managed/Android/Command.cs:148 
+  at UnityEditor.Android.ADB.StartServer () [0x00008] in /home/bokken/build/output/unity/unity/PlatformDependent/AndroidPlayer/Editor/Managed/Android/ADB.cs:193 
+  at UnityEditor.Android.ADB.Run (System.String[] command, UnityEditor.Android.Command+WaitingForProcessToExit waitingForProcessToExit, System.String errorMsg) [0x0000b] in /home/bokken/build/output/unity/unity/PlatformDependent/AndroidPlayer/Editor/Managed/Android/ADB.cs:231 
+  at UnityEditor.Android.AndroidDeploymentTargetsExtension.GetKnownTargets (UnityEditor.DeploymentTargets.IDeploymentTargetsMainThreadContext context, UnityEditor.ProgressHandler progressHandler) [0x0029d] in /home/bokken/build/output/unity/unity/PlatformDependent/AndroidPlayer/Editor/Managed/DeploymentTargets/AndroidDeploymentTargetsExtension.cs:393 
+  at UnityEditor.Android.TargetScanWorker.ScanSync () [0x00049] in /home/bokken/build/output/unity/unity/PlatformDependent/AndroidPlayer/Editor/Managed/TargetScanWorker.cs:164 
+  at UnityEditor.Android.TargetExtension.OnUsbDevicesChanged (UnityEditor.Hardware.UsbDevice[] usbDevices) [0x00087] in /home/bokken/build/output/unity/unity/PlatformDependent/AndroidPlayer/Editor/Managed/ExtensionModule.cs:114 
+  at UnityEditor.Android.TargetExtension.OnLoad () [0x000cd] in /home/bokken/build/output/unity/unity/PlatformDependent/AndroidPlayer/Editor/Managed/ExtensionModule.cs:75 
+  at UnityEditor.Modules.ModuleManager.InitializePlatformSupportModules () [0x000a3] in <fa95cb502fe343b2a567dd611b37cd92>:0 
+UnityEngine.DebugLogHandler:Internal_LogException_Injected(Exception, IntPtr)
+UnityEngine.DebugLogHandler:Internal_LogException(Exception, Object)
+UnityEngine.DebugLogHandler:LogException(Exception, Object)
+UnityEngine.Logger:LogException(Exception, Object)
+UnityEngine.Debug:LogException(Exception)
+UnityEditor.Modules.ModuleManager:InitializePlatformSupportModules()
+
+(Filename: /home/bokken/build/output/unity/unity/PlatformDependent/AndroidPlayer/Editor/Managed/Android/Command.cs Line: 148)
+
+Native extension for WindowsStandalone target not found
+Package Manager log level set to [2]
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  4.363 seconds
+Domain Reload Profiling: 5760ms
+	BeginReloadAssembly (214ms)
+	RebuildCommonClasses (70ms)
+	RebuildNativeTypeToScriptingClass (24ms)
+	initialDomainReloadingComplete (837ms)
+	LoadAllAssembliesAndSetupDomain (253ms)
+		LoadAssemblies (212ms)
+		AnalyzeDomain (244ms)
+			TypeCache.Refresh (242ms)
+				TypeCache.ScanAssembly (227ms)
+	FinalizeReload (4364ms)
+		SetupLoadedEditorAssemblies (0ms)
+			InitializePlatformSupportModulesInManaged (3821ms)
+			BeforeProcessingInitializeOnLoad (151ms)
+			ProcessInitializeOnLoadAttributes (176ms)
+			ProcessInitializeOnLoadMethodAttributes (109ms)
+========================================================================
+Worker process is ready to serve import requests
+Import Worker Mode flag is 0x00
+Begin MonoManager ReloadAssembly
+[Licensing::Client] Successfully resolved entitlement details
+Duplicate assembly 'System.Runtime.CompilerServices.Unsafe.dll' with different versions detected, using 'Packages/com.unity.ai.assistant/Plugins/Shared/System.Runtime.CompilerServices.Unsafe.dll, AssemblyName=System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' and ignoring 'Packages/com.unity.collections/Unity.Collections.Tests/System.Runtime.CompilerServices.Unsafe/System.Runtime.CompilerServices.Unsafe.dll, AssemblyName=System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'.Assembly Assembly-CSharp-Editor-firstpass.dll at Library/ScriptAssemblies/Assembly-CSharp-Editor-firstpass.dll not valid. Loading of assembly skipped.
+Assembly Assembly-CSharp-firstpass.dll at Library/ScriptAssemblies/Assembly-CSharp-firstpass.dll not valid. Loading of assembly skipped.
+Assembly DocCodeExamples.dll at Library/ScriptAssemblies/DocCodeExamples.dll not valid. Loading of assembly skipped.
+Assembly MockTests.dll at Library/ScriptAssemblies/MockTests.dll not valid. Loading of assembly skipped.
+Assembly TestNewCustomAssembly.dll at Library/ScriptAssemblies/TestNewCustomAssembly.dll not valid. Loading of assembly skipped.
+Assembly Unity.2D.Sprite.Package.EditorTests.dll at Library/ScriptAssemblies/Unity.2D.Sprite.Package.EditorTests.dll not valid. Loading of assembly skipped.
+Assembly Unity.AI.Assistant.Integrations.Sample.Editor.dll at Library/ScriptAssemblies/Unity.AI.Assistant.Integrations.Sample.Editor.dll not valid. Loading of assembly skipped.
+Assembly Unity.AppUI.Editor.Tests.dll at Library/ScriptAssemblies/Unity.AppUI.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.AppUI.Tests.dll at Library/ScriptAssemblies/Unity.AppUI.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Collections.BurstCompatibilityGen.dll at Library/ScriptAssemblies/Unity.Collections.BurstCompatibilityGen.dll not valid. Loading of assembly skipped.
+Assembly Unity.Collections.DocCodeSamples.dll at Library/ScriptAssemblies/Unity.Collections.DocCodeSamples.dll not valid. Loading of assembly skipped.
+Assembly Unity.Collections.PerformanceTests.dll at Library/ScriptAssemblies/Unity.Collections.PerformanceTests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Collections.Tests.dll at Library/ScriptAssemblies/Unity.Collections.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Collections.Tests.Playmode.dll at Library/ScriptAssemblies/Unity.Collections.Tests.Playmode.dll not valid. Loading of assembly skipped.
+Assembly Unity.InputSystem.IntegrationTests.dll at Library/ScriptAssemblies/Unity.InputSystem.IntegrationTests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Mathematics.Tests.dll at Library/ScriptAssemblies/Unity.Mathematics.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Multiplayer.Center.Editor.Tests.dll at Library/ScriptAssemblies/Unity.Multiplayer.Center.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Multiplayer.Center.Tests.dll at Library/ScriptAssemblies/Unity.Multiplayer.Center.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Nuget.Mono-Cecil.dll at Library/ScriptAssemblies/Unity.Nuget.Mono-Cecil.dll not valid. Loading of assembly skipped.
+Assembly Unity.PathTracing.Editor.Tests.dll at Library/ScriptAssemblies/Unity.PathTracing.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.PathTracing.Runtime.Tests.dll at Library/ScriptAssemblies/Unity.PathTracing.Runtime.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Performance.Profile-Analyzer.EditorTests.dll at Library/ScriptAssemblies/Unity.Performance.Profile-Analyzer.EditorTests.dll not valid. Loading of assembly skipped.
+Assembly Unity.RenderPipelines.Core.Editor.Tests.dll at Library/ScriptAssemblies/Unity.RenderPipelines.Core.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.RenderPipelines.Core.Runtime.Tests.dll at Library/ScriptAssemblies/Unity.RenderPipelines.Core.Runtime.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.RenderPipelines.Universal.Config.Editor.Tests.dll at Library/ScriptAssemblies/Unity.RenderPipelines.Universal.Config.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.RenderPipelines.Universal.Editor.Tests.dll at Library/ScriptAssemblies/Unity.RenderPipelines.Universal.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.RenderPipelines.Universal.Runtime.Tests.dll at Library/ScriptAssemblies/Unity.RenderPipelines.Universal.Runtime.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Searcher.EditorTests.dll at Library/ScriptAssemblies/Unity.Searcher.EditorTests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Serialization.Tests.dll at Library/ScriptAssemblies/Unity.Serialization.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Settings.Tests.dll at Library/ScriptAssemblies/Unity.Settings.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.ShaderGraph.Editor.Tests.dll at Library/ScriptAssemblies/Unity.ShaderGraph.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.TestTools.CodeCoverage.Editor.Compatibility.dll at Library/ScriptAssemblies/Unity.TestTools.CodeCoverage.Editor.Compatibility.dll not valid. Loading of assembly skipped.
+Assembly Unity.TextMeshPro.Editor.Tests.dll at Library/ScriptAssemblies/Unity.TextMeshPro.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.TextMeshPro.Tests.dll at Library/ScriptAssemblies/Unity.TextMeshPro.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Tutorials.Core.Editor.Tests.dll at Library/ScriptAssemblies/Unity.Tutorials.Core.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.Tutorials.Core.Tests.dll at Library/ScriptAssemblies/Unity.Tutorials.Core.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.UnifiedRayTracing.Editor.Tests.dll at Library/ScriptAssemblies/Unity.UnifiedRayTracing.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.AndroidOpenXR.Tests.dll at Library/ScriptAssemblies/Unity.XR.AndroidOpenXR.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.AndroidXROpenXR.CodeSamples.Tests.dll at Library/ScriptAssemblies/Unity.XR.AndroidXROpenXR.CodeSamples.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.AndroidXROpenXR.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.AndroidXROpenXR.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.ARFoundation.CodeSamples.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.ARFoundation.CodeSamples.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.ARFoundation.CodeSamples.Tests.dll at Library/ScriptAssemblies/Unity.XR.ARFoundation.CodeSamples.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.ARFoundation.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.ARFoundation.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.ARFoundation.InternalUtils.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.ARFoundation.InternalUtils.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.ARFoundation.Runtime.Tests.dll at Library/ScriptAssemblies/Unity.XR.ARFoundation.Runtime.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.ARSubsystems.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.ARSubsystems.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.CompositionLayers.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.CompositionLayers.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.CompositionLayers.Tests.dll at Library/ScriptAssemblies/Unity.XR.CompositionLayers.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.CoreUtils.CodeSamples.Tests.dll at Library/ScriptAssemblies/Unity.XR.CoreUtils.CodeSamples.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.CoreUtils.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.CoreUtils.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.CoreUtils.Tests.dll at Library/ScriptAssemblies/Unity.XR.CoreUtils.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Hands.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.Hands.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Hands.Tests.dll at Library/ScriptAssemblies/Unity.XR.Hands.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Interaction.Toolkit.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.Interaction.Toolkit.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Interaction.Toolkit.Tests.dll at Library/ScriptAssemblies/Unity.XR.Interaction.Toolkit.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Management.EditorTests.dll at Library/ScriptAssemblies/Unity.XR.Management.EditorTests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Management.TestPackage.dll at Library/ScriptAssemblies/Unity.XR.Management.TestPackage.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Management.TestPackage.Editor.dll at Library/ScriptAssemblies/Unity.XR.Management.TestPackage.Editor.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Management.Tests.dll at Library/ScriptAssemblies/Unity.XR.Management.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Management.Tests.Standalone.dll at Library/ScriptAssemblies/Unity.XR.Management.Tests.Standalone.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.OpenXR.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.OpenXR.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.OpenXR.Tests.dll at Library/ScriptAssemblies/Unity.XR.OpenXR.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.OpenXR.Ubuntu.Tests.dll at Library/ScriptAssemblies/Unity.XR.OpenXR.Ubuntu.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Simulation.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.Simulation.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.Simulation.Runtime.Tests.dll at Library/ScriptAssemblies/Unity.XR.Simulation.Runtime.Tests.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.TestSupport.dll at Library/ScriptAssemblies/Unity.XR.TestSupport.dll not valid. Loading of assembly skipped.
+Assembly Unity.XR.TestTooling.Editor.Tests.dll at Library/ScriptAssemblies/Unity.XR.TestTooling.Editor.Tests.dll not valid. Loading of assembly skipped.
+Assembly UnityEditor.UI.Common.Tests.dll at Library/ScriptAssemblies/UnityEditor.UI.Common.Tests.dll not valid. Loading of assembly skipped.
+Assembly UnityEditor.UI.EditorTests.dll at Library/ScriptAssemblies/UnityEditor.UI.EditorTests.dll not valid. Loading of assembly skipped.
+Assembly UnityEditor.XR.LegacyInputHelpers.Tests.dll at Library/ScriptAssemblies/UnityEditor.XR.LegacyInputHelpers.Tests.dll not valid. Loading of assembly skipped.
+Assembly UnityEngine.SpatialTracking.Tests.dll at Library/ScriptAssemblies/UnityEngine.SpatialTracking.Tests.dll not valid. Loading of assembly skipped.
+Assembly UnityEngine.UI.Tests.dll at Library/ScriptAssemblies/UnityEngine.UI.Tests.dll not valid. Loading of assembly skipped.
+Assembly UnityEngine.XR.OpenXR.CodeSamples.Editor.Tests.dll at Library/ScriptAssemblies/UnityEngine.XR.OpenXR.CodeSamples.Editor.Tests.dll not valid. Loading of assembly skipped.
+Symbol file LoadedFromMemory is not a mono symbol file
+Symbol file LoadedFromMemory is not a mono symbol file
+Refreshing native plugins compatible for Editor in 13.36 ms, found 10 plugins.
+Native extension for Android target not found
+Native extension for WindowsStandalone target not found
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+Duplicate assembly 'System.Runtime.CompilerServices.Unsafe.dll' with different versions detected, using 'Packages/com.unity.ai.assistant/Plugins/Shared/System.Runtime.CompilerServices.Unsafe.dll, AssemblyName=System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' and ignoring 'Packages/com.unity.collections/Unity.Collections.Tests/System.Runtime.CompilerServices.Unsafe/System.Runtime.CompilerServices.Unsafe.dll, AssemblyName=System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'.Refreshing native plugins compatible for Editor in 12.00 ms, found 10 plugins.
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+System.InvalidOperationException: Could not determine the Coplay plugin installation path.
+  at Coplay.Services.ApplicationPaths..ctor (System.IO.Abstractions.<bb65ca26-0720-4eb0-b5ec-28e5e773a611>IFileSystem fileSystem, System.String dataPath) [0x001a7] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Coplay.Services.ApplicationPaths..ctor () [0x0000b] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at (wrapper managed-to-native) System.Reflection.RuntimeConstructorInfo.InternalInvoke(System.Reflection.RuntimeConstructorInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeConstructorInfo.InternalInvoke (System.Object obj, System.Object[] parameters, System.Boolean wrapExceptions) [0x0001b] in <f713e1c3c5f545ce9b1df47230f4f853>:0 
+  at System.Reflection.RuntimeConstructorInfo.DoInvoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x00086] in <f713e1c3c5f545ce9b1df47230f4f853>:0 
+  at System.Reflection.RuntimeConstructorInfo.Invoke (System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x00000] in <f713e1c3c5f545ce9b1df47230f4f853>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.VisitConstructor (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ConstructorCallSite constructorCallSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>RuntimeResolverContext context) [0x00045] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteVisitor`2[TArgument,TResult].VisitCallSiteMain (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, TArgument argument) [0x0003f] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.VisitRootCache (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>RuntimeResolverContext context) [0x00061] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteVisitor`2[TArgument,TResult].VisitCallSite (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, TArgument argument) [0x0004f] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.Resolve (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProviderEngineScope scope) [0x00026] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProvider.CreateServiceAccessor (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceIdentifier serviceIdentifier) [0x00055] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at System.Collections.Concurrent.ConcurrentDictionary`2[TKey,TValue].GetOrAdd (TKey key, System.Func`2[T,TResult] valueFactory) [0x00034] in <f713e1c3c5f545ce9b1df47230f4f853>:0 
+  at Microsoft.Extensions.DependencyInjection.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProvider.GetService (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceIdentifier serviceIdentifier, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProviderEngineScope serviceProviderEngineScope) [0x0000d] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProviderEngineScope.GetService (System.Type serviceType) [0x00019] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<03239ec6-c58a-4857-9007-88b5ce2571b7>ServiceProviderServiceExtensions.GetRequiredService (System.IServiceProvider provider, System.Type serviceType) [0x00028] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<03239ec6-c58a-4857-9007-88b5ce2571b7>ServiceProviderServiceExtensions.GetRequiredService[T] (System.IServiceProvider provider) [0x0000b] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Coplay.Common.Logging.CoplayLoggerConfiguration+<>c__DisplayClass0_0.<AddCoplayLogging>b__0 (System.IServiceProvider provider, Serilog.<a4b2d26e-ac3b-4054-9a6c-5e3ce9a96c0b>LoggerConfiguration configuration) [0x00006] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Serilog.<bd0e39ce-cb78-4e01-b06d-080935c10262>SerilogServiceCollectionExtensions+<>c__DisplayClass3_0.<AddSerilog>b__0 (System.IServiceProvider services) [0x00063] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.VisitFactory (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>FactoryCallSite factoryCallSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>RuntimeResolverContext context) [0x0000d] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteVisitor`2[TArgument,TResult].VisitCallSiteMain (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, TArgument argument) [0x00023] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.VisitRootCache (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>RuntimeResolverContext context) [0x00061] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteVisitor`2[TArgument,TResult].VisitCallSite (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, TArgument argument) [0x0004f] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.Resolve (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProviderEngineScope scope) [0x00026] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProvider.CreateServiceAccessor (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceIdentifier serviceIdentifier) [0x00055] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at System.Collections.Concurrent.ConcurrentDictionary`2[TKey,TValue].GetOrAdd (TKey key, System.Func`2[T,TResult] valueFactory) [0x00034] in <f713e1c3c5f545ce9b1df47230f4f853>:0 
+  at Microsoft.Extensions.DependencyInjection.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProvider.GetService (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceIdentifier serviceIdentifier, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProviderEngineScope serviceProviderEngineScope) [0x0000d] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProviderEngineScope.GetService (System.Type serviceType) [0x00019] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<03239ec6-c58a-4857-9007-88b5ce2571b7>ServiceProviderServiceExtensions.GetRequiredService (System.IServiceProvider provider, System.Type serviceType) [0x00028] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<03239ec6-c58a-4857-9007-88b5ce2571b7>ServiceProviderServiceExtensions.GetRequiredService[T] (System.IServiceProvider provider) [0x0000b] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Serilog.<bd0e39ce-cb78-4e01-b06d-080935c10262>SerilogServiceCollectionExtensions+<>c__DisplayClass3_0.<AddSerilog>b__2 (System.IServiceProvider services) [0x00000] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.VisitFactory (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>FactoryCallSite factoryCallSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>RuntimeResolverContext context) [0x0000d] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteVisitor`2[TArgument,TResult].VisitCallSiteMain (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, TArgument argument) [0x00023] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.VisitRootCache (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>RuntimeResolverContext context) [0x00061] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteVisitor`2[TArgument,TResult].VisitCallSite (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, TArgument argument) [0x0004f] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.VisitConstructor (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ConstructorCallSite constructorCallSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>RuntimeResolverContext context) [0x0002c] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteVisitor`2[TArgument,TResult].VisitCallSiteMain (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, TArgument argument) [0x0003f] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.VisitRootCache (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>RuntimeResolverContext context) [0x00061] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteVisitor`2[TArgument,TResult].VisitCallSite (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, TArgument argument) [0x0004f] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>CallSiteRuntimeResolver.Resolve (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceCallSite callSite, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProviderEngineScope scope) [0x00026] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProvider.CreateServiceAccessor (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceIdentifier serviceIdentifier) [0x00055] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at System.Collections.Concurrent.ConcurrentDictionary`2[TKey,TValue].GetOrAdd (TKey key, System.Func`2[T,TResult] valueFactory) [0x00034] in <f713e1c3c5f545ce9b1df47230f4f853>:0 
+  at Microsoft.Extensions.DependencyInjection.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProvider.GetService (Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceIdentifier serviceIdentifier, Microsoft.Extensions.DependencyInjection.ServiceLookup.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProviderEngineScope serviceProviderEngineScope) [0x0000d] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<fd845d3f-5554-448e-8276-c390248dec8b>ServiceProvider.GetService (System.Type serviceType) [0x0000d] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<03239ec6-c58a-4857-9007-88b5ce2571b7>ServiceProviderServiceExtensions.GetRequiredService (System.IServiceProvider provider, System.Type serviceType) [0x00028] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Microsoft.Extensions.DependencyInjection.<03239ec6-c58a-4857-9007-88b5ce2571b7>ServiceProviderServiceExtensions.GetRequiredService[T] (System.IServiceProvider provider) [0x0000b] in <6612addf18fc4ebbaf416812373794ee>:0 
+  at Coplay.DependencyInjection.RootScopeServices..cctor () [0x00019] in <6612addf18fc4ebbaf416812373794ee>:0 
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:LogError (object)
+UnityEditor.EditorAssemblies:ProcessInitializeOnLoadAttributes (System.Type[])
+
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:True
+Mono: successfully reloaded assembly
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+- Finished resetting the current domain, in  4.847 seconds
+Domain Reload Profiling: 7029ms
+	BeginReloadAssembly (252ms)
+		DisableScriptedObjects (10ms)
+		CreateAndSetChildDomain (45ms)
+	RebuildCommonClasses (53ms)
+	RebuildNativeTypeToScriptingClass (16ms)
+	initialDomainReloadingComplete (158ms)
+	LoadAllAssembliesAndSetupDomain (1703ms)
+		LoadAssemblies (590ms)
+		AnalyzeDomain (1233ms)
+			TypeCache.Refresh (1022ms)
+				TypeCache.ScanAssembly (976ms)
+			BuildScriptInfoCaches (179ms)
+			ResolveRequiredComponents (26ms)
+	FinalizeReload (4847ms)
+		SetupLoadedEditorAssemblies (0ms)
+			InitializePlatformSupportModulesInManaged (16ms)
+			BeforeProcessingInitializeOnLoad (338ms)
+			ProcessInitializeOnLoadAttributes (3468ms)
+			ProcessInitializeOnLoadMethodAttributes (652ms)
+			AfterProcessingInitializeOnLoad (3ms)
+		AwakeInstancesAfterBackupRestoration (10ms)
+WARNING: Shader Unsupported: 'Simulation/Standard Lit' - All subshaders removed
+WARNING: Shader Did you use #pragma only_renderers and omit this platform?
+WARNING: Shader If subshaders removal was intentional, you may have forgotten turning Fallback off?
+WARNING: Shader Unsupported: 'Simulation/URP/Room X-Ray' - All subshaders removed
+WARNING: Shader Did you use #pragma only_renderers and omit this platform?
+WARNING: Shader If subshaders removal was intentional, you may have forgotten turning Fallback off?
+WARNING: Shader Unsupported: 'Simulation/URP/Lit' - All subshaders removed
+WARNING: Shader Did you use #pragma only_renderers and omit this platform?
+WARNING: Shader If subshaders removal was intentional, you may have forgotten turning Fallback off?
+WARNING: Shader Unsupported: 'Hidden/Simulation/URP/Synthetic' - All subshaders removed
+WARNING: Shader Did you use #pragma only_renderers and omit this platform?
+WARNING: Shader If subshaders removal was intentional, you may have forgotten turning Fallback off?
+WARNING: Shader Unsupported: 'Hidden/Simulation/Synthetic Lit' - All subshaders removed
+WARNING: Shader Did you use #pragma only_renderers and omit this platform?
+WARNING: Shader If subshaders removal was intentional, you may have forgotten turning Fallback off?
+WARNING: Shader Unsupported: 'Simulation/Room X-Ray' - All subshaders removed
+WARNING: Shader Did you use #pragma only_renderers and omit this platform?
+WARNING: Shader If subshaders removal was intentional, you may have forgotten turning Fallback off?
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.01 seconds
+Refreshing native plugins compatible for Editor in 10.74 ms, found 10 plugins.
+Unloading 73 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 10453 unused Assets / (24.6 MB). Loaded Objects now: 11384.
+Memory consumption went from 218.9 MB to 194.4 MB.
+Total: 45.332500 ms (FindLiveObjects: 1.756200 ms CreateObjectMapping: 1.146600 ms MarkObjects: 33.652800 ms  DeleteObjects: 8.773700 ms)
+
+========================================================================
+Received Import Request.
+  Time since last request: 587.464376 seconds.
+  path: Assets/Scripts/VRUI/QuizPopupWindow.cs
+  importAddress: Guid(9ac07823d813a2d4ebe5f50386da742c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/Scripts/VRUI/QuizPopupWindow.cs using Guid(9ac07823d813a2d4ebe5f50386da742c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (Import Result ID: 'f4203abfae56dca6697c09800a8fd8c4') in 0.110316 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=83a8af6837810134d4d67e80112b1818 DependenciesID=bb4bd6c6299acf340078132d57e6c8d6 StaticDependenciesID=0555f9322a52089f951f86f79d26bc93 
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000031 seconds.
+  path: Assets/Scripts/VRUI/VideoController.cs
+  importAddress: Guid(18cedbe9e18fc4c4f8cc9a39310e32ad) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/Scripts/VRUI/VideoController.cs using Guid(18cedbe9e18fc4c4f8cc9a39310e32ad) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (Import Result ID: 'c038d493baa70209e47b33f6d8ad20d0') in 0.0112521 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=05eb717487721e35bef5dc0faff6a5a8 DependenciesID=006877c0a9dabc6863c1068c9af181f0 StaticDependenciesID=1e5c98f83be0469c9b7a1b0527887764 
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+

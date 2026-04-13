@@ -50,15 +50,16 @@
     <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Core\SourceGenerator\SourceGenerators.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Api\AssistantApi.UX.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Api\AssemblyInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Api\AssistantApi.Agents.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Api\AssistantApi.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Api\AssistantApi.Context.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Api\Utils\ContextUtils.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\Api\AssistantApi.UX.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\Api\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\Api\AssistantApi.Agents.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\Api\AssistantApi.Public.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\Api\AssistantApi.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\Api\AssistantApi.Context.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\Api\Utils\ContextUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Editor\Assistant\Api\Unity.AI.Assistant.API.Editor.asmdef" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\Api\Unity.AI.Assistant.API.Editor.asmdef" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -654,7 +655,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
@@ -1175,8 +1176,8 @@
     <ProjectReference Include="Unity.AI.Assistant.UI.Editor.csproj" />
     <ProjectReference Include="Unity.AI.Assistant.Bridge.Editor.csproj" />
     <ProjectReference Include="Unity.AI.Assistant.Runtime.csproj" />
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.TestRunner.csproj" />
     <ProjectReference Include="UnityEditor.TestRunner.csproj" />
   </ItemGroup>

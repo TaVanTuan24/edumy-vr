@@ -46,6 +46,11 @@ public class QuizQuestionData
     public string question;
     public string text;
     public string prompt;
+    public string explanation;
+    public string explain;
+    public string reason;
+    public string solution;
+    public string wrongExplanation;
     public List<string> options;
     public List<string> answers;
     public List<string> choices;

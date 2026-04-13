@@ -1,0 +1,25 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="slide-window" class="page hidden">
+        <ui:VisualElement class="sections-header content-window__header">
+            <ui:Button name="slide-close-button" text="Close" class="back-button" />
+            <ui:Label name="slide-window-title" text="Slide" class="sections-title content-window__title" />
+        </ui:VisualElement>
+        <ui:VisualElement class="slide-stage">
+            <ui:VisualElement class="slide-toolbar">
+                <ui:Label name="slide-counter" text="1 / 1" class="slide-counter" />
+                <ui:VisualElement class="slide-toolbar-actions">
+                    <ui:Button name="slide-zoom-out" text="-" class="slide-tool-btn" />
+                    <ui:Button name="slide-zoom-in" text="+" class="slide-tool-btn" />
+                    <ui:Button name="slide-fullscreen" text="Full" class="slide-tool-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="slide-canvas" class="slide-canvas">
+                <ui:Label name="slide-content" text="" class="slide-content" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="pager-row">
+            <ui:Button name="slide-prev-button" text="Prev" class="pager-button" />
+            <ui:Button name="slide-next-button" text="Next" class="pager-button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

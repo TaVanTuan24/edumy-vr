@@ -1,0 +1,52 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="SlideWindow.uss" />
+
+    <ui:VisualElement name="slide-window" class="slide-window">
+        <ui:VisualElement class="slide-surface">
+            <ui:VisualElement class="slide-header">
+                <ui:VisualElement class="slide-header-left">
+                    <ui:Label text="Slides" class="slide-eyebrow" />
+                    <ui:Label name="slide-window-title" text="Lesson Slides" class="slide-title" />
+                </ui:VisualElement>
+                <ui:Button name="slide-close-button" text="Close" class="slide-close-button" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="slide-meta-row">
+                <ui:Label name="slide-counter" text="Slide 1 / 12" class="slide-counter" />
+                <ui:Label name="slide-status" text="Ready" class="slide-status" />
+            </ui:VisualElement>
+
+            <ui:ProgressBar name="slide-progress" class="slide-progress" title="" />
+
+            <ui:VisualElement class="slide-stage">
+                <ui:VisualElement class="slide-toolbar">
+                    <ui:Label text="Presentation Viewer" class="slide-toolbar-label" />
+                    <ui:VisualElement class="slide-toolbar-actions">
+                        <ui:Button name="slide-zoom-out" text="-" class="slide-tool-btn" />
+                        <ui:Button name="slide-zoom-in" text="+" class="slide-tool-btn" />
+                        <ui:Button name="slide-fullscreen" text="Full" class="slide-tool-btn" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="slide-canvas" class="slide-canvas">
+                    <ui:Label name="slide-content" text="" class="slide-content" />
+
+                    <ui:VisualElement name="slide-empty" class="slide-overlay empty hidden">
+                        <ui:Label text="No slides available" class="slide-overlay-title" />
+                        <ui:Label text="Select a lesson that has slide content." class="slide-overlay-text" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement name="slide-loading" class="slide-overlay loading hidden">
+                        <ui:Label text="Loading slides..." class="slide-overlay-title" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="slide-footer">
+                <ui:Button name="slide-prev-button" text="Previous Slide" class="slide-nav-btn subtle" />
+                <ui:VisualElement class="slide-footer-spacer" />
+                <ui:Button name="slide-next-button" text="Next Slide" class="slide-nav-btn primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

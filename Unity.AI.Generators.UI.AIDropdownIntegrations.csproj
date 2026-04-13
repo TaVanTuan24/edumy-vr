@@ -49,15 +49,15 @@
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\AIDropdownIntegration.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\AssemblyInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\GenerativeSubMenu.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\GenerativeMenuRoot.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\GenerativeSubMenuContent.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\AIDropdownIntegration.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\GenerativeSubMenu.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\GenerativeMenuRoot.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\GenerativeSubMenuContent.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\AIDropdownIntegration.uss" />
-    <None Include="Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\Unity.AI.Toolkit.UI.AIDropdownIntegrations.asmdef" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\AIDropdownIntegration.uss" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.UI\Components\AIDropdownIntegrations\Unity.AI.Toolkit.UI.AIDropdownIntegrations.asmdef" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -653,7 +653,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@1311ffcbb798\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
@@ -1173,8 +1173,8 @@
     <ProjectReference Include="Unity.AI.Generators.Asset.csproj" />
     <ProjectReference Include="Unity.AI.Toolkit.Accounts.csproj" />
     <ProjectReference Include="Unity.AI.Toolkit.Utility.csproj" />
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.TestRunner.csproj" />
     <ProjectReference Include="UnityEditor.TestRunner.csproj" />
   </ItemGroup>

@@ -8,9 +8,14 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class QuizPopupWindow : MonoBehaviour
 {
-    private static readonly Color OptionDefaultColor = new Color(0.18f, 0.38f, 0.62f, 0.97f);
-    private static readonly Color OptionCorrectColor = new Color(0.16f, 0.58f, 0.34f, 0.98f);
-    private static readonly Color OptionWrongColor = new Color(0.74f, 0.24f, 0.24f, 0.98f);
+    private static readonly Color OptionDefaultColor = new Color(0.92f, 0.96f, 1f, 0.98f);
+    private static readonly Color OptionCorrectColor = new Color(0.894f, 0.98f, 0.933f, 0.98f);
+    private static readonly Color OptionWrongColor = new Color(1f, 0.933f, 0.933f, 0.98f);
+    private static readonly Color PanelColor = new Color(0.985f, 0.992f, 1f, 0.98f);
+    private static readonly Color HeaderColor = new Color(0.82f, 0.9f, 1f, 0.99f);
+    private static readonly Color ActionButtonColor = new Color(0.16f, 0.58f, 0.93f, 0.98f);
+    private static readonly Color SecondaryButtonColor = new Color(0.92f, 0.95f, 1f, 0.98f);
+    private static readonly Color TitleTextColor = new Color(0.05f, 0.08f, 0.13f, 1f);
 
     [SerializeField] private Transform windowTransform;
     [SerializeField] private Vector2 canvasSize = new Vector2(1100f, 760f);
@@ -110,6 +115,23 @@ public class QuizPopupWindow : MonoBehaviour
         return false;
     }
 
+    public Transform WindowRootTransform => windowTransform;
+
+    public void PlaceAtAnchor(Transform anchor, bool copyScale = false)
+    {
+        if (anchor == null) return;
+
+        EnsureWindowExists(false);
+        if (windowTransform == null) return;
+
+        windowTransform.position = anchor.position;
+        windowTransform.rotation = anchor.rotation;
+        if (copyScale)
+        {
+            windowTransform.localScale = anchor.lossyScale;
+        }
+    }
+
     public bool Show(LessonData lesson, Transform viewer, float distance, float heightOffset)
     {
         if (lesson == null) return false;
@@ -125,6 +147,7 @@ public class QuizPopupWindow : MonoBehaviour
         if (titleText != null)
         {
             titleText.text = string.IsNullOrWhiteSpace(lesson.title) ? "Quiz" : lesson.title;
+            titleText.color = TitleTextColor;
         }
         bool shouldAutoPlace = !keepPlacedTransformOnShow
             || (createdRuntimeWindow && Application.isPlaying)
@@ -213,27 +236,36 @@ public class QuizPopupWindow : MonoBehaviour
             panel = CreatePanel(windowTransform).transform;
         }
 
+        EnsurePanelChrome(panel);
+
         RectTransform panelRect = panel.GetComponent<RectTransform>();
 
-        titleText = FindOrCreateText(panel, "Title", new Vector2(0.04f, 0.9f), new Vector2(0.78f, 0.98f), 40, FontStyles.Bold, TextAlignmentOptions.Left);
-        indicatorText = FindOrCreateText(panel, "Indicator", new Vector2(0.04f, 0.84f), new Vector2(0.45f, 0.9f), 26, FontStyles.Normal, TextAlignmentOptions.Left);
-        questionText = FindOrCreateText(panel, "Question", new Vector2(0.04f, 0.64f), new Vector2(0.96f, 0.83f), 30, FontStyles.Bold, TextAlignmentOptions.TopLeft);
+        titleText = FindOrCreateText(panel, "Title", new Vector2(0.05f, 0.9f), new Vector2(0.76f, 0.975f), 36, FontStyles.Bold, TextAlignmentOptions.Left);
+        titleText.color = TitleTextColor;
+        indicatorText = FindOrCreateText(panel, "Indicator", new Vector2(0.05f, 0.84f), new Vector2(0.45f, 0.9f), 22, FontStyles.Normal, TextAlignmentOptions.Left);
+        indicatorText.color = new Color(0.34f, 0.43f, 0.58f, 1f);
+        questionText = FindOrCreateText(panel, "Question", new Vector2(0.05f, 0.64f), new Vector2(0.95f, 0.82f), 27, FontStyles.Bold, TextAlignmentOptions.TopLeft);
         questionText.textWrappingMode = TextWrappingModes.Normal;
+        questionText.color = new Color(0.15f, 0.24f, 0.38f, 1f);
 
-        feedbackText = FindOrCreateText(panel, "Feedback", new Vector2(0.04f, 0.14f), new Vector2(0.96f, 0.24f), 24, FontStyles.Italic, TextAlignmentOptions.TopLeft);
+        feedbackText = FindOrCreateText(panel, "Feedback", new Vector2(0.05f, 0.14f), new Vector2(0.95f, 0.24f), 22, FontStyles.Italic, TextAlignmentOptions.TopLeft);
         feedbackText.textWrappingMode = TextWrappingModes.Normal;
+        feedbackText.color = new Color(0.27f, 0.39f, 0.56f, 1f);
 
-        closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.82f, 0.9f), new Vector2(0.96f, 0.98f));
-        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.76f, 0.03f), new Vector2(0.96f, 0.12f));
+        closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.78f, 0.9f), new Vector2(0.95f, 0.975f));
+        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.73f, 0.03f), new Vector2(0.95f, 0.11f));
+        SetButtonBaseColor(closeButton, SecondaryButtonColor);
+        SetButtonBaseColor(nextButton, ActionButtonColor);
 
         optionButtons.Clear();
-        float top = 0.58f;
+        float top = 0.6f;
         float height = 0.1f;
         for (int i = 0; i < 4; i++)
         {
             float yMax = top - i * 0.11f;
             float yMin = yMax - height;
-            Button b = FindOrCreateButton(panelRect, $"Option{i}", $"Option {i + 1}", new Vector2(0.04f, yMin), new Vector2(0.96f, yMax));
+            Button b = FindOrCreateButton(panelRect, $"Option{i}", $"Option {i + 1}", new Vector2(0.05f, yMin), new Vector2(0.95f, yMax));
+            SetButtonBaseColor(b, OptionDefaultColor);
             optionButtons.Add(b);
         }
     }
@@ -552,8 +584,44 @@ public class QuizPopupWindow : MonoBehaviour
         rect.offsetMax = Vector2.zero;
 
         Image image = panel.GetComponent<Image>();
-        image.color = new Color(0.08f, 0.1f, 0.12f, 0.94f);
+        image.color = PanelColor;
         return panel;
+    }
+
+    private static void EnsurePanelChrome(Transform panel)
+    {
+        Image panelImage = panel.GetComponent<Image>();
+        if (panelImage != null)
+        {
+            panelImage.color = PanelColor;
+        }
+
+        Image headerBg = FindOrCreateFill(panel, "HeaderBg", new Vector2(0f, 0.84f), new Vector2(1f, 1f), HeaderColor);
+        if (headerBg != null)
+        {
+            headerBg.transform.SetAsFirstSibling();
+        }
+    }
+
+    private static Image FindOrCreateFill(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Color color)
+    {
+        Transform existing = parent.Find(name);
+        if (existing == null)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            existing = go.transform;
+        }
+
+        RectTransform rect = existing.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        Image image = existing.GetComponent<Image>();
+        image.color = color;
+        return image;
     }
 
     private static TMP_Text FindOrCreateText(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, float fontSize, FontStyles style, TextAlignmentOptions alignment)
@@ -575,7 +643,7 @@ public class QuizPopupWindow : MonoBehaviour
         TextMeshProUGUI text = existing.GetComponent<TextMeshProUGUI>();
         text.fontSize = fontSize;
         text.fontStyle = style;
-        text.color = Color.white;
+        text.color = new Color(0.17f, 0.28f, 0.43f, 1f);
         text.alignment = alignment;
         return text;
     }
@@ -600,14 +668,15 @@ public class QuizPopupWindow : MonoBehaviour
         rect.offsetMax = Vector2.zero;
 
         Image image = existing.GetComponent<Image>();
-        image.color = new Color(0.18f, 0.38f, 0.62f, 0.97f);
+        image.color = OptionDefaultColor;
 
         Button button = existing.GetComponent<Button>();
 
         TextMeshProUGUI text = existing.GetComponentInChildren<TextMeshProUGUI>(true);
         text.text = label;
-        text.color = Color.white;
-        text.fontSize = 25f;
+        text.color = new Color(0.15f, 0.3f, 0.49f, 1f);
+        text.fontSize = 24f;
+        text.fontStyle = FontStyles.Bold;
         text.alignment = TextAlignmentOptions.Center;
 
         RectTransform textRect = text.GetComponent<RectTransform>();
@@ -617,6 +686,16 @@ public class QuizPopupWindow : MonoBehaviour
         textRect.offsetMax = Vector2.zero;
 
         return button;
+    }
+
+    private static void SetButtonBaseColor(Button button, Color color)
+    {
+        if (button == null) return;
+        Image image = button.GetComponent<Image>();
+        if (image != null)
+        {
+            image.color = color;
+        }
     }
 
     private static Transform EnsureRectTransformRoot(Transform root)
