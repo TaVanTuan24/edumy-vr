@@ -1,9 +1,14 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+
+using UIToolkitButton = UnityEngine.UIElements.Button;
+using UIGraphicImage = UnityEngine.UI.Image;
+using UGUIButton = UnityEngine.UI.Button;
 
 public class CourseToggleController : MonoBehaviour
 {
@@ -18,7 +23,7 @@ public class CourseToggleController : MonoBehaviour
     [SerializeField] private string courseSelectionRootName = "lesson-selection-window-root";
 
     [Header("Open/Close")]
-    [SerializeField] private bool startOpened = true;
+    [SerializeField] private bool startOpened = false;
     [SerializeField] private bool animate = true;
     [SerializeField, Min(0.05f)] private float animationDuration = 0.22f;
     [SerializeField, Min(0f)] private float slideDistancePixels = 36f;
@@ -31,12 +36,19 @@ public class CourseToggleController : MonoBehaviour
     [SerializeField] private float panelRightOffset = 0.22f;
 
     [Header("Screen Overlay Fallback")]
-    [SerializeField] private bool forceScreenOverlayButton = true;
+    [SerializeField] private bool forceScreenOverlayButton = false;
     [SerializeField, Min(8f)] private float overlayMargin = 18f;
     [SerializeField, Min(36f)] private float overlaySize = 56f;
 
+    [Header("Floating Toggle")]
+    [SerializeField] private bool useFloatingWorldButton = true;
+    [SerializeField, Min(0.2f)] private float floatingButtonDistance = 0.48f;
+    [SerializeField] private float floatingButtonHeightOffset = -0.28f;
+    [SerializeField] private float floatingButtonRightOffset = 0.42f;
+    [SerializeField] private Vector3 floatingButtonScale = new Vector3(0.0008f, 0.0008f, 0.0008f);
+
     private UIDocument toggleDocument;
-    private Button toggleButton;
+    private UIToolkitButton toggleButton;
     private VisualElement toggleRoot;
     private VisualElement courseRoot;
     private bool isOpen;
@@ -44,15 +56,23 @@ public class CourseToggleController : MonoBehaviour
     private Coroutine ensureUiRoutine;
     private float nextHealthCheckTime;
     private GUIStyle overlayButtonStyle;
+    private Transform floatingButtonRoot;
+    private Canvas floatingButtonCanvas;
+    private UGUIButton floatingButton;
+    private readonly UIGraphicImage[] floatingGlyphLines = new UIGraphicImage[3];
 
     private void Awake()
     {
         toggleDocument = toggleDocumentOverride != null ? toggleDocumentOverride : GetComponent<UIDocument>();
+        if (Application.isPlaying && useFloatingWorldButton)
+        {
+            forceScreenOverlayButton = false;
+        }
 #if UNITY_EDITOR
         AutoAssignInEditor();
 #endif
         ResolveCourseTarget();
-        isOpen = startOpened;
+        isOpen = Application.isPlaying ? false : startOpened;
     }
 
     private void OnEnable()
@@ -64,6 +84,10 @@ public class CourseToggleController : MonoBehaviour
         ensureUiRoutine = StartCoroutine(InitializeAfterUiReady());
         ResolveCourseTarget();
         nextHealthCheckTime = 0f;
+        if (Application.isPlaying && useFloatingWorldButton)
+        {
+            EnsureFloatingWorldButton();
+        }
     }
 
     private void OnDisable()
@@ -78,6 +102,11 @@ public class CourseToggleController : MonoBehaviour
         {
             toggleButton.clicked -= OnToggleClicked;
         }
+
+        if (floatingButton != null)
+        {
+            floatingButton.onClick.RemoveListener(OnToggleClicked);
+        }
     }
 
     private IEnumerator InitializeAfterUiReady()
@@ -90,11 +119,18 @@ public class CourseToggleController : MonoBehaviour
         BuildToggleUi();
         ApplyImmediateState(isOpen);
         UpdateToggleVisualState();
+        HideDocumentToggleWhenUsingFloatingButton();
         ensureUiRoutine = null;
     }
 
     private void LateUpdate()
     {
+        if (Application.isPlaying && useFloatingWorldButton)
+        {
+            EnsureFloatingWorldButton();
+            UpdateFloatingWorldButtonTransform();
+        }
+
         if (isOpen && positionRightOfViewerOnOpen)
         {
             PlaceCoursePanelNearViewer();
@@ -122,7 +158,7 @@ public class CourseToggleController : MonoBehaviour
             return;
         }
 
-        if (root.Q<Button>("course-toggle-button") == null)
+        if (root.Q<UIToolkitButton>("course-toggle-button") == null)
         {
             BuildToggleUi();
             ApplyImmediateState(isOpen);
@@ -131,9 +167,16 @@ public class CourseToggleController : MonoBehaviour
         }
 
         toggleRoot = root.Q<VisualElement>("course-toggle-root");
-        toggleButton = root.Q<Button>("course-toggle-button");
-        EnforceBottomRightPlacement();
-        EnforceToggleButtonVisual();
+        toggleButton = root.Q<UIToolkitButton>("course-toggle-button");
+        if (useFloatingWorldButton && Application.isPlaying)
+        {
+            HideDocumentToggleWhenUsingFloatingButton();
+        }
+        else
+        {
+            EnforceBottomRightPlacement();
+            EnforceToggleButtonVisual();
+        }
     }
 
     private void BuildToggleUi()
@@ -162,12 +205,12 @@ public class CourseToggleController : MonoBehaviour
         }
 
         toggleRoot = root.Q<VisualElement>("course-toggle-root");
-        toggleButton = root.Q<Button>("course-toggle-button");
+        toggleButton = root.Q<UIToolkitButton>("course-toggle-button");
         if (toggleButton == null)
         {
             CreateRuntimeFallbackToggle(root);
             toggleRoot = root.Q<VisualElement>("course-toggle-root");
-            toggleButton = root.Q<Button>("course-toggle-button");
+            toggleButton = root.Q<UIToolkitButton>("course-toggle-button");
             if (toggleButton == null)
             {
                 Debug.LogError("[CourseToggleController] Toggle button not found.");
@@ -175,8 +218,15 @@ public class CourseToggleController : MonoBehaviour
             }
         }
 
-        EnforceBottomRightPlacement();
-        EnforceToggleButtonVisual();
+        if (useFloatingWorldButton && Application.isPlaying)
+        {
+            HideDocumentToggleWhenUsingFloatingButton();
+        }
+        else
+        {
+            EnforceBottomRightPlacement();
+            EnforceToggleButtonVisual();
+        }
 
         toggleButton.clicked -= OnToggleClicked;
         toggleButton.clicked += OnToggleClicked;
@@ -194,7 +244,7 @@ public class CourseToggleController : MonoBehaviour
         fallbackRoot.style.alignItems = Align.Center;
         fallbackRoot.pickingMode = PickingMode.Position;
 
-        var fallbackButton = new Button { name = "course-toggle-button", text = "Menu" };
+        var fallbackButton = new UIToolkitButton { name = "course-toggle-button", text = "Menu" };
         fallbackButton.style.width = 56f;
         fallbackButton.style.height = 56f;
         fallbackButton.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -417,15 +467,166 @@ public class CourseToggleController : MonoBehaviour
 
     private void UpdateToggleVisualState()
     {
+        if (toggleButton != null)
+        {
+            toggleButton.EnableInClassList("is-active", isOpen);
+            toggleButton.tooltip = isOpen ? "Hide Course Selection" : "Show Course Selection";
+        }
+
+        if (useFloatingWorldButton && Application.isPlaying)
+        {
+            UpdateFloatingWorldButtonVisual();
+            HideDocumentToggleWhenUsingFloatingButton();
+            return;
+        }
+
         if (toggleButton == null)
         {
             return;
         }
 
-        toggleButton.EnableInClassList("is-active", isOpen);
-        toggleButton.tooltip = isOpen ? "Hide Course Selection" : "Show Course Selection";
         EnforceBottomRightPlacement();
         EnforceToggleButtonVisual();
+    }
+
+    private void HideDocumentToggleWhenUsingFloatingButton()
+    {
+        if (toggleRoot == null) return;
+
+        toggleRoot.style.display = DisplayStyle.None;
+        toggleRoot.style.visibility = Visibility.Hidden;
+        toggleRoot.style.opacity = 0f;
+    }
+
+    private void EnsureFloatingWorldButton()
+    {
+        if (!useFloatingWorldButton || !Application.isPlaying)
+        {
+            return;
+        }
+
+        if (floatingButtonRoot != null && floatingButton != null)
+        {
+            return;
+        }
+
+        GameObject rootGo = new GameObject("CourseToggleFloatingButton", typeof(RectTransform));
+        floatingButtonRoot = rootGo.transform;
+        floatingButtonCanvas = rootGo.AddComponent<Canvas>();
+        floatingButtonCanvas.renderMode = RenderMode.WorldSpace;
+        rootGo.AddComponent<GraphicRaycaster>();
+
+        CanvasScaler scaler = rootGo.AddComponent<CanvasScaler>();
+        scaler.dynamicPixelsPerUnit = 10f;
+
+        RectTransform rootRect = rootGo.GetComponent<RectTransform>();
+        rootRect.sizeDelta = new Vector2(96f, 96f);
+        floatingButtonRoot.localScale = floatingButtonScale;
+
+        GameObject buttonGo = new GameObject("Button", typeof(RectTransform), typeof(UIGraphicImage), typeof(UGUIButton));
+        buttonGo.transform.SetParent(floatingButtonRoot, false);
+        RectTransform buttonRect = buttonGo.GetComponent<RectTransform>();
+        buttonRect.anchorMin = Vector2.zero;
+        buttonRect.anchorMax = Vector2.one;
+        buttonRect.offsetMin = Vector2.zero;
+        buttonRect.offsetMax = Vector2.zero;
+
+        UIGraphicImage buttonImage = buttonGo.GetComponent<UIGraphicImage>();
+        buttonImage.color = new Color(0.96f, 0.98f, 1f, 1f);
+        floatingButton = buttonGo.GetComponent<UGUIButton>();
+        floatingButton.onClick.RemoveListener(OnToggleClicked);
+        floatingButton.onClick.AddListener(OnToggleClicked);
+
+        for (int i = 0; i < floatingGlyphLines.Length; i++)
+        {
+            GameObject lineGo = new GameObject($"Line{i}", typeof(RectTransform), typeof(UIGraphicImage));
+            lineGo.transform.SetParent(buttonGo.transform, false);
+            RectTransform lineRect = lineGo.GetComponent<RectTransform>();
+            lineRect.anchorMin = new Vector2(0.28f, 0.5f);
+            lineRect.anchorMax = new Vector2(0.72f, 0.5f);
+            lineRect.sizeDelta = new Vector2(0f, 6f);
+            float y = (i - 1) * -14f;
+            lineRect.anchoredPosition = new Vector2(0f, y);
+            UIGraphicImage lineImage = lineGo.GetComponent<UIGraphicImage>();
+            lineImage.color = new Color(0.08f, 0.33f, 0.68f, 1f);
+            floatingGlyphLines[i] = lineImage;
+        }
+
+        UpdateFloatingWorldButtonVisual();
+        UpdateFloatingWorldButtonTransform();
+    }
+
+    private void UpdateFloatingWorldButtonTransform()
+    {
+        if (floatingButtonRoot == null)
+        {
+            return;
+        }
+
+        Transform viewer = viewerTransform != null
+            ? viewerTransform
+            : (Camera.main != null ? Camera.main.transform : null);
+        if (viewer == null)
+        {
+            return;
+        }
+
+        Vector3 forward = viewer.forward;
+        forward.y = 0f;
+        if (forward.sqrMagnitude < 0.001f)
+        {
+            forward = viewer.forward;
+        }
+        forward.Normalize();
+
+        Vector3 right = viewer.right;
+        right.y = 0f;
+        if (right.sqrMagnitude < 0.001f)
+        {
+            right = Vector3.right;
+        }
+        right.Normalize();
+
+        floatingButtonRoot.position = viewer.position
+            + forward * floatingButtonDistance
+            + right * floatingButtonRightOffset
+            + Vector3.up * floatingButtonHeightOffset;
+
+        Vector3 toViewer = viewer.position - floatingButtonRoot.position;
+        toViewer.y = 0f;
+        if (toViewer.sqrMagnitude > 0.001f)
+        {
+            floatingButtonRoot.rotation = Quaternion.LookRotation(toViewer.normalized, Vector3.up) * Quaternion.Euler(0f, 180f, 0f);
+        }
+    }
+
+    private void UpdateFloatingWorldButtonVisual()
+    {
+        if (floatingButton == null || floatingButtonRoot == null)
+        {
+            return;
+        }
+
+        floatingButtonRoot.gameObject.SetActive(!isOpen);
+
+        UIGraphicImage buttonImage = floatingButton.GetComponent<UIGraphicImage>();
+        if (buttonImage != null)
+        {
+            buttonImage.color = isOpen
+                ? new Color(0.13f, 0.48f, 0.91f, 1f)
+                : new Color(0.96f, 0.98f, 1f, 1f);
+        }
+
+        Color glyphColor = isOpen
+            ? Color.white
+            : new Color(0.08f, 0.33f, 0.68f, 1f);
+        for (int i = 0; i < floatingGlyphLines.Length; i++)
+        {
+            if (floatingGlyphLines[i] != null)
+            {
+                floatingGlyphLines[i].color = glyphColor;
+            }
+        }
     }
 
     private void OnGUI()

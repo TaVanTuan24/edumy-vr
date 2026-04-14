@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using UnityEngine.Video;
 
 /// <summary>
@@ -15,6 +18,11 @@ public class VideoPopupWindow : MonoBehaviour
 {
     private static readonly Color FrameBackColor = new Color(0.88f, 0.94f, 1f, 1f);
     private static readonly Color FrameBarColor = new Color(0.79f, 0.88f, 0.99f, 1f);
+    private static readonly Color PanelColor = new Color(0.97f, 0.985f, 1f, 0.98f);
+    private static readonly Color PanelBorderColor = new Color(0.8f, 0.88f, 0.98f, 1f);
+    private static readonly Color PrimaryButtonColor = new Color(0.2f, 0.55f, 0.93f, 0.98f);
+    private static readonly Color SecondaryButtonColor = new Color(0.89f, 0.94f, 1f, 0.98f);
+    private static readonly Color TextColor = new Color(0.1f, 0.16f, 0.24f, 1f);
 
     [SerializeField] private Transform windowTransform;
     [SerializeField] private Vector2 defaultWindowSize = new Vector2(3.2f, 1.8f);
@@ -29,6 +37,10 @@ public class VideoPopupWindow : MonoBehaviour
     [SerializeField] private AudioSource videoAudioSource;
     [SerializeField, Range(0f, 1f)] private float audioVolume = 1f;
     [SerializeField] private bool spatialAudio = false;
+    [Header("Controls")]
+    [SerializeField] private bool showControls = true;
+    [SerializeField] private Vector3 controlsScale = new Vector3(0.001f, 0.0015f, 0.0012f);
+    [SerializeField] private float seekStepSeconds = 10f;
 
     private VideoPlayer videoPlayer;
     private RenderTexture renderTexture;
@@ -36,8 +48,23 @@ public class VideoPopupWindow : MonoBehaviour
     private Material windowMaterial;
     private bool createdRuntimeWindow;
     private string cachedLocalVideoPath;
+    private Canvas controlsCanvas;
+    private GraphicRaycaster controlsRaycaster;
+    private RectTransform controlsRootRect;
+    private Button playPauseButton;
+    private Button stopButton;
+    private Button rewindButton;
+    private Button forwardButton;
+    private Slider seekSlider;
+    private TMP_Text timeLabel;
+    private TMP_Text titleLabel;
+    private bool controlsBound;
+    private bool isSeeking;
+    private bool createdRuntimeControlsCanvas;
+    private string currentVideoTitle = "Video";
 
     public VideoPlayer Player => videoPlayer;
+    public bool IsPlaying => videoPlayer != null && videoPlayer.isPlaying;
 
     private void Reset()
     {
@@ -56,9 +83,10 @@ public class VideoPopupWindow : MonoBehaviour
         EnsureEditorPreviewMaterial();
     }
 
-    public async Task PlayUrlAsync(string url, Transform viewer, float distance, float heightOffset, Vector2 windowSize)
+    public async Task PlayUrlAsync(string url, string title, Transform viewer, float distance, float heightOffset, Vector2 windowSize)
     {
         if (string.IsNullOrWhiteSpace(url)) return;
+        currentVideoTitle = string.IsNullOrWhiteSpace(title) ? "Video" : title.Trim();
 
         if (IsYouTubeUrl(url))
         {
@@ -69,6 +97,7 @@ public class VideoPopupWindow : MonoBehaviour
 
         EnsureWindowExists(forceEditorCreation: false);
         EnsureVideoResources();
+        EnsureControlsCanvas();
         bool autoPlace = !keepPlacedTransformOnPlay || createdRuntimeWindow;
         if (autoPlace)
         {
@@ -184,6 +213,7 @@ public class VideoPopupWindow : MonoBehaviour
             await tcs.Task;
             ConfigureVideoAudio();
             videoPlayer.Play();
+            RefreshControlsUi();
         }
         finally
         {
@@ -340,7 +370,7 @@ public class VideoPopupWindow : MonoBehaviour
 
     public void StopAndHide()
     {
-        if (videoPlayer != null && videoPlayer.isPlaying)
+        if (videoPlayer != null)
         {
             videoPlayer.Stop();
         }
@@ -348,6 +378,11 @@ public class VideoPopupWindow : MonoBehaviour
         if (windowRenderer != null)
         {
             windowRenderer.enabled = false;
+        }
+
+        if (controlsCanvas != null)
+        {
+            controlsCanvas.gameObject.SetActive(false);
         }
     }
 
@@ -365,6 +400,7 @@ public class VideoPopupWindow : MonoBehaviour
         {
             videoPlayer.Play();
         }
+        RefreshControlsUi();
     }
 
     private void EnsureWindow()
@@ -422,6 +458,7 @@ public class VideoPopupWindow : MonoBehaviour
         }
 
         EnsureFrameVisuals();
+        EnsureControlsCanvas();
     }
 
     private void EnsureFrameVisuals()
@@ -568,6 +605,11 @@ public class VideoPopupWindow : MonoBehaviour
         {
             windowRenderer.sharedMaterial = windowMaterial;
         }
+
+        if (controlsCanvas != null)
+        {
+            controlsCanvas.gameObject.SetActive(showControls);
+        }
     }
 
     private void ConfigureVideoAudio()
@@ -623,6 +665,10 @@ public class VideoPopupWindow : MonoBehaviour
         float width = Mathf.Max(0.5f, windowSize.x > 0f ? windowSize.x : defaultWindowSize.x);
         float height = Mathf.Max(0.3f, windowSize.y > 0f ? windowSize.y : defaultWindowSize.y);
         scaleTarget.localScale = new Vector3(width, height, 1f);
+        if (createdRuntimeControlsCanvas)
+        {
+            LayoutControlsCanvas(width, height);
+        }
     }
 
     private void ApplyWindowSize(Vector2 size)
@@ -632,6 +678,377 @@ public class VideoPopupWindow : MonoBehaviour
         float width = Mathf.Max(0.5f, size.x);
         float height = Mathf.Max(0.3f, size.y);
         windowTransform.localScale = new Vector3(width, height, 1f);
+        if (createdRuntimeControlsCanvas)
+        {
+            LayoutControlsCanvas(width, height);
+        }
+    }
+
+    private void Update()
+    {
+        if (!Application.isPlaying) return;
+        RefreshControlsUi();
+    }
+
+    private void EnsureControlsCanvas()
+    {
+        if (!showControls || windowTransform == null)
+        {
+            return;
+        }
+
+        Transform existing = windowTransform.Find("VideoControlsCanvas");
+        if (existing == null)
+        {
+            GameObject go = new GameObject("VideoControlsCanvas", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster), typeof(CanvasScaler));
+            go.transform.SetParent(windowTransform, false);
+            existing = go.transform;
+            createdRuntimeControlsCanvas = true;
+        }
+
+        controlsCanvas = existing.GetComponent<Canvas>();
+        controlsRaycaster = existing.GetComponent<GraphicRaycaster>();
+        controlsRootRect = existing as RectTransform;
+
+        controlsCanvas.renderMode = RenderMode.WorldSpace;
+        CanvasScaler scaler = existing.GetComponent<CanvasScaler>();
+        scaler.dynamicPixelsPerUnit = 10f;
+
+        if (createdRuntimeControlsCanvas)
+        {
+            existing.localScale = controlsScale;
+            LayoutControlsCanvas(defaultWindowSize.x, defaultWindowSize.y);
+        }
+        BuildControlsUi();
+        EnsureEventSystemSupport();
+    }
+
+    private void LayoutControlsCanvas(float width, float height)
+    {
+        if (controlsRootRect == null) return;
+
+        controlsRootRect.anchorMin = new Vector2(0.5f, 0.5f);
+        controlsRootRect.anchorMax = new Vector2(0.5f, 0.5f);
+        controlsRootRect.pivot = new Vector2(0.5f, 0.5f);
+        controlsRootRect.sizeDelta = new Vector2(1280f, 720f);
+        controlsRootRect.localPosition = new Vector3(0f, -0.134f, -0.01f);
+        controlsRootRect.localRotation = Quaternion.identity;
+        controlsRootRect.localScale = controlsScale;
+    }
+
+    private void BuildControlsUi()
+    {
+        if (controlsRootRect == null) return;
+
+        Image panel = FindOrCreateImage(controlsRootRect, "ControlsPanel");
+        RectTransform panelRect = panel.rectTransform;
+        panelRect.anchorMin = new Vector2(0.08f, 0.03f);
+        panelRect.anchorMax = new Vector2(0.92f, 0.18f);
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+        panel.color = PanelColor;
+
+        Outline outline = panel.GetComponent<Outline>();
+        if (outline == null) outline = panel.gameObject.AddComponent<Outline>();
+        outline.effectColor = PanelBorderColor;
+        outline.effectDistance = new Vector2(1f, -1f);
+
+        titleLabel = FindOrCreateText(panelRect, "VideoTitle", new Vector2(0.02f, 0.58f), new Vector2(0.32f, 0.94f), 28f, FontStyles.Bold, TextAlignmentOptions.Left);
+        timeLabel = FindOrCreateText(panelRect, "TimeLabel", new Vector2(0.76f, 0.58f), new Vector2(0.98f, 0.94f), 24f, FontStyles.Normal, TextAlignmentOptions.Right);
+
+        playPauseButton = FindOrCreateButton(panelRect, "PlayPauseButton", new Vector2(0.02f, 0.12f), new Vector2(0.12f, 0.52f), "Play", PrimaryButtonColor, Color.white);
+        stopButton = FindOrCreateButton(panelRect, "StopButton", new Vector2(0.13f, 0.12f), new Vector2(0.21f, 0.52f), "Stop", SecondaryButtonColor, TextColor);
+        rewindButton = FindOrCreateButton(panelRect, "RewindButton", new Vector2(0.22f, 0.12f), new Vector2(0.30f, 0.52f), "-10", SecondaryButtonColor, TextColor);
+        forwardButton = FindOrCreateButton(panelRect, "ForwardButton", new Vector2(0.31f, 0.12f), new Vector2(0.39f, 0.52f), "+10", SecondaryButtonColor, TextColor);
+        seekSlider = FindOrCreateSlider(panelRect, "SeekSlider", new Vector2(0.41f, 0.16f), new Vector2(0.98f, 0.48f));
+
+        if (controlsBound) return;
+
+        if (playPauseButton != null) playPauseButton.onClick.AddListener(TogglePlayPause);
+        if (stopButton != null) stopButton.onClick.AddListener(StopPlayback);
+        if (rewindButton != null) rewindButton.onClick.AddListener(() => SeekBy(-Mathf.Max(1f, seekStepSeconds)));
+        if (forwardButton != null) forwardButton.onClick.AddListener(() => SeekBy(Mathf.Max(1f, seekStepSeconds)));
+        if (seekSlider != null)
+        {
+            seekSlider.onValueChanged.AddListener(OnSeekSliderChanged);
+            EventTrigger trigger = seekSlider.gameObject.GetComponent<EventTrigger>();
+            if (trigger == null) trigger = seekSlider.gameObject.AddComponent<EventTrigger>();
+            AddEventTrigger(trigger, EventTriggerType.PointerDown, () => isSeeking = true);
+            AddEventTrigger(trigger, EventTriggerType.PointerUp, () =>
+            {
+                isSeeking = false;
+                ApplySeekSlider();
+            });
+        }
+
+        controlsBound = true;
+    }
+
+    private void RefreshControlsUi()
+    {
+        if (!showControls || videoPlayer == null || controlsCanvas == null)
+        {
+            return;
+        }
+
+        controlsCanvas.gameObject.SetActive(windowRenderer != null && windowRenderer.enabled);
+
+        if (titleLabel != null)
+        {
+            titleLabel.text = currentVideoTitle;
+            titleLabel.color = TextColor;
+        }
+
+        if (timeLabel != null)
+        {
+            float current = (float)Math.Max(0d, videoPlayer.time);
+            float total = videoPlayer.length > 0d ? (float)videoPlayer.length : 0f;
+            timeLabel.text = $"{FormatTime(current)} / {FormatTime(total)}";
+            timeLabel.color = TextColor;
+        }
+
+        if (playPauseButton != null)
+        {
+            TMP_Text txt = playPauseButton.GetComponentInChildren<TMP_Text>(true);
+            if (txt != null) txt.text = videoPlayer.isPlaying ? "Pause" : "Play";
+        }
+
+        if (seekSlider != null && !isSeeking)
+        {
+            float total = videoPlayer.length > 0d ? (float)videoPlayer.length : 1f;
+            seekSlider.minValue = 0f;
+            seekSlider.maxValue = Mathf.Max(1f, total);
+            seekSlider.SetValueWithoutNotify((float)Math.Max(0d, videoPlayer.time));
+        }
+    }
+
+    private void TogglePlayPause()
+    {
+        if (videoPlayer == null) return;
+        if (videoPlayer.isPlaying) videoPlayer.Pause();
+        else videoPlayer.Play();
+        RefreshControlsUi();
+    }
+
+    private void StopPlayback()
+    {
+        if (videoPlayer == null) return;
+        videoPlayer.Stop();
+        RefreshControlsUi();
+    }
+
+    private void SeekBy(float deltaSeconds)
+    {
+        if (videoPlayer == null) return;
+        double length = videoPlayer.length;
+        double current = videoPlayer.time;
+        double target = current + deltaSeconds;
+        if (length > 0d)
+        {
+            target = Math.Max(0d, Math.Min(length, target));
+        }
+        else
+        {
+            target = Math.Max(0d, target);
+        }
+        videoPlayer.time = target;
+        RefreshControlsUi();
+    }
+
+    private void OnSeekSliderChanged(float _)
+    {
+        if (isSeeking)
+        {
+            RefreshControlsUi();
+        }
+    }
+
+    private void ApplySeekSlider()
+    {
+        if (videoPlayer == null || seekSlider == null) return;
+        videoPlayer.time = seekSlider.value;
+        RefreshControlsUi();
+    }
+
+    private void EnsureEventSystemSupport()
+    {
+        if (!Application.isPlaying) return;
+
+        EventSystem eventSystem = FindAnyObjectByType<EventSystem>();
+        if (eventSystem == null)
+        {
+            GameObject go = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            eventSystem = go.GetComponent<EventSystem>();
+        }
+
+        if (eventSystem != null && eventSystem.GetComponent<BaseInputModule>() == null)
+        {
+            eventSystem.gameObject.AddComponent<StandaloneInputModule>();
+        }
+    }
+
+    private static void AddEventTrigger(EventTrigger trigger, EventTriggerType type, Action action)
+    {
+        if (trigger == null || action == null) return;
+        EventTrigger.Entry entry = new EventTrigger.Entry { eventID = type };
+        entry.callback.AddListener(_ => action());
+        trigger.triggers.Add(entry);
+    }
+
+    private static Image FindOrCreateImage(RectTransform parent, string name)
+    {
+        Transform existing = parent.Find(name);
+        if (existing == null)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            existing = go.transform;
+        }
+
+        return existing.GetComponent<Image>();
+    }
+
+    private static TMP_Text FindOrCreateText(RectTransform parent, string name, Vector2 anchorMin, Vector2 anchorMax, float fontSize, FontStyles fontStyle, TextAlignmentOptions alignment)
+    {
+        Transform existing = parent.Find(name);
+        if (existing == null)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+            go.transform.SetParent(parent, false);
+            existing = go.transform;
+        }
+
+        RectTransform rect = existing.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        TMP_Text text = existing.GetComponent<TMP_Text>();
+        text.fontSize = fontSize;
+        text.fontStyle = fontStyle;
+        text.alignment = alignment;
+        text.color = TextColor;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        return text;
+    }
+
+    private static Button FindOrCreateButton(RectTransform parent, string name, Vector2 anchorMin, Vector2 anchorMax, string label, Color backgroundColor, Color textColor)
+    {
+        Transform existing = parent.Find(name);
+        if (existing == null)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+            GameObject textGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textGo.transform.SetParent(go.transform, false);
+            existing = go.transform;
+        }
+
+        RectTransform rect = existing.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        Image image = existing.GetComponent<Image>();
+        image.color = backgroundColor;
+
+        Button button = existing.GetComponent<Button>();
+        TMP_Text text = existing.GetComponentInChildren<TMP_Text>(true);
+        text.text = label;
+        text.fontSize = 22f;
+        text.alignment = TextAlignmentOptions.Center;
+        text.color = textColor;
+
+        RectTransform textRect = text.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+
+        return button;
+    }
+
+    private static Slider FindOrCreateSlider(RectTransform parent, string name, Vector2 anchorMin, Vector2 anchorMax)
+    {
+        Transform existing = parent.Find(name);
+        if (existing == null)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform), typeof(Slider));
+            go.transform.SetParent(parent, false);
+
+            GameObject background = new GameObject("Background", typeof(RectTransform), typeof(Image));
+            background.transform.SetParent(go.transform, false);
+            GameObject fillArea = new GameObject("Fill Area", typeof(RectTransform));
+            fillArea.transform.SetParent(go.transform, false);
+            GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            fill.transform.SetParent(fillArea.transform, false);
+            GameObject handleArea = new GameObject("Handle Slide Area", typeof(RectTransform));
+            handleArea.transform.SetParent(go.transform, false);
+            GameObject handle = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+            handle.transform.SetParent(handleArea.transform, false);
+
+            existing = go.transform;
+        }
+
+        RectTransform rect = existing.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        Slider slider = existing.GetComponent<Slider>();
+        slider.direction = Slider.Direction.LeftToRight;
+
+        RectTransform backgroundRect = existing.Find("Background").GetComponent<RectTransform>();
+        backgroundRect.anchorMin = new Vector2(0f, 0.35f);
+        backgroundRect.anchorMax = new Vector2(1f, 0.65f);
+        backgroundRect.offsetMin = Vector2.zero;
+        backgroundRect.offsetMax = Vector2.zero;
+        Image backgroundImage = backgroundRect.GetComponent<Image>();
+        backgroundImage.color = new Color(0.86f, 0.91f, 0.97f, 1f);
+
+        RectTransform fillAreaRect = existing.Find("Fill Area").GetComponent<RectTransform>();
+        fillAreaRect.anchorMin = new Vector2(0f, 0.35f);
+        fillAreaRect.anchorMax = new Vector2(1f, 0.65f);
+        fillAreaRect.offsetMin = new Vector2(6f, 0f);
+        fillAreaRect.offsetMax = new Vector2(-6f, 0f);
+
+        RectTransform fillRect = existing.Find("Fill Area/Fill").GetComponent<RectTransform>();
+        fillRect.anchorMin = Vector2.zero;
+        fillRect.anchorMax = Vector2.one;
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
+        Image fillImage = fillRect.GetComponent<Image>();
+        fillImage.color = new Color(0.22f, 0.56f, 0.93f, 1f);
+
+        RectTransform handleAreaRect = existing.Find("Handle Slide Area").GetComponent<RectTransform>();
+        handleAreaRect.anchorMin = Vector2.zero;
+        handleAreaRect.anchorMax = Vector2.one;
+        handleAreaRect.offsetMin = new Vector2(10f, 0f);
+        handleAreaRect.offsetMax = new Vector2(-10f, 0f);
+
+        RectTransform handleRect = existing.Find("Handle Slide Area/Handle").GetComponent<RectTransform>();
+        handleRect.sizeDelta = new Vector2(18f, 18f);
+        Image handleImage = handleRect.GetComponent<Image>();
+        handleImage.color = Color.white;
+
+        slider.targetGraphic = handleImage;
+        slider.fillRect = fillRect;
+        slider.handleRect = handleRect;
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        return slider;
+    }
+
+    private static string FormatTime(float sec)
+    {
+        sec = Mathf.Max(0f, sec);
+        int h = Mathf.FloorToInt(sec / 3600f);
+        int m = Mathf.FloorToInt((sec % 3600f) / 60f);
+        int s = Mathf.FloorToInt(sec % 60f);
+        return h > 0 ? $"{h:00}:{m:00}:{s:00}" : $"{m:00}:{s:00}";
     }
 
     private void OnDestroy()

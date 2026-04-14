@@ -22,6 +22,10 @@ public class SlidePopupWindow : MonoBehaviour
     [SerializeField] private bool autoCreateWindowInEditor = true;
     [SerializeField] private bool showPreviewInEditor = true;
     [SerializeField] private bool autoPlaceInFrontWhenPlaying = false;
+    [SerializeField] private bool followViewerWhileVisible = true;
+    [SerializeField] private float horizontalOffset = -0.35f;
+    [SerializeField] private float additionalHeightOffset = 0f;
+    [SerializeField] private bool flipForwardToFaceViewer = true;
     [SerializeField] private bool enableDebugLogs = true;
 
     private Canvas canvas;
@@ -37,6 +41,9 @@ public class SlidePopupWindow : MonoBehaviour
     private int currentSlideIndex;
     private bool bindingsAdded;
     private bool createdRuntimeWindow;
+    private Transform activeViewer;
+    private float activeDistance;
+    private float activeHeightOffset;
 
     private void Awake()
     {
@@ -84,6 +91,16 @@ public class SlidePopupWindow : MonoBehaviour
         {
             windowTransform.gameObject.SetActive(showPreviewInEditor);
         }
+    }
+
+    private void LateUpdate()
+    {
+        if (!Application.isPlaying) return;
+        if (!followViewerWhileVisible) return;
+        if (windowTransform == null || !windowTransform.gameObject.activeSelf) return;
+        if (activeViewer == null) return;
+
+        PositionWindow(activeViewer, activeDistance, activeHeightOffset);
     }
 
     [ContextMenu("Show Preview In Editor")]
@@ -169,6 +186,9 @@ public class SlidePopupWindow : MonoBehaviour
         activeSlides.Clear();
         activeSlides.AddRange(BuildSlidesForLesson(lesson));
         currentSlideIndex = 0;
+        activeViewer = viewer;
+        activeDistance = distance;
+        activeHeightOffset = heightOffset;
 
         if (enableDebugLogs)
         {
@@ -180,9 +200,10 @@ public class SlidePopupWindow : MonoBehaviour
             titleText.text = string.IsNullOrWhiteSpace(lesson.title) ? "Slide" : lesson.title;
             titleText.color = TitleTextColor;
         }
-        bool shouldAutoPlace = !keepPlacedTransformOnShow
-            || (createdRuntimeWindow && Application.isPlaying)
-            || (Application.isPlaying && autoPlaceInFrontWhenPlaying);
+        bool shouldAutoPlace = Application.isPlaying
+            || !keepPlacedTransformOnShow
+            || createdRuntimeWindow
+            || autoPlaceInFrontWhenPlaying;
         if (shouldAutoPlace)
         {
             PositionWindow(viewer, distance, heightOffset);
@@ -222,6 +243,8 @@ public class SlidePopupWindow : MonoBehaviour
         {
             windowTransform.gameObject.SetActive(false);
         }
+
+        activeViewer = null;
     }
 
     private void EnsureWindowExists(bool forceEditorCreation)
@@ -416,13 +439,32 @@ public class SlidePopupWindow : MonoBehaviour
         }
         forward.Normalize();
 
-        windowTransform.position = viewer.position + forward * Mathf.Max(0.2f, distance) + Vector3.up * heightOffset;
+        Vector3 right = viewer.right;
+        right.y = 0f;
+        if (right.sqrMagnitude < 0.001f)
+        {
+            right = Vector3.right;
+        }
+        right.Normalize();
 
-        Vector3 lookTarget = viewer.position + Vector3.up * heightOffset;
+        float totalHeightOffset = heightOffset + additionalHeightOffset;
+
+        windowTransform.position = viewer.position
+            + forward * Mathf.Max(0.2f, distance)
+            + right * horizontalOffset
+            + Vector3.up * totalHeightOffset;
+
+        Vector3 lookTarget = viewer.position + Vector3.up * totalHeightOffset;
         Vector3 dir = lookTarget - windowTransform.position;
         if (dir.sqrMagnitude > 0.001f)
         {
-            windowTransform.rotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
+            Quaternion look = Quaternion.LookRotation(dir.normalized, Vector3.up);
+            if (flipForwardToFaceViewer)
+            {
+                look *= Quaternion.Euler(0f, 180f, 0f);
+            }
+
+            windowTransform.rotation = look;
         }
     }
 

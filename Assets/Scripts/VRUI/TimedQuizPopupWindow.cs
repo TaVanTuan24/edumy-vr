@@ -10,9 +10,15 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class TimedQuizPopupWindow : MonoBehaviour
 {
-    private static readonly Color OptionDefaultColor = new Color(0.18f, 0.38f, 0.62f, 0.97f);
-    private static readonly Color OptionCorrectColor = new Color(0.16f, 0.58f, 0.34f, 0.98f);
-    private static readonly Color OptionWrongColor = new Color(0.74f, 0.24f, 0.24f, 0.98f);
+    private static readonly Color PanelColor = new Color(0.97f, 0.985f, 1f, 0.97f);
+    private static readonly Color HeaderColor = new Color(0.82f, 0.91f, 1f, 0.99f);
+    private static readonly Color TitleColor = new Color(0.08f, 0.12f, 0.18f, 1f);
+    private static readonly Color BodyTextColor = new Color(0.18f, 0.24f, 0.33f, 1f);
+    private static readonly Color MutedTextColor = new Color(0.34f, 0.43f, 0.56f, 1f);
+    private static readonly Color OptionDefaultColor = new Color(0.9f, 0.95f, 1f, 0.98f);
+    private static readonly Color OptionCorrectColor = new Color(0.85f, 0.97f, 0.89f, 0.99f);
+    private static readonly Color OptionWrongColor = new Color(1f, 0.89f, 0.89f, 0.99f);
+    private static readonly Color ContinueButtonColor = new Color(0.2f, 0.57f, 0.94f, 0.98f);
 
     [SerializeField] private Transform windowTransform;
     [SerializeField] private Vector2 canvasSize = new Vector2(980f, 620f);
@@ -22,6 +28,8 @@ public class TimedQuizPopupWindow : MonoBehaviour
     [SerializeField] private bool showPreviewInEditor = true;
     [SerializeField] private bool autoPlaceInFrontWhenPlaying = false;
     [SerializeField] private bool flipForwardToFaceViewer = true;
+    [SerializeField] private float horizontalOffset = -0.48f;
+    [SerializeField] private float additionalHeightOffset = -0.22f;
     [SerializeField, Min(0.1f)] private float autoCloseDelayCorrect = 2f;
     [SerializeField, Min(0.1f)] private float autoCloseDelayWrong = 5f;
 
@@ -40,6 +48,9 @@ public class TimedQuizPopupWindow : MonoBehaviour
     private bool bindingsAdded;
     private bool createdRuntimeWindow;
     private Coroutine autoCloseCoroutine;
+    private Transform activeViewer;
+    private float activeDistance;
+    private float activeHeightOffset;
 
     public event Action<bool> OnWindowClosed;
 
@@ -87,6 +98,15 @@ public class TimedQuizPopupWindow : MonoBehaviour
         }
     }
 
+    private void LateUpdate()
+    {
+        if (!Application.isPlaying) return;
+        if (windowTransform == null || !windowTransform.gameObject.activeSelf) return;
+        if (activeViewer == null) return;
+
+        PositionWindow(activeViewer, activeDistance, activeHeightOffset);
+    }
+
     public bool Show(TimedQuizData quiz, Transform viewer, float distance, float heightOffset)
     {
         if (quiz == null) return false;
@@ -97,16 +117,14 @@ public class TimedQuizPopupWindow : MonoBehaviour
         activeQuiz = quiz;
         selectedIndex = -1;
         answered = false;
+        activeViewer = viewer;
+        activeDistance = distance;
+        activeHeightOffset = heightOffset;
         StopAutoClose();
 
         if (titleText != null)
         {
-            titleText.text = "Quiz Trong Video";
-        }
-
-        if (timerText != null)
-        {
-            timerText.text = $"Moc thoi gian: {Mathf.Max(0f, GetTriggerSeconds(quiz)):0.0}s";
+            titleText.text = "Real Time Quiz";
         }
 
         bool shouldAutoPlace = !keepPlacedTransformOnShow
@@ -125,6 +143,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
     public void HideWindow(bool resumeVideo = true)
     {
         StopAutoClose();
+        activeViewer = null;
 
         if (windowTransform != null)
         {
@@ -252,16 +271,22 @@ public class TimedQuizPopupWindow : MonoBehaviour
         }
 
         RectTransform panelRect = panel.GetComponent<RectTransform>();
+        EnsurePanelChrome(panel);
 
         titleText = FindOrCreateText(panel, "Title", new Vector2(0.04f, 0.88f), new Vector2(0.76f, 0.98f), 38, FontStyles.Bold, TextAlignmentOptions.Left);
         timerText = FindOrCreateText(panel, "Timer", new Vector2(0.04f, 0.81f), new Vector2(0.96f, 0.89f), 22, FontStyles.Normal, TextAlignmentOptions.Left);
         questionText = FindOrCreateText(panel, "Question", new Vector2(0.04f, 0.58f), new Vector2(0.96f, 0.8f), 30, FontStyles.Bold, TextAlignmentOptions.TopLeft);
         questionText.textWrappingMode = TextWrappingModes.Normal;
+        titleText.color = TitleColor;
+        timerText.color = MutedTextColor;
+        questionText.color = BodyTextColor;
 
         feedbackText = FindOrCreateText(panel, "Feedback", new Vector2(0.04f, 0.1f), new Vector2(0.96f, 0.22f), 24, FontStyles.Italic, TextAlignmentOptions.TopLeft);
         feedbackText.textWrappingMode = TextWrappingModes.Normal;
+        feedbackText.color = MutedTextColor;
 
         closeButton = FindOrCreateButton(panelRect, "CloseButton", "Continue", new Vector2(0.8f, 0.9f), new Vector2(0.96f, 0.98f));
+        SetButtonColor(closeButton, ContinueButtonColor, Color.white);
 
         optionButtons.Clear();
         for (int i = 0; i < 4; i++)
@@ -269,6 +294,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
             float yTop = 0.54f - (i * 0.11f);
             float yBottom = yTop - 0.095f;
             Button b = FindOrCreateButton(panelRect, $"Option{i}", $"Option {i + 1}", new Vector2(0.04f, yBottom), new Vector2(0.96f, yTop));
+            SetButtonColor(b, OptionDefaultColor, TitleColor);
             optionButtons.Add(b);
         }
     }
@@ -376,14 +402,17 @@ public class TimedQuizPopupWindow : MonoBehaviour
         {
             if (!answered)
             {
+                feedbackText.color = MutedTextColor;
                 feedbackText.text = "Chon 1 dap an de tiep tuc video.";
             }
             else if (selectedIndex == correctIndex)
             {
+                feedbackText.color = new Color(0.18f, 0.54f, 0.31f, 1f);
                 feedbackText.text = "Chinh xac! Bam Continue de tiep tuc video.";
             }
             else
             {
+                feedbackText.color = new Color(0.67f, 0.22f, 0.22f, 1f);
                 string correctText = (options != null && correctIndex >= 0 && correctIndex < options.Count)
                     ? options[correctIndex]
                     : "(khong xac dinh)";
@@ -406,6 +435,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
 
         if (answered && selectedIndex == correctIndex && feedbackText != null)
         {
+            feedbackText.color = new Color(0.18f, 0.54f, 0.31f, 1f);
             feedbackText.text = $"Chinh xac!";
         }
     }
@@ -545,9 +575,21 @@ public class TimedQuizPopupWindow : MonoBehaviour
         }
         forward.Normalize();
 
-        windowTransform.position = viewer.position + forward * Mathf.Max(0.2f, distance) + Vector3.up * heightOffset;
+        Vector3 right = viewer.right;
+        right.y = 0f;
+        if (right.sqrMagnitude < 0.001f)
+        {
+            right = Vector3.right;
+        }
+        right.Normalize();
 
-        Vector3 lookTarget = viewer.position + Vector3.up * heightOffset;
+        float totalHeightOffset = heightOffset + additionalHeightOffset;
+        windowTransform.position = viewer.position
+            + forward * Mathf.Max(0.2f, distance)
+            + right * horizontalOffset
+            + Vector3.up * totalHeightOffset;
+
+        Vector3 lookTarget = viewer.position + Vector3.up * totalHeightOffset;
         Vector3 dir = lookTarget - windowTransform.position;
         if (dir.sqrMagnitude > 0.001f)
         {
@@ -572,8 +614,44 @@ public class TimedQuizPopupWindow : MonoBehaviour
         rect.offsetMax = Vector2.zero;
 
         Image image = panel.GetComponent<Image>();
-        image.color = new Color(0.08f, 0.1f, 0.12f, 0.94f);
+        image.color = PanelColor;
         return panel;
+    }
+
+    private static void EnsurePanelChrome(Transform panel)
+    {
+        Image panelImage = panel.GetComponent<Image>();
+        if (panelImage != null)
+        {
+            panelImage.color = PanelColor;
+        }
+
+        Image headerBg = FindOrCreateFill(panel, "HeaderBg", new Vector2(0f, 0.78f), new Vector2(1f, 1f), HeaderColor);
+        if (headerBg != null)
+        {
+            headerBg.transform.SetAsFirstSibling();
+        }
+    }
+
+    private static Image FindOrCreateFill(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Color color)
+    {
+        Transform existing = parent.Find(name);
+        if (existing == null)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            existing = go.transform;
+        }
+
+        RectTransform rect = existing.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        Image image = existing.GetComponent<Image>();
+        image.color = color;
+        return image;
     }
 
     private static TMP_Text FindOrCreateText(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, float fontSize, FontStyles style, TextAlignmentOptions alignment)
@@ -595,7 +673,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
         TextMeshProUGUI text = existing.GetComponent<TextMeshProUGUI>();
         text.fontSize = fontSize;
         text.fontStyle = style;
-        text.color = Color.white;
+        text.color = BodyTextColor;
         text.alignment = alignment;
         return text;
     }
@@ -626,7 +704,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
 
         TextMeshProUGUI text = existing.GetComponentInChildren<TextMeshProUGUI>(true);
         text.text = label;
-        text.color = Color.white;
+        text.color = TitleColor;
         text.fontSize = 25f;
         text.alignment = TextAlignmentOptions.Center;
 
@@ -637,6 +715,23 @@ public class TimedQuizPopupWindow : MonoBehaviour
         textRect.offsetMax = Vector2.zero;
 
         return button;
+    }
+
+    private static void SetButtonColor(Button button, Color background, Color textColor)
+    {
+        if (button == null) return;
+
+        Image image = button.GetComponent<Image>();
+        if (image != null)
+        {
+            image.color = background;
+        }
+
+        TextMeshProUGUI text = button.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (text != null)
+        {
+            text.color = textColor;
+        }
     }
 
     private static Transform EnsureRectTransformRoot(Transform root)

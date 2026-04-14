@@ -66,6 +66,7 @@ public class CourseSelectionUI : MonoBehaviour
     private ListView courseList;
     private Label statusLabel;
     private Button backButton;
+    private Button closeButton;
     private Label sectionsTitle;
     private ScrollView sectionsScroll;
     private Label sectionsStatus;
@@ -263,6 +264,11 @@ public class CourseSelectionUI : MonoBehaviour
         lessonSelectionWindow = new VisualElement { name = "lesson-selection-window-root" };
         lessonSelectionWindow.AddToClassList("screen-window-root");
         lessonSelectionViewTree.CloneTree(lessonSelectionWindow);
+        if (Application.isPlaying)
+        {
+            lessonSelectionWindow.style.display = DisplayStyle.None;
+            lessonSelectionWindow.style.opacity = 0f;
+        }
         root.Add(lessonSelectionWindow);
 
         coursesPage = lessonSelectionWindow.Q<VisualElement>("courses-page");
@@ -270,6 +276,7 @@ public class CourseSelectionUI : MonoBehaviour
         statusLabel = lessonSelectionWindow.Q<Label>("status-label");
         courseList = lessonSelectionWindow.Q<ListView>("course-list");
         backButton = lessonSelectionWindow.Q<Button>("back-button");
+        closeButton = EnsureCloseButton();
         sectionsTitle = lessonSelectionWindow.Q<Label>("sections-title");
         sectionsScroll = lessonSelectionWindow.Q<ScrollView>("sections-scroll");
         sectionsStatus = lessonSelectionWindow.Q<Label>("sections-status");
@@ -289,8 +296,76 @@ public class CourseSelectionUI : MonoBehaviour
             backButton.clicked += ShowCoursesPage;
         }
 
+        if (closeButton != null)
+        {
+            closeButton.clicked -= CloseCourseSelection;
+            closeButton.clicked += CloseCourseSelection;
+        }
+
         ConfigureListView();
         ShowCoursesPage();
+    }
+
+    private Button EnsureCloseButton()
+    {
+        if (lessonSelectionWindow == null)
+        {
+            return null;
+        }
+
+        Button button = lessonSelectionWindow.Q<Button>("course-selection-close-button");
+        if (button != null)
+        {
+            return button;
+        }
+
+        button = new Button { name = "course-selection-close-button", text = "Close" };
+        button.style.position = Position.Absolute;
+        button.style.top = 18f;
+        button.style.right = 18f;
+        button.style.height = 34f;
+        button.style.minWidth = 88f;
+        button.style.paddingLeft = 12f;
+        button.style.paddingRight = 12f;
+        button.style.backgroundColor = new Color(0.92f, 0.95f, 1f, 0.98f);
+        button.style.color = new Color(0.08f, 0.12f, 0.18f, 1f);
+        button.style.borderTopLeftRadius = 10f;
+        button.style.borderTopRightRadius = 10f;
+        button.style.borderBottomLeftRadius = 10f;
+        button.style.borderBottomRightRadius = 10f;
+        button.style.borderTopWidth = 1f;
+        button.style.borderRightWidth = 1f;
+        button.style.borderBottomWidth = 1f;
+        button.style.borderLeftWidth = 1f;
+        button.style.borderTopColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.borderRightColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.borderBottomColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.borderLeftColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.unityFontStyleAndWeight = FontStyle.Bold;
+        lessonSelectionWindow.Add(button);
+        button.BringToFront();
+        return button;
+    }
+
+    private void CloseCourseSelection()
+    {
+        CourseToggleController toggleController = GetComponent<CourseToggleController>();
+        if (toggleController == null)
+        {
+            toggleController = FindAnyObjectByType<CourseToggleController>();
+        }
+
+        if (toggleController != null)
+        {
+            toggleController.SetOpen(false);
+            return;
+        }
+
+        if (uiDocument != null && uiDocument.rootVisualElement != null)
+        {
+            uiDocument.rootVisualElement.style.display = DisplayStyle.None;
+            uiDocument.rootVisualElement.style.opacity = 0f;
+        }
     }
 
 #if UNITY_EDITOR
@@ -694,10 +769,11 @@ public class CourseSelectionUI : MonoBehaviour
         // IMPORTANT: Route by explicit content type first.
         // Slide must have precedence over quiz because some backend payloads include quiz stubs on slide lessons.
         bool slideLesson = IsSlideLesson(lesson);
+        bool videoLesson = IsVideoLesson(lesson);
         bool quizLesson = IsQuizLesson(lesson);
         if (enableSlideDebugLogs)
         {
-            Debug.Log($"[CourseSelectionUI] Route decision slide={slideLesson} quiz={quizLesson} video={IsVideoLesson(lesson)}");
+            Debug.Log($"[CourseSelectionUI] Route decision slide={slideLesson} video={videoLesson} quiz={quizLesson}");
         }
 
         if (slideLesson)
@@ -715,6 +791,12 @@ public class CourseSelectionUI : MonoBehaviour
             return;
         }
 
+        if (videoLesson)
+        {
+            _ = PlayVideoLessonAsync(lesson);
+            return;
+        }
+
         if (quizLesson)
         {
             if (ShowQuizIndependentScreen(lesson))
@@ -726,12 +808,6 @@ public class CourseSelectionUI : MonoBehaviour
             {
                 sectionsStatus.text = "Bài học quiz chưa có dữ liệu hợp lệ hoặc chưa gán QuizPopupWindow.";
             }
-            return;
-        }
-
-        if (IsVideoLesson(lesson))
-        {
-            _ = PlayVideoLessonAsync(lesson);
             return;
         }
 
@@ -801,13 +877,17 @@ public class CourseSelectionUI : MonoBehaviour
             }
 
             Transform viewer = GetViewerTransform();
-            if (slideScreenAnchor != null && slideScreenAnchor.gameObject.activeInHierarchy)
+            bool useSceneAnchor = !Application.isPlaying
+                && slideScreenAnchor != null
+                && slideScreenAnchor.gameObject.activeInHierarchy;
+
+            if (useSceneAnchor)
             {
                 slidePopupWindow.PlaceAtAnchor(slideScreenAnchor);
             }
             else
             {
-                // Ensure the slide window is visible even when no anchor is configured.
+                // In play mode, slide windows should behave like floating popups in front of the player.
                 slidePopupWindow.PlaceInFrontOf(viewer, slideWindowDistance, slideWindowHeightOffset);
             }
 
@@ -859,12 +939,20 @@ public class CourseSelectionUI : MonoBehaviour
 
         if (!quizPopupWindow.CanHandle(lesson)) return false;
 
-        if (quizScreenAnchor != null)
+        Transform viewer = GetViewerTransform();
+        bool useSceneAnchor = !Application.isPlaying
+            && quizScreenAnchor != null
+            && quizScreenAnchor.gameObject.activeInHierarchy;
+
+        if (useSceneAnchor)
         {
             quizPopupWindow.PlaceAtAnchor(quizScreenAnchor);
         }
+        else
+        {
+            quizPopupWindow.PlaceInFrontOf(viewer, quizWindowDistance, quizWindowHeightOffset);
+        }
 
-        Transform viewer = GetViewerTransform();
         bool shown = quizPopupWindow.Show(lesson, viewer, quizWindowDistance, quizWindowHeightOffset);
         if (!shown) return false;
 
@@ -1045,7 +1133,8 @@ public class CourseSelectionUI : MonoBehaviour
                 ? anchorManager.cameraAnchor
                 : (Camera.main != null ? Camera.main.transform : null);
 
-            await videoPopupWindow.PlayUrlAsync(url, viewer, videoWindowDistance, videoWindowHeightOffset, videoWindowSize);
+            string displayTitle = string.IsNullOrWhiteSpace(lesson.title) ? "Video" : lesson.title;
+            await videoPopupWindow.PlayUrlAsync(title: displayTitle, url: url, viewer: viewer, distance: videoWindowDistance, heightOffset: videoWindowHeightOffset, windowSize: videoWindowSize);
 
             if (videoQuizScheduler != null)
             {
