@@ -546,8 +546,27 @@ public class CourseToggleController : MonoBehaviour
         toViewer.y = 0f;
         if (toViewer.sqrMagnitude > 0.001f)
         {
-            panelTransform.rotation = Quaternion.LookRotation(toViewer.normalized, Vector3.up);
+            Quaternion lookRotation = Quaternion.LookRotation(toViewer.normalized, Vector3.up);
+            if (RequiresCoursePanelFacingFlip())
+            {
+                lookRotation *= Quaternion.Euler(0f, 180f, 0f);
+            }
+
+            panelTransform.rotation = lookRotation;
         }
+    }
+
+    private bool RequiresCoursePanelFacingFlip()
+    {
+        UIDocument document = courseSelectionDocument;
+        if (document == null && courseSelectionUI != null)
+        {
+            document = courseSelectionUI.GetComponent<UIDocument>();
+        }
+
+        return document != null
+            && document.panelSettings != null
+            && document.panelSettings.targetTexture == null;
     }
 
 #if UNITY_EDITOR
