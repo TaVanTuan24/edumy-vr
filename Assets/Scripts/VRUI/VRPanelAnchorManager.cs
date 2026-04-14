@@ -46,8 +46,8 @@ public class VRPanelAnchorManager : MonoBehaviour
     [SerializeField, Min(0.2f)] private float surfaceHeightMeters = 0.5f;
     [SerializeField, Range(1.0f, 2.2f)] private float surfaceAspect = 1.25f;
     [SerializeField] private bool forceSurfaceLocalOrientation = true;
-    [SerializeField] private bool rotateSurface180Y = false;
-    [SerializeField] private bool flipTextureHorizontally = false;
+        [SerializeField] private bool rotateSurface180Y = false;
+        [SerializeField] private bool flipTextureHorizontally = false;
     [SerializeField] private bool flipTextureVertically = true;
     [SerializeField] private bool liveApplySurfaceSettings = true;
 
@@ -104,89 +104,103 @@ public class VRPanelAnchorManager : MonoBehaviour
             return;
         }
 
-        if (useRenderTextureSurface)
+        if (!useRenderTextureSurface)
         {
-            // 1. Ensure RenderTexture
-            if (uiRenderTexture == null)
+            uiDoc.panelSettings.targetTexture = null;
+            uiDoc.panelSettings.clearColor = false;
+
+            if (uiSurfaceTransform != null)
             {
-                uiRenderTexture = new RenderTexture(rtResolution.x, rtResolution.y, 24, RenderTextureFormat.ARGB32)
-                {
-                    name = "VRCoursePanel_RT",
-                    antiAliasing = 4,
-                    useMipMap = false
-                };
-                uiRenderTexture.Create();
+                uiSurfaceTransform.gameObject.SetActive(false);
             }
 
-            // 2. Assign to PanelSettings
-            uiDoc.panelSettings.targetTexture = uiRenderTexture;
-            uiDoc.panelSettings.clearColor = true;
-
-            // 3. Setup Surface Material
-            if (uiSurfaceTransform == null)
-            {
-                // Find or create a child quad for display
-                Transform existing = transform.Find("UISurface");
-                if (existing == null)
-                {
-                    GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                    quad.name = "UISurface";
-                    quad.transform.SetParent(transform);
-                    quad.transform.localPosition = Vector3.zero;
-                    quad.transform.localRotation = Quaternion.identity;
-                    uiSurfaceTransform = quad.transform;
-                    
-                    // Remove MeshCollider from primitive, we want our specific BoxCollider
-                    DestroyImmediate(quad.GetComponent<MeshCollider>());
-                }
-                else
-                {
-                    uiSurfaceTransform = existing;
-                }
-            }
-
-            if (forceSurfaceLocalOrientation)
-            {
-                uiSurfaceTransform.localPosition = Vector3.zero;
-                uiSurfaceTransform.localRotation = rotateSurface180Y
-                    ? Quaternion.Euler(0f, 180f, 0f)
-                    : Quaternion.identity;
-            }
-
-            // Make panel compact and remove excessive empty area in world-space.
-            float clampedAspect = Mathf.Clamp(surfaceAspect, 1.0f, 2.2f);
-            float clampedHeight = Mathf.Max(0.2f, surfaceHeightMeters);
-            uiSurfaceTransform.localScale = new Vector3(clampedAspect * clampedHeight, clampedHeight, 1f);
-
-            MeshRenderer renderer = uiSurfaceTransform.GetComponent<MeshRenderer>();
-            if (renderer != null)
-            {
-                Material mat = surfaceMaterial != null ? surfaceMaterial : renderer.sharedMaterial;
-                if (mat == null || mat.shader == null || mat.shader.name != "Unlit/Texture")
-                {
-                    mat = new Material(Shader.Find("Unlit/Texture"));
-                }
-
-                mat.mainTexture = uiRenderTexture;
-                surfaceMaterial = mat;
-                ApplyTextureFlipToMaterial(mat);
-                renderer.sharedMaterial = mat;
-            }
-
-            // 4. Interaction routing
-            if (uiSurfaceTransform.GetComponent<PanelRaycaster>() == null)
-                uiSurfaceTransform.gameObject.AddComponent<PanelRaycaster>();
-
-            BoxCollider col = uiSurfaceTransform.GetComponent<BoxCollider>();
-            if (col == null)
-                col = uiSurfaceTransform.gameObject.AddComponent<BoxCollider>();
-            
-            // Matches quad size
-            col.center = Vector3.zero;
-            col.size = new Vector3(1f, 1f, 0.02f);
-
-            Debug.Log("[VRPanelAnchor] World-space UI surface initialized via RenderTexture.");
+            return;
         }
+
+        // 1. Ensure RenderTexture
+        if (uiRenderTexture == null)
+        {
+            uiRenderTexture = new RenderTexture(rtResolution.x, rtResolution.y, 24, RenderTextureFormat.ARGB32)
+            {
+                name = "VRCoursePanel_RT",
+                antiAliasing = 4,
+                useMipMap = false
+            };
+            uiRenderTexture.Create();
+        }
+
+        // 2. Assign to PanelSettings
+        uiDoc.panelSettings.targetTexture = uiRenderTexture;
+        uiDoc.panelSettings.clearColor = true;
+
+        // 3. Setup Surface Material
+        if (uiSurfaceTransform == null)
+        {
+            // Find or create a child quad for display
+            Transform existing = transform.Find("UISurface");
+            if (existing == null)
+            {
+                GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                quad.name = "UISurface";
+                quad.transform.SetParent(transform);
+                quad.transform.localPosition = Vector3.zero;
+                quad.transform.localRotation = Quaternion.identity;
+                uiSurfaceTransform = quad.transform;
+
+                // Remove MeshCollider from primitive, we want our specific BoxCollider
+                DestroyImmediate(quad.GetComponent<MeshCollider>());
+            }
+            else
+            {
+                uiSurfaceTransform = existing;
+            }
+        }
+
+        uiSurfaceTransform.gameObject.SetActive(true);
+
+        if (forceSurfaceLocalOrientation)
+        {
+            uiSurfaceTransform.localPosition = Vector3.zero;
+            uiSurfaceTransform.localRotation = rotateSurface180Y
+                ? Quaternion.Euler(0f, 180f, 0f)
+                : Quaternion.identity;
+        }
+
+        // Make panel compact and remove excessive empty area in world-space.
+        float clampedAspect = Mathf.Clamp(surfaceAspect, 1.0f, 2.2f);
+        float clampedHeight = Mathf.Max(0.2f, surfaceHeightMeters);
+        uiSurfaceTransform.localScale = new Vector3(clampedAspect * clampedHeight, clampedHeight, 1f);
+
+        MeshRenderer renderer = uiSurfaceTransform.GetComponent<MeshRenderer>();
+        if (renderer != null)
+        {
+            Material mat = surfaceMaterial != null ? surfaceMaterial : renderer.sharedMaterial;
+            if (mat == null || mat.shader == null || mat.shader.name != "Unlit/Texture")
+            {
+                mat = new Material(Shader.Find("Unlit/Texture"));
+            }
+
+            mat.mainTexture = uiRenderTexture;
+            surfaceMaterial = mat;
+            ApplyTextureFlipToMaterial(mat);
+            renderer.sharedMaterial = mat;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+        }
+
+        // 4. Interaction routing
+        if (uiSurfaceTransform.GetComponent<PanelRaycaster>() == null)
+            uiSurfaceTransform.gameObject.AddComponent<PanelRaycaster>();
+
+        BoxCollider col = uiSurfaceTransform.GetComponent<BoxCollider>();
+        if (col == null)
+            col = uiSurfaceTransform.gameObject.AddComponent<BoxCollider>();
+
+        // Matches quad size
+        col.center = Vector3.zero;
+        col.size = new Vector3(1f, 1f, 0.02f);
+
+        Debug.Log("[VRPanelAnchor] World-space UI surface initialized via RenderTexture.");
     }
 
     private void ApplySurfaceVisualSettings()
@@ -283,7 +297,14 @@ public class VRPanelAnchorManager : MonoBehaviour
         {
             Quaternion look = Quaternion.LookRotation(directionToUser, Vector3.up);
             Vector3 euler = look.eulerAngles;
-            targetRotation = Quaternion.Euler(0f, euler.y, 0f);
+            float yaw = euler.y;
+            if (!useRenderTextureSurface)
+            {
+                // World-space UIDocument (no quad/RT) faces opposite compared to RT surface setup.
+                yaw += 180f;
+            }
+
+            targetRotation = Quaternion.Euler(0f, yaw, 0f);
         }
     }
 

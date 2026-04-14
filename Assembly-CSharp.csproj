@@ -52,6 +52,7 @@
     <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\com.unity.dt.app-ui@8ac7e730dd5d\Runtime\MVVM\SourceGenerators\netstandard2.0\MVVMSourceGenerators.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\VRUI\CourseToggleController.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\VideoPlayerRenderTexture.cs" />
     <Compile Include="Assets\Scripts\VRUI\EditorFlyCameraController.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\Rotator.cs" />
@@ -102,6 +103,7 @@
     <None Include="Assets\UI\VRCourseSelection\SlideWindow.uss" />
     <None Include="Assets\UI\VRCourseSelection\SlideWindow.uxml" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
+    <None Include="Assets\UI\VRCourseSelection\CourseToggleButton.uss" />
     <None Include="Assets\UI\VRCourseSelection\LessonSelectionView.uxml" />
     <None Include="Assets\UI\VRCourseSelection\SlideView.uxml" />
     <None Include="Assets\TextMesh Pro\Shaders\TMPro_Mobile.cginc" />
@@ -127,6 +129,7 @@
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF Overlay.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Mobile.shader" />
     <None Include="Assets\UI\VRCourseSelection\QuizWindow.uss" />
+    <None Include="Assets\UI\VRCourseSelection\CourseToggleButton.uxml" />
     <None Include="Assets\VRTemplateAssets\Shaders\TexturedFresnelStandard.shader" />
     <None Include="Assets\TextMesh Pro\Fonts\LiberationSans - OFL.txt" />
     <None Include="Assets\VRTemplateAssets\Shaders\TexturedStableFresnelCommon.cginc" />

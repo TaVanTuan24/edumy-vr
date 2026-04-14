@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="course-toggle-root" class="course-toggle-root">
+        <ui:Button name="course-toggle-button" class="course-toggle-button" tooltip="Toggle Course Selection">
+            <ui:VisualElement class="course-toggle-glyph">
+                <ui:VisualElement class="glyph-line" />
+                <ui:VisualElement class="glyph-line" />
+                <ui:VisualElement class="glyph-line" />
+            </ui:VisualElement>
+        </ui:Button>
+    </ui:VisualElement>
+</ui:UXML>
