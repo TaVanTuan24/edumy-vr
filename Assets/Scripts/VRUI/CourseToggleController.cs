@@ -552,6 +552,8 @@ public class CourseToggleController : MonoBehaviour
             floatingGlyphLines[i] = lineImage;
         }
 
+        XRRuntimeUiHelper.EnsureWorldSpaceCanvasInteraction(rootGo);
+        XRRuntimeUiHelper.EnsureEventSystemSupportsXR();
         UpdateFloatingWorldButtonVisual();
         UpdateFloatingWorldButtonTransform();
     }

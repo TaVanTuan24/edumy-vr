@@ -719,6 +719,8 @@ public class VideoPopupWindow : MonoBehaviour
             existing.localScale = controlsScale;
             LayoutControlsCanvas(defaultWindowSize.x, defaultWindowSize.y);
         }
+
+        XRRuntimeUiHelper.EnsureWorldSpaceCanvasInteraction(existing.gameObject);
         BuildControlsUi();
         EnsureEventSystemSupport();
     }
@@ -873,18 +875,7 @@ public class VideoPopupWindow : MonoBehaviour
     private void EnsureEventSystemSupport()
     {
         if (!Application.isPlaying) return;
-
-        EventSystem eventSystem = FindAnyObjectByType<EventSystem>();
-        if (eventSystem == null)
-        {
-            GameObject go = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-            eventSystem = go.GetComponent<EventSystem>();
-        }
-
-        if (eventSystem != null && eventSystem.GetComponent<BaseInputModule>() == null)
-        {
-            eventSystem.gameObject.AddComponent<StandaloneInputModule>();
-        }
+        XRRuntimeUiHelper.EnsureEventSystemSupportsXR();
     }
 
     private static void AddEventTrigger(EventTrigger trigger, EventTriggerType type, Action action)

@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.XR;
+using UnityEngine.XR.Management;
 
 #if UNITY_EDITOR
 /// <summary>
@@ -17,6 +19,12 @@ public class EditorFlyCameraController : MonoBehaviour
 
     private void Awake()
     {
+        if (IsXrActive())
+        {
+            enabled = false;
+            return;
+        }
+
         Vector3 euler = transform.rotation.eulerAngles;
         yaw = euler.y;
         pitch = euler.x;
@@ -25,6 +33,7 @@ public class EditorFlyCameraController : MonoBehaviour
     private void Update()
     {
         if (!Application.isPlaying) return;
+        if (IsXrActive()) return;
 
         var mouse = Mouse.current;
         var keyboard = Keyboard.current;
@@ -63,6 +72,21 @@ public class EditorFlyCameraController : MonoBehaviour
         {
             transform.position += move.normalized * speed * Time.unscaledDeltaTime;
         }
+    }
+
+    private static bool IsXrActive()
+    {
+        var displays = new System.Collections.Generic.List<XRDisplaySubsystem>();
+        SubsystemManager.GetSubsystems(displays);
+        for (int i = 0; i < displays.Count; i++)
+        {
+            if (displays[i] != null && displays[i].running)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 #endif

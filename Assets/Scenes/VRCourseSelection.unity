@@ -7606,6 +7606,22 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls: []
+  - eventID: 2
+    callback:
+      m_PersistentCalls:
+        m_Calls: []
+  - eventID: 3
+    callback:
+      m_PersistentCalls:
+        m_Calls: []
+  - eventID: 2
+    callback:
+      m_PersistentCalls:
+        m_Calls: []
+  - eventID: 3
+    callback:
+      m_PersistentCalls:
+        m_Calls: []
 --- !u!114 &572047285
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13720,7 +13736,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 64fcabbed7b63c245a0ac04361ddd309, type: 3}
       propertyPath: m_Name
-      value: HHti_Scean
+      value: classroom
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:

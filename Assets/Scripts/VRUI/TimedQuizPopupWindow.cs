@@ -216,50 +216,12 @@ public class TimedQuizPopupWindow : MonoBehaviour
     {
         if (windowTransform != null)
         {
-            if (windowTransform.GetComponent<GraphicRaycaster>() == null)
-            {
-                windowTransform.gameObject.AddComponent<GraphicRaycaster>();
-            }
-
-            // XR UI ray interaction support when XR Interaction Toolkit is installed.
-            TryAddComponentByTypeName(
-                windowTransform.gameObject,
-                "UnityEngine.XR.Interaction.Toolkit.UI.TrackedDeviceGraphicRaycaster, Unity.XR.Interaction.Toolkit");
+            XRRuntimeUiHelper.EnsureWorldSpaceCanvasInteraction(windowTransform.gameObject);
         }
 
         if (!Application.isPlaying) return;
 
-        EventSystem eventSystem = FindAnyObjectByType<EventSystem>();
-        if (eventSystem == null)
-        {
-            GameObject go = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-            eventSystem = go.GetComponent<EventSystem>();
-        }
-
-        if (eventSystem != null)
-        {
-            // Prefer Input System UI module if package exists.
-            TryAddComponentByTypeName(
-                eventSystem.gameObject,
-                "UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
-
-            if (eventSystem.GetComponent<BaseInputModule>() == null)
-            {
-                eventSystem.gameObject.AddComponent<StandaloneInputModule>();
-            }
-        }
-    }
-
-    private static void TryAddComponentByTypeName(GameObject go, string assemblyQualifiedTypeName)
-    {
-        if (go == null || string.IsNullOrWhiteSpace(assemblyQualifiedTypeName)) return;
-
-        Type type = Type.GetType(assemblyQualifiedTypeName, false);
-        if (type == null) return;
-        if (!typeof(Component).IsAssignableFrom(type)) return;
-        if (go.GetComponent(type) != null) return;
-
-        go.AddComponent(type);
+        XRRuntimeUiHelper.EnsureEventSystemSupportsXR();
     }
 
     private void BuildUiIfMissing()

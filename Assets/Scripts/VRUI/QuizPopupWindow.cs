@@ -241,6 +241,9 @@ public class QuizPopupWindow : MonoBehaviour
             scaler.dynamicPixelsPerUnit = 10f;
         }
 
+        XRRuntimeUiHelper.EnsureWorldSpaceCanvasInteraction(windowTransform.gameObject);
+        XRRuntimeUiHelper.EnsureEventSystemSupportsXR();
+
         rootRect = canvas.GetComponent<RectTransform>();
         if (rootRect == null)
         {

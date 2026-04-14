@@ -65,6 +65,7 @@
     <Compile Include="Assets\Scripts\VRUI\MainScreenController.cs" />
     <Compile Include="Assets\Scripts\VRUI\SectionItemElement.cs" />
     <Compile Include="Assets\Scripts\VRUI\SlideController.cs" />
+    <Compile Include="Assets\Scripts\VRUI\XRRuntimeUiHelper.cs" />
     <Compile Include="Assets\Scripts\VRUI\VideoController.cs" />
     <Compile Include="Assets\Scripts\VRUI\DataModels.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\BezierCurve.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Assets\Scripts\VRUI\LessonSelectionController.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\HandSubsystemManager.cs" />
     <Compile Include="Assets\Scripts\VRUI\QuizController.cs" />
+    <Compile Include="Assets\Scripts\VRUI\VRSimulatorBootstrap.cs" />
     <Compile Include="Assets\Scripts\VRUI\SlidePopupWindow.cs" />
     <Compile Include="Assets\Scripts\VRUI\VideoQuizScheduler.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\DestroyObject.cs" />
