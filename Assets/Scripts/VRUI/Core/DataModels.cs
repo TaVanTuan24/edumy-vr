@@ -22,14 +22,19 @@ public class LessonData
     public string type;
     public string videoUrl;
     public string slideText;
+    public float slideCanvasWidth;
+    public float slideCanvasHeight;
     public string duration;
     public int order;
     public int sectionOrder;
     public bool isCompleted;
+    public int quizQuestionsCount;
+    public int slideCount;
     public string sectionTitle;
     public string section;
     public string sectionName;
     public List<string> slides;
+    public List<SlidePageData> slidePages;
     public List<QuizQuestionData> quizQuestions;
     public List<QuizQuestionData> questions;
     public List<QuizQuestionData> quizzes;
@@ -38,6 +43,35 @@ public class LessonData
     public List<TimedQuizData> interactiveQuizzes;
     public List<TimedQuizData> popupQuizzes;
     public List<TimedQuizData> videoQuizzes;
+}
+
+[Serializable]
+public class SlidePageData
+{
+    public string id;
+    public string title;
+    public string layout;
+    public string theme;
+    public float canvasWidth;
+    public float canvasHeight;
+    public List<SlideElementData> elements;
+}
+
+[Serializable]
+public class SlideElementData
+{
+    public string id;
+    public string type;
+    public float x;
+    public float y;
+    public float width;
+    public float height;
+    public string text;
+    public string src;
+    public float fontSize;
+    public string color;
+    public string align;
+    public bool bold;
 }
 
 [Serializable]

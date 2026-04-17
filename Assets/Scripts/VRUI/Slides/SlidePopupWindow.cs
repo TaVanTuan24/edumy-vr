@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,13 +34,18 @@ public class SlidePopupWindow : MonoBehaviour
     private TMP_Text titleText;
     private TMP_Text indicatorText;
     private TMP_Text contentText;
+    private RectTransform slideViewportRect;
+    private RectTransform slideSurfaceRect;
+    private Image slideSurfaceBackground;
     private Button closeButton;
     private Button prevButton;
     private Button nextButton;
     private Button pinButton;
 
-    private readonly List<string> activeSlides = new List<string>();
+    private readonly List<SlidePageData> activeSlides = new List<SlidePageData>();
+    private readonly List<GameObject> activeSlideElementObjects = new List<GameObject>();
     private int currentSlideIndex;
+    private int slideRenderVersion;
     private bool bindingsAdded;
     private bool createdRuntimeWindow;
     private Transform activeViewer;
@@ -127,7 +133,11 @@ public class SlidePopupWindow : MonoBehaviour
     {
         if (lesson == null) return false;
         string t = (lesson.type ?? string.Empty).Trim().ToLowerInvariant();
-        if (t.Contains("slide") || t.Contains("presentation") || t.Contains("ppt") || t.Contains("document")) return true;
+        if (t.Contains("slide") || t.Contains("presentation") || t.Contains("ppt") || t.Contains("document"))
+        {
+            return BuildSlidesForLesson(lesson).Count > 0;
+        }
+        if (lesson.slidePages != null && lesson.slidePages.Count > 0) return true;
         if (lesson.slides != null && lesson.slides.Count > 0) return true;
         if (!string.IsNullOrWhiteSpace(lesson.slideText)) return true;
         if (!string.IsNullOrWhiteSpace(lesson.title) && lesson.title.IndexOf("slide", StringComparison.OrdinalIgnoreCase) >= 0) return true;
@@ -214,13 +224,14 @@ public class SlidePopupWindow : MonoBehaviour
         activeSlides.Clear();
         activeSlides.AddRange(BuildSlidesForLesson(lesson));
         currentSlideIndex = 0;
+        slideRenderVersion++;
         activeViewer = viewer;
         activeDistance = distance;
         activeHeightOffset = heightOffset;
 
         if (enableDebugLogs)
         {
-            Debug.Log($"[SlidePopupWindow] slides prepared count={activeSlides.Count}");
+            Debug.Log($"[SlidePopupWindow] slides prepared count={activeSlides.Count} sourceCanvas={lesson.slideCanvasWidth}x{lesson.slideCanvasHeight}");
         }
 
         if (titleText != null)
@@ -406,6 +417,7 @@ public class SlidePopupWindow : MonoBehaviour
         contentText.alignment = TextAlignmentOptions.TopLeft;
         contentText.color = new Color(0.15f, 0.24f, 0.38f, 1f);
         indicatorText.color = new Color(0.27f, 0.39f, 0.56f, 1f);
+        EnsureSlideViewport(panelRect);
 
         closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.79f, 0.885f), new Vector2(0.95f, 0.97f));
         pinButton = FindOrCreateButton(panelRect, "PinButton", "📌", new Vector2(0.69f, 0.885f), new Vector2(0.78f, 0.97f));
@@ -482,44 +494,392 @@ public class SlidePopupWindow : MonoBehaviour
             indicatorText.text = $"Slide {currentSlideIndex + 1}/{total}";
         }
 
-        if (contentText != null)
+        if (activeSlides.Count == 0)
         {
-            contentText.text = activeSlides.Count > 0 ? activeSlides[currentSlideIndex] : "No slide content.";
+            if (contentText != null)
+            {
+                contentText.gameObject.SetActive(true);
+                contentText.text = "No slide content.";
+            }
+            if (slideViewportRect != null) slideViewportRect.gameObject.SetActive(false);
+            ClearSlideElements();
+        }
+        else
+        {
+            RenderStructuredSlide(activeSlides[currentSlideIndex]);
         }
 
         if (prevButton != null) prevButton.interactable = currentSlideIndex > 0;
         if (nextButton != null) nextButton.interactable = currentSlideIndex < total - 1;
     }
 
-    private List<string> BuildSlidesForLesson(LessonData lesson)
+    private List<SlidePageData> BuildSlidesForLesson(LessonData lesson)
     {
-        List<string> slides = new List<string>();
+        List<SlidePageData> slides = new List<SlidePageData>();
 
-        if (lesson != null && lesson.slides != null)
+        if (lesson != null && lesson.slidePages != null && lesson.slidePages.Count > 0)
         {
-            foreach (string page in lesson.slides)
+            for (int i = 0; i < lesson.slidePages.Count; i++)
             {
-                if (string.IsNullOrWhiteSpace(page)) continue;
-                slides.Add(page.Trim());
+                SlidePageData page = NormalizeSlidePage(lesson.slidePages[i], i, lesson);
+                if (page != null) slides.Add(page);
+            }
+        }
+
+        if (slides.Count == 0 && lesson != null && lesson.slides != null && lesson.slides.Count > 0)
+        {
+            for (int i = 0; i < lesson.slides.Count; i++)
+            {
+                string pageText = lesson.slides[i];
+                if (string.IsNullOrWhiteSpace(pageText)) continue;
+                slides.Add(BuildTextFallbackPage(lesson, pageText.Trim(), i));
             }
         }
 
         if (slides.Count == 0 && lesson != null && !string.IsNullOrWhiteSpace(lesson.slideText))
         {
             string[] pages = lesson.slideText.Split(new[] { "\n---\n", "\r\n---\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (string p in pages)
+            for (int i = 0; i < pages.Length; i++)
             {
-                string page = p.Trim();
-                if (!string.IsNullOrWhiteSpace(page)) slides.Add(page);
+                string pageText = pages[i].Trim();
+                if (!string.IsNullOrWhiteSpace(pageText))
+                {
+                    slides.Add(BuildTextFallbackPage(lesson, pageText, i));
+                }
             }
         }
 
-        if (slides.Count == 0)
+        return slides;
+    }
+
+    private void EnsureSlideViewport(RectTransform panelRect)
+    {
+        if (panelRect == null) return;
+
+        Transform viewport = panelRect.Find("SlideViewport");
+        if (viewport == null)
         {
-            slides.Add("No slide data from API.");
+            GameObject viewportGo = new GameObject("SlideViewport", typeof(RectTransform));
+            viewportGo.transform.SetParent(panelRect, false);
+            viewport = viewportGo.transform;
         }
 
-        return slides;
+        slideViewportRect = viewport.GetComponent<RectTransform>();
+        slideViewportRect.anchorMin = new Vector2(0.05f, 0.15f);
+        slideViewportRect.anchorMax = new Vector2(0.95f, 0.78f);
+        slideViewportRect.offsetMin = Vector2.zero;
+        slideViewportRect.offsetMax = Vector2.zero;
+
+        Transform surface = slideViewportRect.Find("SlideSurface");
+        if (surface == null)
+        {
+            GameObject surfaceGo = new GameObject("SlideSurface", typeof(RectTransform), typeof(Image));
+            surfaceGo.transform.SetParent(slideViewportRect, false);
+            surface = surfaceGo.transform;
+        }
+
+        slideSurfaceRect = surface.GetComponent<RectTransform>();
+        slideSurfaceRect.anchorMin = new Vector2(0f, 1f);
+        slideSurfaceRect.anchorMax = new Vector2(0f, 1f);
+        slideSurfaceRect.pivot = new Vector2(0f, 1f);
+        slideSurfaceBackground = surface.GetComponent<Image>();
+        slideSurfaceBackground.color = Color.white;
+    }
+
+    private SlidePageData NormalizeSlidePage(SlidePageData page, int index, LessonData lesson)
+    {
+        if (page == null) return null;
+
+        SlidePageData normalized = new SlidePageData
+        {
+            id = string.IsNullOrWhiteSpace(page.id) ? $"slide-{index + 1}" : page.id,
+            title = string.IsNullOrWhiteSpace(page.title) ? $"Slide {index + 1}" : page.title,
+            layout = string.IsNullOrWhiteSpace(page.layout) ? "left-text" : page.layout,
+            theme = string.IsNullOrWhiteSpace(page.theme) ? "light" : page.theme,
+            canvasWidth = page.canvasWidth > 0f ? page.canvasWidth : (lesson != null && lesson.slideCanvasWidth > 0f ? lesson.slideCanvasWidth : 1280f),
+            canvasHeight = page.canvasHeight > 0f ? page.canvasHeight : (lesson != null && lesson.slideCanvasHeight > 0f ? lesson.slideCanvasHeight : 720f),
+            elements = new List<SlideElementData>()
+        };
+
+        if (page.elements != null)
+        {
+            for (int i = 0; i < page.elements.Count; i++)
+            {
+                SlideElementData element = page.elements[i];
+                if (element == null) continue;
+                if (element.type == "image" && string.IsNullOrWhiteSpace(element.src)) continue;
+                if (element.type != "image" && string.IsNullOrWhiteSpace(element.text)) continue;
+
+                normalized.elements.Add(new SlideElementData
+                {
+                    id = string.IsNullOrWhiteSpace(element.id) ? $"{normalized.id}-el-{i + 1}" : element.id,
+                    type = string.IsNullOrWhiteSpace(element.type) ? "text" : element.type,
+                    x = element.x,
+                    y = element.y,
+                    width = element.width > 0f ? element.width : (element.type == "image" ? 320f : 320f),
+                    height = element.height > 0f ? element.height : (element.type == "image" ? 220f : 80f),
+                    text = element.text,
+                    src = element.src,
+                    fontSize = element.fontSize > 0f ? element.fontSize : 28f,
+                    color = string.IsNullOrWhiteSpace(element.color) ? "#1c1d1f" : element.color,
+                    align = string.IsNullOrWhiteSpace(element.align) ? "left" : element.align,
+                    bold = element.bold
+                });
+            }
+        }
+
+        return normalized.elements.Count > 0 ? normalized : null;
+    }
+
+    private SlidePageData BuildTextFallbackPage(LessonData lesson, string pageText, int index)
+    {
+        float canvasWidth = lesson != null && lesson.slideCanvasWidth > 0f ? lesson.slideCanvasWidth : 1280f;
+        float canvasHeight = lesson != null && lesson.slideCanvasHeight > 0f ? lesson.slideCanvasHeight : 720f;
+
+        return new SlidePageData
+        {
+            id = $"slide-{index + 1}",
+            title = $"Slide {index + 1}",
+            layout = "left-text",
+            theme = "light",
+            canvasWidth = canvasWidth,
+            canvasHeight = canvasHeight,
+            elements = new List<SlideElementData>
+            {
+                new SlideElementData
+                {
+                    id = $"slide-{index + 1}-text-1",
+                    type = "text",
+                    x = 80f,
+                    y = 80f,
+                    width = Mathf.Max(320f, canvasWidth - 160f),
+                    height = Mathf.Max(120f, canvasHeight - 160f),
+                    text = pageText,
+                    fontSize = 28f,
+                    color = "#1c1d1f",
+                    align = "left",
+                    bold = false
+                }
+            }
+        };
+    }
+
+    private void RenderStructuredSlide(SlidePageData page)
+    {
+        if (page == null)
+        {
+            if (contentText != null)
+            {
+                contentText.gameObject.SetActive(true);
+                contentText.text = "No slide content.";
+            }
+            if (slideViewportRect != null) slideViewportRect.gameObject.SetActive(false);
+            ClearSlideElements();
+            return;
+        }
+
+        Canvas.ForceUpdateCanvases();
+        if (rootRect != null)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rootRect);
+        }
+
+        if (contentText != null)
+        {
+            contentText.gameObject.SetActive(false);
+        }
+        if (slideViewportRect == null || slideSurfaceRect == null)
+        {
+            return;
+        }
+
+        slideViewportRect.gameObject.SetActive(true);
+        ClearSlideElements();
+
+        float viewportWidth = slideViewportRect.rect.width;
+        float viewportHeight = slideViewportRect.rect.height;
+        float sourceWidth = page.canvasWidth > 0f ? page.canvasWidth : 1280f;
+        float sourceHeight = page.canvasHeight > 0f ? page.canvasHeight : 720f;
+        float scale = Mathf.Min(viewportWidth / sourceWidth, viewportHeight / sourceHeight);
+        if (float.IsNaN(scale) || float.IsInfinity(scale) || scale <= 0f) scale = 1f;
+
+        float fittedWidth = sourceWidth * scale;
+        float fittedHeight = sourceHeight * scale;
+        slideSurfaceRect.sizeDelta = new Vector2(fittedWidth, fittedHeight);
+        slideSurfaceRect.anchoredPosition = new Vector2((viewportWidth - fittedWidth) * 0.5f, -(viewportHeight - fittedHeight) * 0.5f);
+        ApplySlideTheme(page.theme);
+
+        int imageCount = 0;
+        for (int i = 0; i < page.elements.Count; i++)
+        {
+            if (string.Equals(page.elements[i].type, "image", StringComparison.OrdinalIgnoreCase))
+            {
+                imageCount++;
+            }
+        }
+
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[SlidePopupWindow] render slide page={page.id} sourceCanvas={sourceWidth}x{sourceHeight} viewport={viewportWidth:F1}x{viewportHeight:F1} scale={scale:F3} elements={page.elements.Count} imageElements={imageCount}");
+        }
+
+        int renderVersion = slideRenderVersion;
+        for (int i = 0; i < page.elements.Count; i++)
+        {
+            CreateSlideElementView(page.elements[i], scale, renderVersion);
+        }
+    }
+
+    private void ApplySlideTheme(string theme)
+    {
+        if (slideSurfaceBackground == null) return;
+
+        string value = string.IsNullOrWhiteSpace(theme) ? "light" : theme.Trim().ToLowerInvariant();
+        slideSurfaceBackground.color = value switch
+        {
+            "dark" => new Color(0.11f, 0.12f, 0.15f, 1f),
+            "purple" => new Color(0.95f, 0.91f, 1f, 1f),
+            "blue" => new Color(0.89f, 0.96f, 1f, 1f),
+            _ => Color.white
+        };
+    }
+
+    private void CreateSlideElementView(SlideElementData element, float scale, int renderVersion)
+    {
+        if (slideSurfaceRect == null || element == null) return;
+
+        GameObject go = new GameObject(
+            string.IsNullOrWhiteSpace(element.id) ? "SlideElement" : element.id,
+            typeof(RectTransform)
+        );
+        go.transform.SetParent(slideSurfaceRect, false);
+        activeSlideElementObjects.Add(go);
+
+        RectTransform rect = go.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.sizeDelta = new Vector2(Mathf.Max(1f, element.width * scale), Mathf.Max(1f, element.height * scale));
+        rect.anchoredPosition = new Vector2(element.x * scale, -(element.y * scale));
+
+        if (string.Equals(element.type, "image", StringComparison.OrdinalIgnoreCase))
+        {
+            Image image = go.AddComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.08f);
+            image.preserveAspect = true;
+            _ = LoadSlideImageAsync(image, element.src, renderVersion);
+            return;
+        }
+
+        TextMeshProUGUI text = go.AddComponent<TextMeshProUGUI>();
+        text.text = string.IsNullOrWhiteSpace(element.text) ? string.Empty : element.text;
+        text.enableWordWrapping = true;
+        text.fontSize = Mathf.Max(12f, element.fontSize * scale);
+        text.color = TryParseColor(element.color, out Color parsedColor) ? parsedColor : new Color(0.11f, 0.12f, 0.15f, 1f);
+        text.fontStyle = element.bold ? FontStyles.Bold : FontStyles.Normal;
+        text.alignment = ResolveTextAlignment(element.align);
+        text.textWrappingMode = TextWrappingModes.Normal;
+        text.overflowMode = TextOverflowModes.Overflow;
+    }
+
+    private void ClearSlideElements()
+    {
+        for (int i = 0; i < activeSlideElementObjects.Count; i++)
+        {
+            GameObject go = activeSlideElementObjects[i];
+            if (go == null) continue;
+            if (Application.isPlaying) Destroy(go);
+            else DestroyImmediate(go);
+        }
+        activeSlideElementObjects.Clear();
+    }
+
+    private async Task LoadSlideImageAsync(Image image, string url, int renderVersion)
+    {
+        if (image == null)
+        {
+            return;
+        }
+
+        string normalizedUrl = string.IsNullOrWhiteSpace(url) ? string.Empty : url.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedUrl))
+        {
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning("[SlidePopupWindow] image element missing URL.");
+            }
+            return;
+        }
+
+        Texture2D texture = null;
+        try
+        {
+            if (normalizedUrl.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
+            {
+                texture = DecodeDataUrlTexture(normalizedUrl);
+            }
+            else if (ApiManager.Instance != null)
+            {
+                texture = await ApiManager.Instance.DownloadImageAsync(normalizedUrl);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[SlidePopupWindow] image load exception url='{normalizedUrl}' error={ex.Message}");
+        }
+
+        if (renderVersion != slideRenderVersion || image == null || image.gameObject == null)
+        {
+            return;
+        }
+
+        if (texture == null)
+        {
+            Debug.LogWarning($"[SlidePopupWindow] image load failed url='{normalizedUrl}'");
+            image.color = new Color(1f, 0.92f, 0.92f, 0.35f);
+            return;
+        }
+
+        image.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+        image.color = Color.white;
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[SlidePopupWindow] image load success url='{normalizedUrl}' size={texture.width}x{texture.height}");
+        }
+    }
+
+    private static Texture2D DecodeDataUrlTexture(string dataUrl)
+    {
+        if (string.IsNullOrWhiteSpace(dataUrl)) return null;
+        int commaIndex = dataUrl.IndexOf(',');
+        if (commaIndex < 0 || commaIndex >= dataUrl.Length - 1) return null;
+
+        string base64 = dataUrl.Substring(commaIndex + 1);
+        byte[] bytes = Convert.FromBase64String(base64);
+        Texture2D texture = new Texture2D(2, 2);
+        return texture.LoadImage(bytes) ? texture : null;
+    }
+
+    private static bool TryParseColor(string value, out Color color)
+    {
+        if (!string.IsNullOrWhiteSpace(value) && ColorUtility.TryParseHtmlString(value, out color))
+        {
+            return true;
+        }
+
+        color = Color.black;
+        return false;
+    }
+
+    private static TextAlignmentOptions ResolveTextAlignment(string align)
+    {
+        string value = string.IsNullOrWhiteSpace(align) ? "left" : align.Trim().ToLowerInvariant();
+        return value switch
+        {
+            "center" => TextAlignmentOptions.Top,
+            "right" => TextAlignmentOptions.TopRight,
+            _ => TextAlignmentOptions.TopLeft
+        };
     }
 
     private void PositionWindow(Transform viewer, float distance, float heightOffset)

@@ -1224,17 +1224,13 @@ public class CourseSelectionUI : MonoBehaviour
             Debug.Log($"[CourseSelectionUI] Click lesson id={lesson?.id} title='{lesson?.title}' type='{lesson?.type}' slides={(lesson?.slides != null ? lesson.slides.Count : 0)} slideTextLen={(lesson?.slideText != null ? lesson.slideText.Length : 0)} videoUrlEmpty={string.IsNullOrWhiteSpace(lesson?.videoUrl)}");
         }
 
-        // IMPORTANT: Route by explicit content type first.
-        // Slide must have precedence over quiz because some backend payloads include quiz stubs on slide lessons.
-        bool slideLesson = IsSlideLesson(lesson);
-        bool videoLesson = IsVideoLesson(lesson);
-        bool quizLesson = IsQuizLesson(lesson);
+        string normalizedType = DetermineLessonType(lesson);
         if (enableSlideDebugLogs)
         {
-            Debug.Log($"[CourseSelectionUI] Route decision slide={slideLesson} video={videoLesson} quiz={quizLesson}");
+            Debug.Log($"[CourseSelectionUI] Route decision normalizedType={normalizedType} slideCount={GetSlideCount(lesson)} quizCount={GetQuizQuestionCount(lesson)} timedQuizCount={GetTimedQuizCount(lesson)} hasPlayableVideo={HasPlayableVideoSource(lesson)}");
         }
 
-        if (slideLesson)
+        if (normalizedType == "slide")
         {
             Debug.Log($"[CourseSelectionUI] Routing to slide popup id={lesson?.id} title='{lesson?.title}'");
             if (ShowSlideIndependentScreen(lesson))
@@ -1249,13 +1245,13 @@ public class CourseSelectionUI : MonoBehaviour
             return;
         }
 
-        if (videoLesson)
+        if (normalizedType == "video")
         {
             _ = PlayVideoLessonAsync(lesson);
             return;
         }
 
-        if (quizLesson)
+        if (normalizedType == "quiz")
         {
             if (ShowQuizIndependentScreen(lesson))
             {
@@ -1269,31 +1265,7 @@ public class CourseSelectionUI : MonoBehaviour
             return;
         }
 
-        // Last fallback: unknown non-video/non-quiz lessons are treated as slide shells
-        // so the window is still visible and easier to debug real data issues.
-        if (ShowSlideIndependentScreen(lesson))
-        {
-            return;
-        }
-
-        if (IsQuizLesson(lesson))
-        {
-            if (sectionsStatus != null)
-            {
-                sectionsStatus.text = "This lesson was identified as a quiz, but it has no valid question data.";
-            }
-            return;
-        }
-
-        if (IsSlideLesson(lesson))
-        {
-            if (sectionsStatus != null)
-            {
-                sectionsStatus.text = "This lesson was identified as a slide, but it has no valid slide content.";
-            }
-            return;
-        }
-
+        Debug.LogWarning($"[CourseSelectionUI] Unknown lesson type. id={lesson?.id} title='{lesson?.title}' rawType='{lesson?.type}'");
         if (sectionsStatus != null)
         {
             sectionsStatus.text = "This lesson does not have a supported content type yet.";
@@ -1427,32 +1399,93 @@ public class CourseSelectionUI : MonoBehaviour
         return true;
     }
 
-    private static bool IsSlideLesson(LessonData lesson)
+    private static string DetermineLessonType(LessonData lesson)
     {
-        if (lesson == null) return false;
-        string type = string.IsNullOrWhiteSpace(lesson.type) ? string.Empty : lesson.type.Trim().ToLowerInvariant();
-        if (type.Contains("slide") || type.Contains("presentation") || type.Contains("ppt") || type.Contains("document")) return true;
-        if (lesson.slides != null && lesson.slides.Count > 0) return true;
-        if (!string.IsNullOrWhiteSpace(lesson.slideText)) return true;
+        if (lesson == null) return "unknown";
 
-        // Fallback heuristics for schema drift where slide text may be delivered in title/description-like fields.
-        if (!string.IsNullOrWhiteSpace(lesson.title) && lesson.title.IndexOf("slide", StringComparison.OrdinalIgnoreCase) >= 0)
+        string type = string.IsNullOrWhiteSpace(lesson.type) ? string.Empty : lesson.type.Trim().ToLowerInvariant();
+        bool hasSlides = HasRealSlides(lesson);
+        bool hasQuiz = HasRealQuizQuestions(lesson);
+        bool hasTimedQuiz = HasRealTimedQuizEvents(lesson);
+        bool hasVideo = HasPlayableVideoSource(lesson);
+
+        if (type == "slide" || type == "presentation" || type == "ppt" || type == "document")
         {
-            return true;
+            return hasSlides ? "slide" : "unknown";
         }
 
-        return false;
+        if (type == "quiz")
+        {
+            return (hasQuiz || hasTimedQuiz) ? "quiz" : "unknown";
+        }
+
+        if (type == "video" || type == "lecture")
+        {
+            return hasVideo ? "video" : "unknown";
+        }
+
+        if (hasSlides) return "slide";
+        if (hasQuiz) return "quiz";
+        if (hasVideo) return "video";
+        if (hasTimedQuiz) return "quiz";
+
+        return "unknown";
     }
 
-    private static bool IsQuizLesson(LessonData lesson)
+    private static bool HasRealSlides(LessonData lesson)
     {
         if (lesson == null) return false;
-        string type = string.IsNullOrWhiteSpace(lesson.type) ? string.Empty : lesson.type.Trim().ToLowerInvariant();
-        if (type.Contains("quiz") || type.Contains("question")) return true;
+        return GetSlideCount(lesson) > 0 || !string.IsNullOrWhiteSpace(lesson.slideText);
+    }
+
+    private static int GetSlideCount(LessonData lesson)
+    {
+        if (lesson == null) return 0;
+        if (lesson.slideCount > 0) return lesson.slideCount;
+        return lesson.slides != null ? lesson.slides.Count : 0;
+    }
+
+    private static bool HasRealQuizQuestions(LessonData lesson)
+    {
+        if (lesson == null) return false;
+        if (lesson.quizQuestionsCount > 0) return true;
         if (HasAnyValidQuizQuestions(lesson.quizQuestions)) return true;
         if (HasAnyValidQuizQuestions(lesson.questions)) return true;
         if (HasAnyValidQuizQuestions(lesson.quizzes)) return true;
         return IsMeaningfulQuizQuestion(lesson.quizQuestion);
+    }
+
+    private static bool HasRealTimedQuizEvents(LessonData lesson)
+    {
+        if (lesson == null) return false;
+        return HasAnyValidTimedQuizQuestions(lesson.timedQuizzes)
+            || HasAnyValidTimedQuizQuestions(lesson.interactiveQuizzes)
+            || HasAnyValidTimedQuizQuestions(lesson.popupQuizzes)
+            || HasAnyValidTimedQuizQuestions(lesson.videoQuizzes);
+    }
+
+    private static int GetQuizQuestionCount(LessonData lesson)
+    {
+        if (lesson == null) return 0;
+        if (lesson.quizQuestionsCount > 0) return lesson.quizQuestionsCount;
+
+        int count = 0;
+        if (lesson.quizQuestions != null) count += lesson.quizQuestions.Count;
+        if (lesson.questions != null) count += lesson.questions.Count;
+        if (lesson.quizzes != null) count += lesson.quizzes.Count;
+        if (lesson.quizQuestion != null) count += 1;
+        return count;
+    }
+
+    private static int GetTimedQuizCount(LessonData lesson)
+    {
+        if (lesson == null) return 0;
+        int count = 0;
+        if (lesson.timedQuizzes != null) count += lesson.timedQuizzes.Count;
+        if (lesson.interactiveQuizzes != null) count += lesson.interactiveQuizzes.Count;
+        if (lesson.popupQuizzes != null) count += lesson.popupQuizzes.Count;
+        if (lesson.videoQuizzes != null) count += lesson.videoQuizzes.Count;
+        return count;
     }
 
     private static bool HasAnyValidQuizQuestions(List<QuizQuestionData> list)
@@ -1461,6 +1494,16 @@ public class CourseSelectionUI : MonoBehaviour
         for (int i = 0; i < list.Count; i++)
         {
             if (IsMeaningfulQuizQuestion(list[i])) return true;
+        }
+        return false;
+    }
+
+    private static bool HasAnyValidTimedQuizQuestions(List<TimedQuizData> list)
+    {
+        if (list == null || list.Count == 0) return false;
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (IsMeaningfulTimedQuizQuestion(list[i])) return true;
         }
         return false;
     }
@@ -1477,7 +1520,22 @@ public class CourseSelectionUI : MonoBehaviour
             || (q.answers != null && q.answers.Count > 0)
             || (q.choices != null && q.choices.Count > 0);
 
-        return hasPrompt || hasOptions;
+        return hasPrompt && hasOptions;
+    }
+
+    private static bool IsMeaningfulTimedQuizQuestion(TimedQuizData q)
+    {
+        if (q == null) return false;
+
+        bool hasPrompt = !string.IsNullOrWhiteSpace(q.question)
+            || !string.IsNullOrWhiteSpace(q.text)
+            || !string.IsNullOrWhiteSpace(q.prompt);
+
+        bool hasOptions = (q.options != null && q.options.Count > 0)
+            || (q.answers != null && q.answers.Count > 0)
+            || (q.choices != null && q.choices.Count > 0);
+
+        return hasPrompt && hasOptions;
     }
 
     private void RefreshLessonSelectionVisuals()
@@ -1493,14 +1551,12 @@ public class CourseSelectionUI : MonoBehaviour
 
     private bool IsVideoLesson(LessonData lesson)
     {
+        return DetermineLessonType(lesson) == "video";
+    }
+
+    private static bool HasPlayableVideoSource(LessonData lesson)
+    {
         if (lesson == null) return false;
-
-        if (!string.IsNullOrWhiteSpace(lesson.type))
-        {
-            string t = lesson.type.Trim().ToLowerInvariant();
-            if (t == "video" || t == "lecture") return true;
-        }
-
         if (!string.IsNullOrWhiteSpace(lesson.videoUrl)) return true;
 
         string title = lesson.title ?? string.Empty;

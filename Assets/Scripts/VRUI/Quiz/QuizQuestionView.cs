@@ -55,15 +55,10 @@ public class QuizQuestionView
                 : lesson.title;
         }
 
-        AddQuestions(questions, lesson != null ? lesson.quizQuestions : null);
-        AddQuestions(questions, lesson != null ? lesson.questions : null);
-        AddQuestions(questions, lesson != null ? lesson.quizzes : null);
-        if (lesson != null && lesson.quizQuestion != null)
-        {
-            questions.Add(lesson.quizQuestion);
-        }
+        AddQuestions(questions, SelectStandaloneQuizSource(lesson));
 
         NormalizeQuestions();
+        Debug.Log($"[QuizQuestionView] quiz source counts lesson={lesson?.id} quizQuestions={(lesson?.quizQuestions != null ? lesson.quizQuestions.Count : 0)} questions={(lesson?.questions != null ? lesson.questions.Count : 0)} quizzes={(lesson?.quizzes != null ? lesson.quizzes.Count : 0)} final={questions.Count}");
         Render();
         return questions.Count > 0;
     }
@@ -106,9 +101,11 @@ public class QuizQuestionView
 
         if (questionLabel != null)
         {
-            questionLabel.text = string.IsNullOrWhiteSpace(question.question)
+            string displayQuestion = FirstNonEmpty(question.question, question.prompt, question.text);
+            questionLabel.text = string.IsNullOrWhiteSpace(displayQuestion)
                 ? "Question"
-                : question.question;
+                : displayQuestion;
+            Debug.Log($"[QuizQuestionView] render pass questionIndex={currentIndex} chosenText='{questionLabel.text}'");
         }
 
         bool answered = selectedAnswers.TryGetValue(currentIndex, out int selectedIndex);
@@ -222,6 +219,8 @@ public class QuizQuestionView
             answerCards.Add(card);
             answersContainer.Add(card);
         }
+
+        Debug.Log($"[QuizQuestionView] instantiated answer cards={answerCards.Count} for questionIndex={currentIndex}");
     }
 
     private void OnAnswerCardClicked(AnswerCard card)
@@ -328,6 +327,36 @@ public class QuizQuestionView
             if (!string.IsNullOrWhiteSpace(values[i])) return values[i];
         }
         return null;
+    }
+
+    private static bool HasValidStandaloneQuizQuestions(List<QuizQuestionData> source)
+    {
+        if (source == null || source.Count == 0) return false;
+        for (int i = 0; i < source.Count; i++)
+        {
+            QuizQuestionData question = source[i];
+            if (question == null) continue;
+            string text = FirstNonEmpty(question.question, question.prompt, question.text);
+            if (string.IsNullOrWhiteSpace(text)) continue;
+            int optionsCount = question.options != null && question.options.Count > 0
+                ? question.options.Count
+                : (question.answers != null && question.answers.Count > 0 ? question.answers.Count : (question.choices != null ? question.choices.Count : 0));
+            if (optionsCount > 0) return true;
+        }
+        return false;
+    }
+
+    private static List<QuizQuestionData> SelectStandaloneQuizSource(LessonData lesson)
+    {
+        if (lesson == null) return new List<QuizQuestionData>();
+        if (HasValidStandaloneQuizQuestions(lesson.quizQuestions)) return lesson.quizQuestions;
+        if (HasValidStandaloneQuizQuestions(lesson.questions)) return lesson.questions;
+        if (HasValidStandaloneQuizQuestions(lesson.quizzes)) return lesson.quizzes;
+        if (lesson.quizQuestion != null && !string.IsNullOrWhiteSpace(FirstNonEmpty(lesson.quizQuestion.question, lesson.quizQuestion.prompt, lesson.quizQuestion.text)))
+        {
+            return new List<QuizQuestionData> { lesson.quizQuestion };
+        }
+        return new List<QuizQuestionData>();
     }
 
     private void SetNavigationState(bool canPrev, bool canNext, bool showNext, bool showRetry = false)

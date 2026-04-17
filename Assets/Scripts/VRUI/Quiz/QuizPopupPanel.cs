@@ -68,11 +68,7 @@ public class QuizPopupPanel : MonoBehaviour
 
     public bool CanHandle(LessonData lesson)
     {
-        if (lesson == null) return false;
-        string t = (lesson.type ?? string.Empty).Trim().ToLowerInvariant();
-        if (t.Contains("quiz") || t.Contains("question")) return true;
-        if (lesson.quizQuestions != null && lesson.quizQuestions.Count > 0) return true;
-        return false;
+        return BuildQuizForLesson(lesson).Count > 0;
     }
 
     public bool Open(LessonData lesson)
@@ -81,6 +77,8 @@ public class QuizPopupPanel : MonoBehaviour
 
         activeQuizQuestions.Clear();
         activeQuizQuestions.AddRange(BuildQuizForLesson(lesson));
+        Debug.Log($"[QuizPopupPanel] quiz source counts lesson={lesson.id} quizQuestions={(lesson.quizQuestions != null ? lesson.quizQuestions.Count : 0)} questions={(lesson.questions != null ? lesson.questions.Count : 0)} quizzes={(lesson.quizzes != null ? lesson.quizzes.Count : 0)} final={activeQuizQuestions.Count}");
+        if (activeQuizQuestions.Count == 0) return false;
         quizSelectedByQuestionIndex.Clear();
         currentQuizQuestionIndex = 0;
 
@@ -145,32 +143,64 @@ public class QuizPopupPanel : MonoBehaviour
     private List<QuizQuestionData> BuildQuizForLesson(LessonData lesson)
     {
         List<QuizQuestionData> list = new List<QuizQuestionData>();
-
-        if (lesson != null && lesson.quizQuestions != null)
+        List<QuizQuestionData> source = SelectStandaloneQuizSource(lesson);
+        if (source != null)
         {
-            foreach (QuizQuestionData q in lesson.quizQuestions)
+            foreach (QuizQuestionData q in source)
             {
-                if (q == null || string.IsNullOrWhiteSpace(q.question)) continue;
+                string text = FirstNonEmpty(q != null ? q.question : null, q != null ? q.prompt : null, q != null ? q.text : null);
+                if (q == null || string.IsNullOrWhiteSpace(text)) continue;
+                if (q.options == null || q.options.Count == 0)
+                {
+                    if (q.answers != null && q.answers.Count > 0) q.options = new List<string>(q.answers);
+                    else if (q.choices != null && q.choices.Count > 0) q.options = new List<string>(q.choices);
+                }
                 if (q.options == null || q.options.Count == 0) continue;
+                q.question = text.Trim();
                 list.Add(q);
             }
         }
 
-        if (list.Count == 0)
-        {
-            string baseTitle = string.IsNullOrWhiteSpace(lesson != null ? lesson.title : null) ? "Quiz" : lesson.title;
-            for (int i = 1; i <= 10; i++)
-            {
-                list.Add(new QuizQuestionData
-                {
-                    question = $"{baseTitle} - Question {i}: Choose the correct answer.",
-                    options = new List<string> { "Option A", "Option B", "Option C", "Option D" },
-                    correctIndex = i % 4
-                });
-            }
-        }
-
         return list;
+    }
+
+    private static string FirstNonEmpty(params string[] values)
+    {
+        if (values == null) return null;
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!string.IsNullOrWhiteSpace(values[i])) return values[i];
+        }
+        return null;
+    }
+
+    private static bool HasValidStandaloneQuizQuestions(List<QuizQuestionData> source)
+    {
+        if (source == null || source.Count == 0) return false;
+        foreach (QuizQuestionData question in source)
+        {
+            if (question == null) continue;
+            string text = FirstNonEmpty(question.question, question.prompt, question.text);
+            if (string.IsNullOrWhiteSpace(text)) continue;
+            int optionsCount = question.options != null && question.options.Count > 0
+                ? question.options.Count
+                : (question.answers != null && question.answers.Count > 0 ? question.answers.Count : (question.choices != null ? question.choices.Count : 0));
+            if (optionsCount > 0) return true;
+        }
+        return false;
+    }
+
+    private static List<QuizQuestionData> SelectStandaloneQuizSource(LessonData lesson)
+    {
+        if (lesson == null) return new List<QuizQuestionData>();
+        if (HasValidStandaloneQuizQuestions(lesson.quizQuestions)) return lesson.quizQuestions;
+        if (HasValidStandaloneQuizQuestions(lesson.questions)) return lesson.questions;
+        if (HasValidStandaloneQuizQuestions(lesson.quizzes)) return lesson.quizzes;
+        if (lesson.quizQuestion != null && !string.IsNullOrWhiteSpace(FirstNonEmpty(lesson.quizQuestion.question, lesson.quizQuestion.prompt, lesson.quizQuestion.text)))
+        {
+            return new List<QuizQuestionData> { lesson.quizQuestion };
+        }
+        return new List<QuizQuestionData>();
     }
 
     private void SelectQuizOption(int optionIndex)
@@ -226,7 +256,9 @@ public class QuizPopupPanel : MonoBehaviour
 
         if (quizQuestion != null)
         {
-            quizQuestion.text = q.question;
+            string text = FirstNonEmpty(q != null ? q.question : null, q != null ? q.prompt : null, q != null ? q.text : null);
+            quizQuestion.text = string.IsNullOrWhiteSpace(text) ? "Question" : text;
+            Debug.Log($"[QuizPopupPanel] render pass questionIndex={currentQuizQuestionIndex} chosenText='{quizQuestion.text}'");
         }
 
         int selectedIndex = quizSelectedByQuestionIndex.TryGetValue(currentQuizQuestionIndex, out int selected) ? selected : -1;
