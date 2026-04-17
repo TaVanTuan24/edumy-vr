@@ -7,6 +7,9 @@ using TMPro;
 
 public class ApiManager : MonoBehaviour
 {
+    private const string JwtTokenPlayerPrefsKey = "JWT_TOKEN";
+    private const string JwtTokenEnvironmentVariable = "EDUMY_VR_JWT_TOKEN";
+
     public static ApiManager Instance { get; private set; }
 
     [Header("API Settings")]
@@ -21,13 +24,16 @@ public class ApiManager : MonoBehaviour
 
     [Header("Authentication")]
     [Tooltip("JWT Token dùng để xác thực. Token này sẽ được gửi tự động trong header Authorization.")]
-    public string authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE2OWIwYTA1NTA3MWI3ZTQ0MTBiOGYiLCJlbWFpbCI6ImFAZ2cuY29tIiwicm9sZSI6bnVsbCwiaWF0IjoxNzc1MzYyMTU0LCJleHAiOjE3Nzc5NTQxNTR9.QwtpOrEt_UaTFXZQLLE_QXZW6DGKFSMflrUH_17QHeg";
+    [SerializeField] private string authToken = string.Empty;
+    [SerializeField] private bool loadTokenFromPlayerPrefs;
+    [SerializeField] private bool persistTokenInPlayerPrefs;
 
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI errorTextDisplay; 
     [SerializeField] private TextMeshProUGUI debugUrlText;    
 
     public string BaseUrl => useProduction ? productionUrl : localUrl;
+    public bool HasAuthToken => !string.IsNullOrWhiteSpace(authToken);
     private bool lessonProgressSyncDisabled;
     private bool lessonProgressSyncDisableLogged;
     public string LastStreamResolveErrorCode { get; private set; }
@@ -39,13 +45,8 @@ public class ApiManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            LoadAuthToken();
             
-            // Tải token từ PlayerPrefs nếu có (fallback), nếu không sẽ dùng token mặc định ở trên
-            if (PlayerPrefs.HasKey("JWT_TOKEN"))
-            {
-                authToken = PlayerPrefs.GetString("JWT_TOKEN");
-                Debug.Log("[ApiManager] Đã tải Token từ PlayerPrefs.");
-            }
         }
         else
         {
@@ -56,7 +57,7 @@ public class ApiManager : MonoBehaviour
     private void Start()
     {
         // Log thông tin khởi tạo theo yêu cầu
-        Debug.Log($"ApiManager initialized with JWT token and baseUrl: {BaseUrl}");
+        Debug.Log($"ApiManager initialized. BaseUrl: {BaseUrl} | Auth configured: {HasAuthToken}");
         
         if (debugUrlText != null) 
             debugUrlText.text = $"API: {BaseUrl}";
@@ -64,10 +65,29 @@ public class ApiManager : MonoBehaviour
 
     public void SetAuthToken(string token)
     {
-        authToken = token;
-        PlayerPrefs.SetString("JWT_TOKEN", token);
-        PlayerPrefs.Save();
-        Debug.Log("[ApiManager] Đã cập nhật và lưu Token mới.");
+        authToken = string.IsNullOrWhiteSpace(token) ? string.Empty : token.Trim();
+        if (persistTokenInPlayerPrefs && !string.IsNullOrWhiteSpace(authToken))
+        {
+            PlayerPrefs.SetString(JwtTokenPlayerPrefsKey, authToken);
+            PlayerPrefs.Save();
+        }
+        else if (PlayerPrefs.HasKey(JwtTokenPlayerPrefsKey))
+        {
+            PlayerPrefs.DeleteKey(JwtTokenPlayerPrefsKey);
+            PlayerPrefs.Save();
+        }
+        Debug.Log($"[ApiManager] Auth token updated. Persisted: {persistTokenInPlayerPrefs && !string.IsNullOrWhiteSpace(authToken)}");
+    }
+
+    public void ClearAuthToken()
+    {
+        authToken = string.Empty;
+
+        if (PlayerPrefs.HasKey(JwtTokenPlayerPrefsKey))
+        {
+            PlayerPrefs.DeleteKey(JwtTokenPlayerPrefsKey);
+            PlayerPrefs.Save();
+        }
     }
 
     public async Task<List<CourseData>> GetCoursesAsync()
@@ -194,7 +214,7 @@ public class ApiManager : MonoBehaviour
         }
         else
         {
-            LastStreamResolveErrorMessage = "Không resolve được stream khả dụng từ backend.";
+            LastStreamResolveErrorMessage = "The backend did not return a playable stream.";
         }
 
         return null;
@@ -207,16 +227,46 @@ public class ApiManager : MonoBehaviour
         return $"{baseUrl}/{path}";
     }
 
+    private void LoadAuthToken()
+    {
+        if (!string.IsNullOrWhiteSpace(authToken))
+        {
+            authToken = authToken.Trim();
+            return;
+        }
+
+        string envToken = Environment.GetEnvironmentVariable(JwtTokenEnvironmentVariable);
+        if (!string.IsNullOrWhiteSpace(envToken))
+        {
+            authToken = envToken.Trim();
+            Debug.Log($"[ApiManager] Loaded auth token from environment variable {JwtTokenEnvironmentVariable}.");
+            return;
+        }
+
+        if (loadTokenFromPlayerPrefs && PlayerPrefs.HasKey(JwtTokenPlayerPrefsKey))
+        {
+            authToken = PlayerPrefs.GetString(JwtTokenPlayerPrefsKey)?.Trim() ?? string.Empty;
+            Debug.Log("[ApiManager] Loaded auth token from PlayerPrefs.");
+        }
+    }
+
+    private void TrySetAuthHeader(UnityWebRequest webRequest)
+    {
+        if (webRequest == null || string.IsNullOrWhiteSpace(authToken))
+        {
+            return;
+        }
+
+        webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
+    }
+
     private async Task<T> SendGetRequest<T>(string url)
     {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
-            if (!string.IsNullOrEmpty(authToken))
-            {
-                webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
-            }
+            TrySetAuthHeader(webRequest);
             
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();
@@ -253,7 +303,7 @@ public class ApiManager : MonoBehaviour
 
                 if (statusCode == 404)
                 {
-                    ShowError("API endpoint không tồn tại (404). Kiểm tra lại BaseUrl và đường dẫn endpoint.");
+                    ShowError("API endpoint was not found (404). Check the BaseUrl and endpoint path.");
                 }
                 return default;
             }
@@ -266,10 +316,7 @@ public class ApiManager : MonoBehaviour
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
-            if (!string.IsNullOrEmpty(authToken))
-            {
-                webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
-            }
+            TrySetAuthHeader(webRequest);
 
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();
@@ -287,7 +334,7 @@ public class ApiManager : MonoBehaviour
 
             if (statusCode == 404)
             {
-                ShowError("API endpoint không tồn tại (404). Kiểm tra lại BaseUrl và đường dẫn endpoint.");
+                ShowError("API endpoint was not found (404). Check the BaseUrl and endpoint path.");
             }
 
             return null;
@@ -305,10 +352,7 @@ public class ApiManager : MonoBehaviour
             webRequest.downloadHandler = new DownloadHandlerBuffer();
             webRequest.SetRequestHeader("Content-Type", "application/json");
 
-            if (!string.IsNullOrEmpty(authToken))
-            {
-                webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
-            }
+            TrySetAuthHeader(webRequest);
 
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();
@@ -336,10 +380,7 @@ public class ApiManager : MonoBehaviour
             webRequest.downloadHandler = new DownloadHandlerBuffer();
             webRequest.SetRequestHeader("Content-Type", "application/json");
 
-            if (!string.IsNullOrEmpty(authToken))
-            {
-                webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
-            }
+            TrySetAuthHeader(webRequest);
 
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();
@@ -735,10 +776,7 @@ public class ApiManager : MonoBehaviour
         // 2. Sử dụng UnityWebRequest thường để lấy mảng byte
         using (UnityWebRequest webRequest = UnityWebRequest.Get(fullUrl))
         {
-            if (!string.IsNullOrEmpty(authToken))
-            {
-                webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
-            }
+            TrySetAuthHeader(webRequest);
 
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();

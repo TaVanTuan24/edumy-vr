@@ -57,42 +57,15 @@
     <Compile Include="Assets\Editor\VRUI\VRUICleanupUtility.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\function_call_image.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\style.uss" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\context_item.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\issue-description-popup.uss" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\function_call_texture.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\removable_context_item.uxml" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\ReportItem-style.uss" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\image_context_item.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\style_svg_icons.uss" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\thread_review_panel.uxml" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\ReportItem.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\style_light.uss" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\function_call_scene.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\download_dependencies.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\coplay.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\login.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\function_call_animation.uxml" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\MaterialsVariantsComponentInspector.uxml" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\GltfImporter.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\Unity-v6000.3\Coplay-v8.15.1.dll" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\style_dark.uss" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\issue-description-popup-dark.uss" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\todo_list_view.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\pipeline_recording.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\todo_list_item.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\function_call_3d_model.uxml" />
     <None Include="Library\PackageCache\com.unity.dt.app-ui@8ac7e730dd5d\PackageResources\Editor\ProjectSettings.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\issue-description-popup-light.uss" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\Dependency-style.uss" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\function_call_item.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\todo_list_view.uss" />
     <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\Dependency.uxml" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\UI\Resources\chat_message.uxml" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\GltfImporter-style.uss" />
-    <None Include="Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\Unity-v2022.3\Coplay-v8.15.1.dll" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -677,10 +650,6 @@
     </Reference>
     <Reference Include="System.IO.Hashing">
       <HintPath>Library\PackageCache\com.unity.collections@538ace9075bc\Unity.Collections.Tests\System.IO.Hashing\System.IO.Hashing.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Coplay-v8.15.1">
-      <HintPath>Library\PackageCache\com.coplaydev.coplay@7d4ecbd3bf14\Editor\Unity-v6000.3\Coplay-v8.15.1.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">

@@ -32,6 +32,7 @@ public class CourseSelectionUI : MonoBehaviour
     [SerializeField] private bool openYouTubeExternally = true;
     [SerializeField] private bool autoOpenYouTubeWhenResolveFails = false;
     [SerializeField] private VideoPopupWindow videoPopupWindow;
+    [SerializeField] private VideoWindowModeController videoWindowModeController;
     [SerializeField, Min(0.5f)] private float videoWindowDistance = 2.1f;
     [SerializeField] private float videoWindowHeightOffset = 0.0f;
     [SerializeField] private Vector2 videoWindowSize = new Vector2(3.2f, 1.8f);
@@ -65,6 +66,7 @@ public class CourseSelectionUI : MonoBehaviour
     private Label statusLabel;
     private Button backButton;
     private Button closeButton;
+    private Button videoModeButton;
     private Label sectionsTitle;
     private ScrollView sectionsScroll;
     private Label sectionsStatus;
@@ -73,6 +75,8 @@ public class CourseSelectionUI : MonoBehaviour
     private readonly List<LessonItemElement> renderedLessonItems = new List<LessonItemElement>();
     private CourseData activeCourse;
     private string selectedLessonId;
+    private int refreshCoursesRequestVersion;
+    private int openSectionsRequestVersion;
 
     private async void Start()
     {
@@ -84,6 +88,11 @@ public class CourseSelectionUI : MonoBehaviour
         if (videoPopupWindow == null)
         {
             videoPopupWindow = FindAnyObjectByType<VideoPopupWindow>();
+        }
+
+        if (videoWindowModeController == null)
+        {
+            videoWindowModeController = EnsureVideoWindowModeController();
         }
 
         if (slidePopupWindow == null)
@@ -117,7 +126,8 @@ public class CourseSelectionUI : MonoBehaviour
 
     public async Task RefreshCourses()
     {
-        if (statusLabel != null) statusLabel.text = "Đang tải dữ liệu khóa học...";
+        int requestVersion = ++refreshCoursesRequestVersion;
+        if (statusLabel != null) statusLabel.text = "Loading courses...";
 
         bool usedMock = false;
 
@@ -125,7 +135,7 @@ public class CourseSelectionUI : MonoBehaviour
         {
             if (ApiManager.Instance == null)
             {
-                throw new InvalidOperationException("Khong tim thay ApiManager trong scene.");
+                throw new InvalidOperationException("ApiManager was not found in the scene.");
             }
 
             List<CourseData> response;
@@ -138,6 +148,10 @@ public class CourseSelectionUI : MonoBehaviour
             else
             {
                 response = await ApiManager.Instance.GetCoursesAsync();
+                if (requestVersion != refreshCoursesRequestVersion)
+                {
+                    return;
+                }
 
                 // Chỉ fallback mock trong Editor khi API trả rỗng và bạn bật option này.
                 if ((response == null || response.Count == 0) && Application.isEditor && useMockDataInEditor)
@@ -161,14 +175,18 @@ public class CourseSelectionUI : MonoBehaviour
             if (statusLabel != null)
             {
                 statusLabel.text = courses.Count == 0
-                    ? "Chưa có khóa học để hiển thị."
+                    ? "No courses available."
                     : usedMock
-                        ? $"Đã tải {courses.Count} khóa học (Mock Editor)."
-                        : $"Đã tải {courses.Count} khóa học.";
+                        ? $"Loaded {courses.Count} courses (Editor mock)."
+                        : $"Loaded {courses.Count} courses.";
             }
         }
         catch (Exception ex)
         {
+            if (requestVersion != refreshCoursesRequestVersion)
+            {
+                return;
+            }
             Debug.LogError($"[CourseSelectionUI] Không thể tải danh sách khóa học: {ex.Message}");
 
             if (Application.isEditor && fallbackToMockOnApiErrorInEditor)
@@ -182,7 +200,7 @@ public class CourseSelectionUI : MonoBehaviour
 
                 if (statusLabel != null)
                 {
-                    statusLabel.text = "API lỗi, đang hiển thị dữ liệu mock để test UI trong Editor.";
+                    statusLabel.text = "The API failed. Showing mock data in the Editor for UI testing.";
                 }
                 return;
             }
@@ -196,7 +214,7 @@ public class CourseSelectionUI : MonoBehaviour
                 }
                 else
                 {
-                    statusLabel.text = $"Tai khoa hoc that bai: {msg}";
+                    statusLabel.text = $"Failed to load courses: {msg}";
                 }
             }
         }
@@ -275,6 +293,7 @@ public class CourseSelectionUI : MonoBehaviour
         courseList = lessonSelectionWindow.Q<ListView>("course-list");
         backButton = lessonSelectionWindow.Q<Button>("back-button");
         closeButton = EnsureCloseButton();
+        videoModeButton = EnsureVideoModeButton();
         sectionsTitle = lessonSelectionWindow.Q<Label>("sections-title");
         sectionsScroll = lessonSelectionWindow.Q<ScrollView>("sections-scroll");
         sectionsStatus = lessonSelectionWindow.Q<Label>("sections-status");
@@ -300,8 +319,20 @@ public class CourseSelectionUI : MonoBehaviour
             closeButton.clicked += CloseCourseSelection;
         }
 
+        if (videoModeButton != null)
+        {
+            videoModeButton.clicked -= ToggleVideoWindowMode;
+            videoModeButton.clicked += ToggleVideoWindowMode;
+        }
+
+        if (videoPopupWindow != null)
+        {
+            videoPopupWindow.SetPinButtonVisible(false);
+        }
+
         ConfigureListView();
         ShowCoursesPage();
+        UpdateVideoModeButton();
     }
 
     private Button EnsureCloseButton()
@@ -343,6 +374,105 @@ public class CourseSelectionUI : MonoBehaviour
         lessonSelectionWindow.Add(button);
         button.BringToFront();
         return button;
+    }
+
+    private Button EnsureVideoModeButton()
+    {
+        if (lessonSelectionWindow == null)
+        {
+            return null;
+        }
+
+        Button button = lessonSelectionWindow.Q<Button>("course-selection-video-mode-button");
+        if (button != null)
+        {
+            return button;
+        }
+
+        button = new Button { name = "course-selection-video-mode-button", text = "Float Video" };
+        button.style.position = Position.Absolute;
+        button.style.top = 18f;
+        button.style.right = 116f;
+        button.style.height = 34f;
+        button.style.minWidth = 110f;
+        button.style.paddingLeft = 12f;
+        button.style.paddingRight = 12f;
+        button.style.backgroundColor = new Color(0.92f, 0.95f, 1f, 0.98f);
+        button.style.color = new Color(0.08f, 0.12f, 0.18f, 1f);
+        button.style.borderTopLeftRadius = 10f;
+        button.style.borderTopRightRadius = 10f;
+        button.style.borderBottomLeftRadius = 10f;
+        button.style.borderBottomRightRadius = 10f;
+        button.style.borderTopWidth = 1f;
+        button.style.borderRightWidth = 1f;
+        button.style.borderBottomWidth = 1f;
+        button.style.borderLeftWidth = 1f;
+        button.style.borderTopColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.borderRightColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.borderBottomColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.borderLeftColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.unityFontStyleAndWeight = FontStyle.Bold;
+        lessonSelectionWindow.Add(button);
+        button.BringToFront();
+        return button;
+    }
+
+    private VideoWindowModeController EnsureVideoWindowModeController()
+    {
+        if (videoWindowModeController != null)
+        {
+            return videoWindowModeController;
+        }
+
+        videoWindowModeController = FindAnyObjectByType<VideoWindowModeController>();
+        if (videoWindowModeController != null)
+        {
+            return videoWindowModeController;
+        }
+
+        if (videoPopupWindow == null)
+        {
+            videoPopupWindow = FindAnyObjectByType<VideoPopupWindow>();
+        }
+
+        if (videoPopupWindow == null)
+        {
+            return null;
+        }
+
+        videoWindowModeController = videoPopupWindow.GetComponent<VideoWindowModeController>();
+        if (videoWindowModeController == null)
+        {
+            videoWindowModeController = videoPopupWindow.gameObject.AddComponent<VideoWindowModeController>();
+        }
+
+        return videoWindowModeController;
+    }
+
+    private void ToggleVideoWindowMode()
+    {
+        VideoWindowModeController controller = EnsureVideoWindowModeController();
+        if (controller == null)
+        {
+            return;
+        }
+
+        controller.ToggleMode();
+        UpdateVideoModeButton();
+    }
+
+    private void UpdateVideoModeButton()
+    {
+        if (videoModeButton == null)
+        {
+            return;
+        }
+
+        VideoWindowModeController controller = EnsureVideoWindowModeController();
+        videoModeButton.style.display = DisplayStyle.Flex;
+        bool canToggle = controller != null && videoPopupWindow != null && videoPopupWindow.IsPlaying;
+        videoModeButton.SetEnabled(canToggle);
+        videoModeButton.text = controller != null && controller.IsFloatingMode ? "Dock Video" : "Float Video";
     }
 
     private void CloseCourseSelection()
@@ -411,6 +541,7 @@ public class CourseSelectionUI : MonoBehaviour
     private async Task OpenSectionsPageAsync(CourseData course)
     {
         if (course == null || ApiManager.Instance == null) return;
+        int requestVersion = ++openSectionsRequestVersion;
 
         activeCourse = course;
         activeLessons.Clear();
@@ -425,7 +556,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         if (sectionsStatus != null)
         {
-            sectionsStatus.text = "Đang tải section và lesson...";
+            sectionsStatus.text = "Loading sections and lessons...";
         }
 
         if (sectionsScroll != null)
@@ -438,6 +569,11 @@ public class CourseSelectionUI : MonoBehaviour
         try
         {
             List<SectionData> sections = await ApiManager.Instance.GetCourseSectionsAsync(course.id);
+            if (requestVersion != openSectionsRequestVersion)
+            {
+                return;
+            }
+
             if (HasRenderableSections(sections))
             {
                 RenderExplicitSections(sections);
@@ -446,14 +582,24 @@ public class CourseSelectionUI : MonoBehaviour
 
             // Fallback cuoi cung neu endpoint hien tai chi tra lesson list.
             List<LessonData> lessons = await ApiManager.Instance.GetLessonsAsync(course.id);
+            if (requestVersion != openSectionsRequestVersion)
+            {
+                return;
+            }
+
             RenderSections(lessons);
         }
         catch (Exception ex)
         {
+            if (requestVersion != openSectionsRequestVersion)
+            {
+                return;
+            }
+
             Debug.LogError($"[CourseSelectionUI] Load sections failed: {ex.Message}");
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = $"Tải sections thất bại: {ex.Message}";
+                sectionsStatus.text = $"Failed to load sections: {ex.Message}";
             }
         }
     }
@@ -470,7 +616,7 @@ public class CourseSelectionUI : MonoBehaviour
         {
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = "Khóa học này chưa có section.";
+                sectionsStatus.text = "This course has no sections yet.";
             }
             return;
         }
@@ -515,7 +661,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         if (sectionsStatus != null)
         {
-            sectionsStatus.text = $"Tổng {sortedSections.Count} section, {totalLessons} lesson.";
+            sectionsStatus.text = $"{sortedSections.Count} sections, {totalLessons} lessons.";
         }
 
         UpdateActiveCourseProgressUI();
@@ -549,7 +695,7 @@ public class CourseSelectionUI : MonoBehaviour
         {
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = "Khóa học này chưa có lesson.";
+                sectionsStatus.text = "This course has no lessons yet.";
             }
             return;
         }
@@ -591,7 +737,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         if (sectionsStatus != null)
         {
-            sectionsStatus.text = $"Tổng {sortedSections.Count} section, {lessons.Count} lesson.";
+            sectionsStatus.text = $"{sortedSections.Count} sections, {lessons.Count} lessons.";
         }
 
         UpdateActiveCourseProgressUI();
@@ -630,7 +776,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         if (sectionsStatus != null)
         {
-            sectionsStatus.text = "Không thể lưu tiến độ lên server. Đã hoàn tác thay đổi.";
+            sectionsStatus.text = "Unable to save progress to the server. Changes were rolled back.";
         }
     }
 
@@ -654,7 +800,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         if (sectionsStatus != null)
         {
-            sectionsStatus.text = $"Tiến độ học: {activeCourse.completedLessons} / {Mathf.Max(0, total)} bài ({activeCourse.progress}%)";
+            sectionsStatus.text = $"Progress: {activeCourse.completedLessons} / {Mathf.Max(0, total)} lessons ({activeCourse.progress}%)";
         }
     }
 
@@ -671,7 +817,7 @@ public class CourseSelectionUI : MonoBehaviour
                 string sectionName = GetExplicitSectionName(lesson);
                 if (string.IsNullOrWhiteSpace(sectionName))
                 {
-                    sectionName = "Nội dung khóa học";
+                    sectionName = "Course Content";
                 }
 
                 sectionName = NormalizeSectionLabel(sectionName);
@@ -700,7 +846,7 @@ public class CourseSelectionUI : MonoBehaviour
 
                 if (string.IsNullOrWhiteSpace(currentSection))
                 {
-                    currentSection = "Nội dung khóa học";
+                    currentSection = "Course Content";
                     EnsureSectionBucket(currentSection, grouped);
                 }
 
@@ -711,7 +857,7 @@ public class CourseSelectionUI : MonoBehaviour
         }
 
         // Strategy C: Final fallback - keep all lessons under one section.
-        const string defaultSection = "Nội dung khóa học";
+        const string defaultSection = "Course Content";
         EnsureSectionBucket(defaultSection, grouped);
         grouped[defaultSection].AddRange(orderedLessons);
         return grouped;
@@ -725,12 +871,12 @@ public class CourseSelectionUI : MonoBehaviour
         if (!string.IsNullOrWhiteSpace(lesson.sectionName)) return lesson.sectionName;
         if (!string.IsNullOrWhiteSpace(lesson.section)) return lesson.section;
 
-        return "Nội dung khóa học";
+        return "Course Content";
     }
 
     private static string GetSectionDisplayName(SectionData section)
     {
-        if (section == null) return "Nội dung khóa học";
+        if (section == null) return "Course Content";
 
         string name = null;
         if (!string.IsNullOrWhiteSpace(section.sectionTitle)) name = section.sectionTitle;
@@ -784,7 +930,7 @@ public class CourseSelectionUI : MonoBehaviour
 
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = "Bài học slide chưa có dữ liệu hợp lệ hoặc chưa gán SlidePopupWindow.";
+                sectionsStatus.text = "This slide lesson has no valid data, or SlidePopupWindow is not assigned.";
             }
             return;
         }
@@ -804,7 +950,7 @@ public class CourseSelectionUI : MonoBehaviour
 
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = "Bài học quiz chưa có dữ liệu hợp lệ hoặc chưa gán QuizPopupWindow.";
+                sectionsStatus.text = "This quiz lesson has no valid data, or QuizPopupWindow is not assigned.";
             }
             return;
         }
@@ -820,7 +966,7 @@ public class CourseSelectionUI : MonoBehaviour
         {
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = "Bài học được nhận diện là quiz nhưng không có dữ liệu câu hỏi hợp lệ.";
+                sectionsStatus.text = "This lesson was identified as a quiz, but it has no valid question data.";
             }
             return;
         }
@@ -829,14 +975,14 @@ public class CourseSelectionUI : MonoBehaviour
         {
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = "Bài học được nhận diện là slide nhưng không có nội dung slide hợp lệ.";
+                sectionsStatus.text = "This lesson was identified as a slide, but it has no valid slide content.";
             }
             return;
         }
 
         if (sectionsStatus != null)
         {
-            sectionsStatus.text = "Bài này chưa có kiểu nội dung hỗ trợ.";
+            sectionsStatus.text = "This lesson does not have a supported content type yet.";
         }
     }
 
@@ -905,7 +1051,7 @@ public class CourseSelectionUI : MonoBehaviour
 
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = "Đã mở màn hình Slide độc lập trong scene.";
+                sectionsStatus.text = "Opened the standalone Slide screen in the scene.";
             }
 
             return true;
@@ -915,7 +1061,7 @@ public class CourseSelectionUI : MonoBehaviour
             Debug.LogError($"[CourseSelectionUI] ShowSlideIndependentScreen exception: {ex}");
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = $"Lỗi mở màn hình Slide: {ex.Message}";
+                sectionsStatus.text = $"Failed to open the Slide screen: {ex.Message}";
             }
             return false;
         }
@@ -961,7 +1107,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         if (sectionsStatus != null)
         {
-            sectionsStatus.text = "Đã mở màn hình Quiz độc lập trong scene.";
+            sectionsStatus.text = "Opened the standalone Quiz screen in the scene.";
         }
 
         return true;
@@ -1058,7 +1204,7 @@ public class CourseSelectionUI : MonoBehaviour
         {
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = "Bài video chưa có videoUrl trong API.";
+                sectionsStatus.text = "This video lesson does not have a videoUrl from the API.";
             }
             return;
         }
@@ -1070,7 +1216,7 @@ public class CourseSelectionUI : MonoBehaviour
             resolverAttempted = true;
             if (sectionsStatus != null)
             {
-                sectionsStatus.text = "Đang phân giải nguồn phát...";
+                sectionsStatus.text = "Resolving the stream source...";
             }
 
             try
@@ -1091,7 +1237,7 @@ public class CourseSelectionUI : MonoBehaviour
             if (allowExternalOpen)
             {
                 Application.OpenURL(url);
-                const string openedMsg = "Đã mở YouTube bên ngoài để phát video (Unity VideoPlayer không hỗ trợ trực tiếp link watch/shorts).";
+                const string openedMsg = "Opened YouTube externally for playback (Unity VideoPlayer does not support watch/shorts links directly).";
                 if (sectionsStatus != null) sectionsStatus.text = openedMsg;
                 Debug.Log("[CourseSelectionUI] Opened YouTube URL externally.");
                 return;
@@ -1099,8 +1245,8 @@ public class CourseSelectionUI : MonoBehaviour
 
             string resolverReason = ApiManager.Instance != null ? ApiManager.Instance.LastStreamResolveErrorMessage : null;
             string msg = string.IsNullOrWhiteSpace(resolverReason)
-                ? "Link YouTube dạng watch/shorts không phát trực tiếp bằng Unity VideoPlayer. Hãy dùng link stream mp4/m3u8 hoặc URL đã transcode từ backend."
-                : $"Không thể phát YouTube trong Unity vì backend resolve lỗi: {resolverReason}. Hãy cài ytdl-core/yt-dlp trên server hoặc dùng link stream mp4/m3u8.";
+                ? "Watch/shorts YouTube links cannot be played directly by Unity VideoPlayer. Use an mp4/m3u8 stream URL or a backend-transcoded URL."
+                : $"Unity could not play the YouTube video because backend stream resolution failed: {resolverReason}. Install ytdl-core/yt-dlp on the server or use an mp4/m3u8 stream URL.";
             if (sectionsStatus != null) sectionsStatus.text = msg;
             Debug.Log("[CourseSelectionUI] Unsupported YouTube webpage URL for VideoPlayer.");
             return;
@@ -1113,7 +1259,7 @@ public class CourseSelectionUI : MonoBehaviour
             {
                 if (sectionsStatus != null)
                 {
-                    sectionsStatus.text = "Chưa có VideoPopupWindow để phát video.";
+                    sectionsStatus.text = "No VideoPopupWindow is available for playback.";
                 }
                 return;
             }
@@ -1122,7 +1268,7 @@ public class CourseSelectionUI : MonoBehaviour
         if (sectionsStatus != null)
         {
             string displayTitle = string.IsNullOrWhiteSpace(lesson.title) ? "Video" : lesson.title;
-            sectionsStatus.text = $"Đang mở video: {displayTitle}";
+            sectionsStatus.text = $"Opening video: {displayTitle}";
         }
 
         try
@@ -1133,6 +1279,16 @@ public class CourseSelectionUI : MonoBehaviour
 
             string displayTitle = string.IsNullOrWhiteSpace(lesson.title) ? "Video" : lesson.title;
             await videoPopupWindow.PlayUrlAsync(title: displayTitle, url: url, viewer: viewer, distance: videoWindowDistance, heightOffset: videoWindowHeightOffset, windowSize: videoWindowSize);
+            videoWindowModeController = EnsureVideoWindowModeController();
+            if (videoWindowModeController != null)
+            {
+                videoWindowModeController.BindViewer(viewer);
+            }
+            if (videoPopupWindow != null)
+            {
+                videoPopupWindow.SetPinButtonVisible(false);
+            }
+            UpdateVideoModeButton();
 
             if (videoQuizScheduler != null)
             {
@@ -1146,7 +1302,7 @@ public class CourseSelectionUI : MonoBehaviour
                 videoQuizScheduler.StartTracking(lesson, sourceUrl, viewer, ytTimeProvider);
             }
 
-            if (sectionsStatus != null) sectionsStatus.text = "Đang phát video";
+            if (sectionsStatus != null) sectionsStatus.text = "Playing video";
         }
         catch (Exception ex)
         {
@@ -1159,7 +1315,7 @@ public class CourseSelectionUI : MonoBehaviour
                 Debug.LogError($"[CourseSelectionUI] Play video failed: {ex.Message}");
             }
 
-            if (sectionsStatus != null) sectionsStatus.text = $"Không phát được video: {ex.Message}";
+            if (sectionsStatus != null) sectionsStatus.text = $"Unable to play the video: {ex.Message}";
         }
     }
 
@@ -1242,6 +1398,7 @@ public class CourseSelectionUI : MonoBehaviour
         if (videoPopupWindow != null)
         {
             videoPopupWindow.StopAndHide();
+            videoPopupWindow.SetPinButtonVisible(false);
         }
 
         if (videoQuizScheduler != null)
@@ -1253,6 +1410,8 @@ public class CourseSelectionUI : MonoBehaviour
         {
             timedQuizPopupWindow.HideWindow(resumeVideo: false);
         }
+
+        UpdateVideoModeButton();
     }
 
     private Func<double> BuildYouTubeTimeProvider(string sourceUrl)
@@ -1320,7 +1479,7 @@ public class CourseSelectionUI : MonoBehaviour
 
     private static string NormalizeSectionLabel(string sectionName)
     {
-        if (string.IsNullOrWhiteSpace(sectionName)) return "Nội dung khóa học";
+        if (string.IsNullOrWhiteSpace(sectionName)) return "Course Content";
 
         string normalized = sectionName.Trim();
         Match m = Regex.Match(normalized, @"^\s*(\d{1,3})\s*[-:\.]\s*(.+)$");
@@ -1359,7 +1518,7 @@ public class CourseSelectionUI : MonoBehaviour
 
     private static void EnsureSectionBucket(string sectionName, Dictionary<string, List<LessonData>> grouped)
     {
-        if (string.IsNullOrWhiteSpace(sectionName)) sectionName = "Nội dung khóa học";
+        if (string.IsNullOrWhiteSpace(sectionName)) sectionName = "Course Content";
 
         if (!grouped.ContainsKey(sectionName))
         {
@@ -1386,6 +1545,7 @@ public class CourseSelectionUI : MonoBehaviour
         if (sectionsPage != null) sectionsPage.AddToClassList("hidden");
         if (slidePopupWindow != null) slidePopupWindow.HideWindow();
         if (quizPopupWindow != null) quizPopupWindow.HideWindow();
+        UpdateVideoModeButton();
 
         if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Browsing);
     }
@@ -1396,12 +1556,15 @@ public class CourseSelectionUI : MonoBehaviour
         if (sectionsPage != null) sectionsPage.RemoveFromClassList("hidden");
         if (slidePopupWindow != null) slidePopupWindow.HideWindow();
         if (quizPopupWindow != null) quizPopupWindow.HideWindow();
+        UpdateVideoModeButton();
 
         if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Browsing);
     }
 
     private void OnDestroy()
     {
+        refreshCoursesRequestVersion++;
+        openSectionsRequestVersion++;
         StopVideo();
     }
 

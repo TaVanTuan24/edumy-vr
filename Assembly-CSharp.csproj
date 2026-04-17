@@ -61,10 +61,12 @@
     <Compile Include="Assets\Scripts\VRUI\Core\UiScreenState.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\RayAttachModifier.cs" />
     <Compile Include="Assets\Scripts\VRUI\Tools\LearningWindowsBindingSample.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Spatial\SpatialWindowHandle.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\LessonItemElement.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\MainScreenController.cs" />
     <Compile Include="Assets\Scripts\VRUI\Slides\SlidePopupPanel.cs" />
     <Compile Include="Assets\Scripts\VRUI\Quiz\AnswerCard.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Video\VideoWindowModeController.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\XRPokeFollowAffordanceFill.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\SectionItemElement.cs" />
     <Compile Include="Assets\Scripts\VRUI\Slides\SlideController.cs" />
@@ -92,6 +94,7 @@
     <Compile Include="Assets\Scripts\VRUI\VR\VRSimulatorBootstrap.cs" />
     <Compile Include="Assets\Scripts\VRUI\Video\VideoController.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\CourseCardElement.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Spatial\SpatialWindow.cs" />
     <Compile Include="Assets\Scripts\VRUI\Core\DataModels.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\StepManager.cs" />
     <Compile Include="Assets\Scripts\VRUI\Quiz\QuizQuestionView.cs" />

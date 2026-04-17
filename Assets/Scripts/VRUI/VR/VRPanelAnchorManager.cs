@@ -33,6 +33,7 @@ public class VRPanelAnchorManager : MonoBehaviour
     [Header("Debug Placement")]
     [SerializeField] private bool followViewerInPlayMode = true;
     [SerializeField] private bool staticModeScaleWithPanelMode = false;
+    [SerializeField] private bool allowSpatialWindowOverride = true;
 
     [Header("Hard Clamp")]
     [SerializeField] private bool hardClampToFov = true;
@@ -58,11 +59,13 @@ public class VRPanelAnchorManager : MonoBehaviour
     private Vector3 targetScale;
     private RenderTexture uiRenderTexture;
     private Material surfaceMaterial;
+    private SpatialWindow spatialWindow;
 
     private void Awake()
     {
         initialLocalScale = transform.localScale;
         targetScale = initialLocalScale;
+        spatialWindow = GetComponent<SpatialWindow>();
         
         if (cameraAnchor == null) cameraAnchor = Camera.main?.transform;
     }
@@ -75,12 +78,16 @@ public class VRPanelAnchorManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (followViewerInPlayMode)
+        bool spatialWindowOwnsPlacement = allowSpatialWindowOverride
+            && spatialWindow != null
+            && spatialWindow.enabled;
+
+        if (!spatialWindowOwnsPlacement && followViewerInPlayMode)
         {
             UpdateTargets(false);
             ApplySmoothTransitions();
         }
-        else if (staticModeScaleWithPanelMode)
+        else if (!spatialWindowOwnsPlacement && staticModeScaleWithPanelMode)
         {
             ApplyScaleOnlyTransition();
         }
@@ -148,7 +155,18 @@ public class VRPanelAnchorManager : MonoBehaviour
                 uiSurfaceTransform = quad.transform;
 
                 // Remove MeshCollider from primitive, we want our specific BoxCollider
-                DestroyImmediate(quad.GetComponent<MeshCollider>());
+                MeshCollider meshCollider = quad.GetComponent<MeshCollider>();
+                if (meshCollider != null)
+                {
+                    if (Application.isPlaying)
+                    {
+                        Destroy(meshCollider);
+                    }
+                    else
+                    {
+                        DestroyImmediate(meshCollider);
+                    }
+                }
             }
             else
             {

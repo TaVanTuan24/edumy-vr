@@ -118,7 +118,7 @@ public class SlidePopupPanel : MonoBehaviour
 
         if (slideContent != null)
         {
-            slideContent.text = activeSlides.Count > 0 ? activeSlides[currentSlideIndex] : "Không có slide.";
+            slideContent.text = activeSlides.Count > 0 ? activeSlides[currentSlideIndex] : "No slides available.";
         }
 
         if (slidePrevButton != null) slidePrevButton.SetEnabled(currentSlideIndex > 0);
@@ -154,7 +154,7 @@ public class SlidePopupPanel : MonoBehaviour
             string title = string.IsNullOrWhiteSpace(lesson != null ? lesson.title : null) ? "Slide lesson" : lesson.title;
             for (int i = 1; i <= 6; i++)
             {
-                slides.Add($"{title}\n\nSlide {i}/6\n\nNội dung slide chưa được backend trả về. Bạn có thể gửi mảng slides hoặc slideText (phân trang bằng ---).");
+                slides.Add($"{title}\n\nSlide {i}/6\n\nSlide content was not returned by the backend. You can provide a slides array or slideText separated with ---.");
             }
         }
 

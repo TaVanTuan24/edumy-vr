@@ -163,8 +163,8 @@ public class QuizPopupPanel : MonoBehaviour
             {
                 list.Add(new QuizQuestionData
                 {
-                    question = $"{baseTitle} - Câu hỏi {i}: Chọn đáp án đúng.",
-                    options = new List<string> { "Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D" },
+                    question = $"{baseTitle} - Question {i}: Choose the correct answer.",
+                    options = new List<string> { "Option A", "Option B", "Option C", "Option D" },
                     correctIndex = i % 4
                 });
             }
@@ -193,7 +193,7 @@ public class QuizPopupPanel : MonoBehaviour
         {
             if (quizFeedback != null)
             {
-                quizFeedback.text = "Bạn cần chọn đáp án trước khi sang câu tiếp theo.";
+                quizFeedback.text = "Select an answer before moving to the next question.";
             }
             return;
         }
@@ -206,7 +206,7 @@ public class QuizPopupPanel : MonoBehaviour
     {
         if (activeQuizQuestions.Count == 0)
         {
-            if (quizQuestion != null) quizQuestion.text = "Không có dữ liệu quiz.";
+            if (quizQuestion != null) quizQuestion.text = "No quiz data.";
             if (quizPageIndicator != null) quizPageIndicator.text = "Question 0/0";
             if (quizNextButton != null) quizNextButton.SetEnabled(false);
             return;
@@ -251,7 +251,7 @@ public class QuizPopupPanel : MonoBehaviour
 
         if (quizFeedback != null)
         {
-            quizFeedback.text = selectedIndex >= 0 ? "Đã chọn đáp án. Bấm Next để qua câu tiếp." : "Chọn 1 đáp án.";
+            quizFeedback.text = selectedIndex >= 0 ? "Answer selected. Press Next to continue." : "Select one answer.";
         }
 
         if (quizNextButton != null)
@@ -283,7 +283,7 @@ public class QuizPopupPanel : MonoBehaviour
 
         if (quizQuestion != null)
         {
-            quizQuestion.text = $"Hoàn thành quiz. Kết quả: {score}/{total}";
+            quizQuestion.text = $"Quiz complete. Score: {score}/{total}";
         }
 
         foreach (Button b in quizOptionButtons)
@@ -294,7 +294,7 @@ public class QuizPopupPanel : MonoBehaviour
 
         if (quizFeedback != null)
         {
-            quizFeedback.text = $"Tổng kết: {score}/{total}";
+            quizFeedback.text = $"Summary: {score}/{total}";
         }
 
         if (quizNextButton != null)

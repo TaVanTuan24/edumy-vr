@@ -109,6 +109,27 @@ public class CourseToggleController : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if (floatingButtonRoot == null)
+        {
+            return;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(floatingButtonRoot.gameObject);
+        }
+        else
+        {
+            DestroyImmediate(floatingButtonRoot.gameObject);
+        }
+
+        floatingButtonRoot = null;
+        floatingButtonCanvas = null;
+        floatingButton = null;
+    }
+
     private IEnumerator InitializeAfterUiReady()
     {
         // CourseSelectionUI builds in Start() and clears root; wait so toggle is injected after that.

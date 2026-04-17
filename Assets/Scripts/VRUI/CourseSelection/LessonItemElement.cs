@@ -66,7 +66,7 @@ public partial class LessonItemElement : VisualElement
         LessonId = lesson != null ? lesson.id : null;
 
         string lessonTitle = string.IsNullOrWhiteSpace(lesson != null ? lesson.title : null)
-            ? "(Không có tiêu đề)"
+            ? "(Untitled)"
             : lesson.title;
 
         string type = (lesson != null ? lesson.type : string.Empty) ?? string.Empty;

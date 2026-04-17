@@ -17,6 +17,7 @@ public partial class CourseCardElement : VisualElement
     private readonly Button openButton;
 
     private CourseData boundCourse;
+    private Action openHandler;
 
     public CourseCardElement()
     {
@@ -55,6 +56,7 @@ public partial class CourseCardElement : VisualElement
         openButton = new Button();
         openButton.text = "Open";
         openButton.AddToClassList("course-card__open-button");
+        openButton.clicked += HandleOpenClicked;
 
         progressRow.Add(progressLabel);
         progressRow.Add(progressTrack);
@@ -96,13 +98,7 @@ public partial class CourseCardElement : VisualElement
 
         thumbnail.style.backgroundImage = StyleKeyword.None;
 
-        openButton.clicked -= HandleOpenClicked;
-        openButton.clicked += HandleOpenClicked;
-
-        void HandleOpenClicked()
-        {
-            onOpen?.Invoke(boundCourse);
-        }
+        openHandler = () => onOpen?.Invoke(boundCourse);
     }
 
     public void SetThumbnail(Texture2D texture, int expectedBindVersion)
@@ -134,5 +130,10 @@ public partial class CourseCardElement : VisualElement
         }
 
         return "COURSE";
+    }
+
+    private void HandleOpenClicked()
+    {
+        openHandler?.Invoke();
     }
 }

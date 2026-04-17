@@ -6,7 +6,7 @@
                 <ui:Label text="Learn at your own pace" class="screen-subtitle" />
             </ui:VisualElement>
             <ui:ListView name="course-list" class="course-list modern-scroll" />
-            <ui:Label name="status-label" text="Đang tải dữ liệu..." class="status-label" />
+            <ui:Label name="status-label" text="Loading data..." class="status-label" />
         </ui:VisualElement>
 
         <ui:VisualElement name="sections-page" class="page detail-page hidden">
@@ -15,7 +15,6 @@
                     <ui:Button name="back-button" text="Back" class="back-button" />
                     <ui:Label name="sections-title" text="Sections" class="screen-title detail-title" />
                 </ui:VisualElement>
-                <ui:Label text="Tap a lesson to open content" class="screen-subtitle detail-subtitle" />
             </ui:VisualElement>
             <ui:ScrollView name="sections-scroll" class="sections-scroll modern-scroll" />
             <ui:Label name="sections-status" text="" class="status-label" />

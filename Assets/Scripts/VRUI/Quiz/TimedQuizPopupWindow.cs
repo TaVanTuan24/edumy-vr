@@ -29,7 +29,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
     [SerializeField] private bool autoPlaceInFrontWhenPlaying = false;
     [SerializeField] private bool flipForwardToFaceViewer = true;
     [SerializeField] private float horizontalOffset = -0.48f;
-    [SerializeField] private float additionalHeightOffset = -0.22f;
+    [SerializeField] private float additionalHeightOffset = -0.35f;
     [SerializeField, Min(0.1f)] private float autoCloseDelayCorrect = 2f;
     [SerializeField, Min(0.1f)] private float autoCloseDelayWrong = 5f;
 
@@ -40,6 +40,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
     private TMP_Text feedbackText;
     private TMP_Text timerText;
     private Button closeButton;
+    private Button pinButton;
     private readonly List<Button> optionButtons = new List<Button>();
 
     private TimedQuizData activeQuiz;
@@ -51,6 +52,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
     private Transform activeViewer;
     private float activeDistance;
     private float activeHeightOffset;
+    private SpatialWindow spatialWindow;
 
     public event Action<bool> OnWindowClosed;
 
@@ -101,10 +103,8 @@ public class TimedQuizPopupWindow : MonoBehaviour
     private void LateUpdate()
     {
         if (!Application.isPlaying) return;
-        if (windowTransform == null || !windowTransform.gameObject.activeSelf) return;
-        if (activeViewer == null) return;
-
-        PositionWindow(activeViewer, activeDistance, activeHeightOffset);
+        if (spatialWindow == null) return;
+        spatialWindow.SetViewer(activeViewer);
     }
 
     public bool Show(TimedQuizData quiz, Transform viewer, float distance, float heightOffset)
@@ -127,17 +127,40 @@ public class TimedQuizPopupWindow : MonoBehaviour
             titleText.text = "Real Time Quiz";
         }
 
-        bool shouldAutoPlace = !keepPlacedTransformOnShow
-            || (createdRuntimeWindow && Application.isPlaying)
-            || (Application.isPlaying && autoPlaceInFrontWhenPlaying);
+        bool shouldAutoPlace = Application.isPlaying
+            || !keepPlacedTransformOnShow
+            || createdRuntimeWindow
+            || autoPlaceInFrontWhenPlaying;
         if (shouldAutoPlace)
         {
-            PositionWindow(viewer, distance, heightOffset);
+            PlaceInFrontOf(viewer, distance, heightOffset);
         }
 
         windowTransform.gameObject.SetActive(true);
+        EnsureSpatialWindow();
+        spatialWindow?.SetPinned(false, false);
+        UpdatePinButtonState();
         RenderQuiz();
         return true;
+    }
+
+    public void PlaceInFrontOf(Transform viewer, float distance, float heightOffset)
+    {
+        EnsureWindowExists(false);
+        if (windowTransform == null || viewer == null) return;
+
+        EnsureSpatialWindow();
+        if (spatialWindow != null)
+        {
+            float totalHeightOffset = heightOffset + additionalHeightOffset;
+            spatialWindow.SetViewer(viewer);
+            spatialWindow.SetFollowSettings(distance, totalHeightOffset, horizontalOffset);
+            spatialWindow.MoveInFrontOfViewer(viewer, distance, totalHeightOffset, horizontalOffset);
+            spatialWindow.SetPinned(false, false);
+            return;
+        }
+
+        PositionWindow(viewer, distance, heightOffset);
     }
 
     public void HideWindow(bool resumeVideo = true)
@@ -210,6 +233,35 @@ public class TimedQuizPopupWindow : MonoBehaviour
         BuildUiIfMissing();
         BindEventsOnce();
         EnsureInteractionSupport();
+        EnsureSpatialWindow();
+    }
+
+    private void EnsureSpatialWindow()
+    {
+        if (windowTransform == null)
+        {
+            return;
+        }
+
+        if (spatialWindow == null)
+        {
+            spatialWindow = windowTransform.GetComponent<SpatialWindow>();
+            if (spatialWindow == null)
+            {
+                spatialWindow = windowTransform.gameObject.AddComponent<SpatialWindow>();
+            }
+        }
+
+        spatialWindow.ConfigureWindowRoot(windowTransform, rootRect != null ? rootRect : windowTransform);
+        spatialWindow.SetViewer(activeViewer != null ? activeViewer : (Camera.main != null ? Camera.main.transform : null));
+        spatialWindow.SetFollowSettings(activeDistance > 0f ? activeDistance : 1.45f, activeHeightOffset + additionalHeightOffset, horizontalOffset);
+        spatialWindow.SetAllowResize(false);
+        spatialWindow.SetChromeVisible(false);
+        spatialWindow.SetInteractionsEnabled(false);
+        if (Application.isPlaying)
+        {
+            spatialWindow.RemoveChrome();
+        }
     }
 
     private void EnsureInteractionSupport()
@@ -248,7 +300,9 @@ public class TimedQuizPopupWindow : MonoBehaviour
         feedbackText.color = MutedTextColor;
 
         closeButton = FindOrCreateButton(panelRect, "CloseButton", "Continue", new Vector2(0.8f, 0.9f), new Vector2(0.96f, 0.98f));
+        pinButton = FindOrCreateButton(panelRect, "PinButton", "📌", new Vector2(0.7f, 0.9f), new Vector2(0.79f, 0.98f));
         SetButtonColor(closeButton, ContinueButtonColor, Color.white);
+        SetButtonColor(pinButton, OptionDefaultColor, TitleColor);
 
         optionButtons.Clear();
         for (int i = 0; i < 4; i++)
@@ -269,6 +323,10 @@ public class TimedQuizPopupWindow : MonoBehaviour
         {
             closeButton.onClick.AddListener(() => HideWindow(true));
         }
+        if (pinButton != null)
+        {
+            pinButton.onClick.AddListener(TogglePinnedState);
+        }
 
         for (int i = 0; i < optionButtons.Count; i++)
         {
@@ -281,6 +339,36 @@ public class TimedQuizPopupWindow : MonoBehaviour
         }
 
         bindingsAdded = true;
+        UpdatePinButtonState();
+    }
+
+    private void TogglePinnedState()
+    {
+        EnsureSpatialWindow();
+        if (spatialWindow == null)
+        {
+            return;
+        }
+
+        spatialWindow.TogglePinned();
+        UpdatePinButtonState();
+    }
+
+    private void UpdatePinButtonState()
+    {
+        if (pinButton == null || spatialWindow == null)
+        {
+            return;
+        }
+
+        TextMeshProUGUI label = pinButton.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (label != null)
+        {
+            label.text = spatialWindow.IsPinned ? "📌" : "Pin";
+            label.color = spatialWindow.IsPinned ? Color.white : TitleColor;
+        }
+
+        SetButtonColor(pinButton, spatialWindow.IsPinned ? ContinueButtonColor : OptionDefaultColor, spatialWindow.IsPinned ? Color.white : TitleColor);
     }
 
     private void SelectOption(int optionIndex)
@@ -304,7 +392,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
     {
         if (activeQuiz == null)
         {
-            if (questionText != null) questionText.text = "Khong co du lieu quiz.";
+            if (questionText != null) questionText.text = "No quiz data.";
             if (feedbackText != null) feedbackText.text = string.Empty;
             if (closeButton != null) closeButton.interactable = true;
             return;
@@ -312,7 +400,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
 
         List<string> options = GetOptions(activeQuiz);
         string question = FirstNonEmpty(activeQuiz.question, activeQuiz.text, activeQuiz.prompt);
-        if (string.IsNullOrWhiteSpace(question)) question = "Cau hoi";
+        if (string.IsNullOrWhiteSpace(question)) question = "Question";
 
         if (questionText != null)
         {
@@ -333,7 +421,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
             TextMeshProUGUI label = b.GetComponentInChildren<TextMeshProUGUI>(true);
             if (label != null)
             {
-                label.text = string.IsNullOrWhiteSpace(options[i]) ? $"Lua chon {i + 1}" : options[i].Trim();
+                label.text = string.IsNullOrWhiteSpace(options[i]) ? $"Option {i + 1}" : options[i].Trim();
             }
 
             Image image = b.GetComponent<Image>();
@@ -365,27 +453,27 @@ public class TimedQuizPopupWindow : MonoBehaviour
             if (!answered)
             {
                 feedbackText.color = MutedTextColor;
-                feedbackText.text = "Chon 1 dap an de tiep tuc video.";
+                feedbackText.text = "Select an answer to continue the video.";
             }
             else if (selectedIndex == correctIndex)
             {
                 feedbackText.color = new Color(0.18f, 0.54f, 0.31f, 1f);
-                feedbackText.text = "Chinh xac! Bam Continue de tiep tuc video.";
+                feedbackText.text = "Correct! Press Continue to resume the video.";
             }
             else
             {
                 feedbackText.color = new Color(0.67f, 0.22f, 0.22f, 1f);
                 string correctText = (options != null && correctIndex >= 0 && correctIndex < options.Count)
                     ? options[correctIndex]
-                    : "(khong xac dinh)";
+                    : "(unknown)";
                 string explanation = GetExplanationText(activeQuiz);
                 if (string.IsNullOrWhiteSpace(explanation))
                 {
-                    feedbackText.text = $"Sai. Dap an dung: {correctText}.";
+                    feedbackText.text = $"Incorrect. Correct answer: {correctText}.";
                 }
                 else
                 {
-                    feedbackText.text = $"Sai. Dap an dung: {correctText}.\nGiai thich: {explanation}";
+                    feedbackText.text = $"Incorrect. Correct answer: {correctText}.\nExplanation: {explanation}";
                 }
             }
         }
@@ -729,3 +817,4 @@ public class TimedQuizPopupWindow : MonoBehaviour
         return replacement.transform;
     }
 }
+

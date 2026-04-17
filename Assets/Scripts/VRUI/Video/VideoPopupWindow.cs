@@ -39,6 +39,7 @@ public class VideoPopupWindow : MonoBehaviour
     [SerializeField] private bool spatialAudio = false;
     [Header("Controls")]
     [SerializeField] private bool showControls = true;
+    [SerializeField] private bool showPinButton = false;
     [SerializeField] private Vector3 controlsScale = new Vector3(0.001f, 0.0015f, 0.0012f);
     [SerializeField] private float seekStepSeconds = 10f;
 
@@ -47,7 +48,7 @@ public class VideoPopupWindow : MonoBehaviour
     private MeshRenderer windowRenderer;
     private Material windowMaterial;
     private bool createdRuntimeWindow;
-    private string cachedLocalVideoPath;
+    private readonly List<string> cachedLocalVideoPaths = new List<string>();
     private Canvas controlsCanvas;
     private GraphicRaycaster controlsRaycaster;
     private RectTransform controlsRootRect;
@@ -58,13 +59,18 @@ public class VideoPopupWindow : MonoBehaviour
     private Slider seekSlider;
     private TMP_Text timeLabel;
     private TMP_Text titleLabel;
+    private Button pinButton;
     private bool controlsBound;
     private bool isSeeking;
     private bool createdRuntimeControlsCanvas;
     private string currentVideoTitle = "Video";
+    private SpatialWindow spatialWindow;
 
     public VideoPlayer Player => videoPlayer;
     public bool IsPlaying => videoPlayer != null && videoPlayer.isPlaying;
+    public bool IsWindowVisible => windowRenderer != null && windowRenderer.enabled;
+    public Transform WindowRootTransform => windowTransform;
+    public SpatialWindow SpatialWindow => spatialWindow;
 
     private void Reset()
     {
@@ -93,6 +99,7 @@ public class VideoPopupWindow : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(url)) return;
         currentVideoTitle = string.IsNullOrWhiteSpace(title) ? "Video" : title.Trim();
+        ClearTrackedTempVideoFiles();
 
         if (IsYouTubeUrl(url))
         {
@@ -252,58 +259,44 @@ public class VideoPopupWindow : MonoBehaviour
     private async Task<string> DownloadGoogleDriveToLocalTempAsync(string fileId)
     {
         string downloadUrl = $"https://drive.google.com/uc?export=download&id={fileId}&confirm=t";
-        using UnityWebRequest req = UnityWebRequest.Get(downloadUrl);
-        req.downloadHandler = new DownloadHandlerBuffer();
+        string filePath = CreateTrackedTempVideoPath($"drive_{fileId}", ".mp4");
 
-        await SendRequestAsync(req);
-
-        if (req.result != UnityWebRequest.Result.Success)
+        try
         {
-            throw new Exception($"Google Drive download failed: {req.error}");
-        }
+            using UnityWebRequest req = new UnityWebRequest(downloadUrl, UnityWebRequest.kHttpVerbGET);
+            req.downloadHandler = new DownloadHandlerFile(filePath);
+            req.timeout = 25;
 
-        byte[] data = req.downloadHandler.data;
-        if (data == null || data.Length == 0)
+            await SendRequestAsync(req);
+            ValidateDownloadedVideoFile(req, filePath);
+            return filePath;
+        }
+        catch
         {
-            throw new Exception("Downloaded video is empty.");
+            DeleteTrackedTempVideoFile(filePath);
+            throw;
         }
-
-        string filePath = Path.Combine(Application.temporaryCachePath, $"vr_video_{fileId}.mp4");
-        File.WriteAllBytes(filePath, data);
-        cachedLocalVideoPath = filePath;
-        return filePath;
     }
 
     private async Task<string> DownloadVideoToLocalTempAsync(string sourceUrl)
     {
-        using UnityWebRequest req = UnityWebRequest.Get(sourceUrl);
-        req.downloadHandler = new DownloadHandlerBuffer();
-        req.timeout = 25;
+        string filePath = CreateTrackedTempVideoPath("stream", ".mp4");
 
-        await SendRequestAsync(req);
-
-        if (req.result != UnityWebRequest.Result.Success)
+        try
         {
-            throw new Exception($"Download fallback failed: {req.error}");
-        }
+            using UnityWebRequest req = new UnityWebRequest(sourceUrl, UnityWebRequest.kHttpVerbGET);
+            req.downloadHandler = new DownloadHandlerFile(filePath);
+            req.timeout = 25;
 
-        string contentType = req.GetResponseHeader("Content-Type") ?? string.Empty;
-        byte[] data = req.downloadHandler.data;
-        if (data == null || data.Length < 1024)
+            await SendRequestAsync(req);
+            ValidateDownloadedVideoFile(req, filePath);
+            return filePath;
+        }
+        catch
         {
-            throw new Exception("Downloaded fallback file too small or empty.");
+            DeleteTrackedTempVideoFile(filePath);
+            throw;
         }
-
-        // Avoid storing HTML interstitial pages as mp4.
-        if (!string.IsNullOrEmpty(contentType) && contentType.IndexOf("video", StringComparison.OrdinalIgnoreCase) < 0)
-        {
-            throw new Exception($"Fallback content-type is not video: {contentType}");
-        }
-
-        string filePath = Path.Combine(Application.temporaryCachePath, $"vr_video_{Mathf.Abs(sourceUrl.GetHashCode())}.mp4");
-        File.WriteAllBytes(filePath, data);
-        cachedLocalVideoPath = filePath;
-        return filePath;
     }
 
     private static Task SendRequestAsync(UnityWebRequest req)
@@ -312,6 +305,73 @@ public class VideoPopupWindow : MonoBehaviour
         UnityWebRequestAsyncOperation op = req.SendWebRequest();
         op.completed += _ => tcs.TrySetResult(true);
         return tcs.Task;
+    }
+
+    private string CreateTrackedTempVideoPath(string prefix, string extension)
+    {
+        string safeExtension = string.IsNullOrWhiteSpace(extension) ? ".mp4" : extension;
+        string filePath = Path.Combine(
+            Application.temporaryCachePath,
+            $"vr_video_{prefix}_{DateTime.UtcNow:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}{safeExtension}");
+
+        cachedLocalVideoPaths.Add(filePath);
+        return filePath;
+    }
+
+    private static void ValidateDownloadedVideoFile(UnityWebRequest req, string filePath)
+    {
+        if (req.result != UnityWebRequest.Result.Success)
+        {
+            throw new Exception($"Download fallback failed: {req.error}");
+        }
+
+        FileInfo fileInfo = new FileInfo(filePath);
+        if (!fileInfo.Exists || fileInfo.Length < 1024)
+        {
+            throw new Exception("Downloaded fallback file too small or empty.");
+        }
+
+        string contentType = req.GetResponseHeader("Content-Type") ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(contentType))
+        {
+            return;
+        }
+
+        if (contentType.IndexOf("text/html", StringComparison.OrdinalIgnoreCase) >= 0
+            || contentType.IndexOf("text/plain", StringComparison.OrdinalIgnoreCase) >= 0
+            || contentType.IndexOf("application/json", StringComparison.OrdinalIgnoreCase) >= 0
+            || contentType.IndexOf("application/xml", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            throw new Exception($"Fallback content-type is not playable video: {contentType}");
+        }
+    }
+
+    private void ClearTrackedTempVideoFiles()
+    {
+        for (int i = cachedLocalVideoPaths.Count - 1; i >= 0; i--)
+        {
+            DeleteTrackedTempVideoFile(cachedLocalVideoPaths[i]);
+        }
+    }
+
+    private void DeleteTrackedTempVideoFile(string filePath)
+    {
+        if (!string.IsNullOrWhiteSpace(filePath))
+        {
+            try
+            {
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+            catch
+            {
+                // Ignore cleanup errors for temp files.
+            }
+        }
+
+        cachedLocalVideoPaths.Remove(filePath);
     }
 
     private static bool TryExtractGoogleDriveFileId(string url, out string fileId)
@@ -392,6 +452,63 @@ public class VideoPopupWindow : MonoBehaviour
         }
     }
 
+    public void PlaceInFrontOf(Transform viewer, float distance, float heightOffset)
+    {
+        EnsureWindow();
+        if (spatialWindow != null)
+        {
+            spatialWindow.SetViewer(viewer);
+            spatialWindow.SetFollowSettings(distance, heightOffset);
+            spatialWindow.MoveInFrontOfViewer(viewer, distance, heightOffset);
+            spatialWindow.SetPinned(false, false);
+            return;
+        }
+
+        PositionWindow(viewer, distance, heightOffset);
+    }
+
+    public void SetPinned(bool pinned, bool snapInFrontWhenUnpinned)
+    {
+        EnsureSpatialWindow();
+        spatialWindow?.SetPinned(pinned, snapInFrontWhenUnpinned);
+        UpdatePinButtonState();
+    }
+
+    public void SetSpatialInteractionEnabled(bool enabled)
+    {
+        EnsureSpatialWindow();
+        spatialWindow?.SetInteractionsEnabled(enabled);
+    }
+
+    public void SetChromeVisible(bool visible)
+    {
+        EnsureSpatialWindow();
+        spatialWindow?.SetChromeVisible(visible);
+    }
+
+    public void SetPinButtonVisible(bool visible)
+    {
+        showPinButton = visible;
+        if (pinButton != null)
+        {
+            pinButton.gameObject.SetActive(visible);
+        }
+    }
+
+    public void SetWindowPose(Vector3 position, Quaternion rotation, Vector3 scale)
+    {
+        EnsureWindow();
+        if (windowTransform == null)
+        {
+            return;
+        }
+
+        windowTransform.position = position;
+        windowTransform.rotation = rotation;
+        windowTransform.localScale = scale;
+        spatialWindow?.RefreshChromeLayout();
+    }
+
     public void PausePlayback()
     {
         if (videoPlayer != null && videoPlayer.isPlaying)
@@ -465,6 +582,36 @@ public class VideoPopupWindow : MonoBehaviour
 
         EnsureFrameVisuals();
         EnsureControlsCanvas();
+        EnsureSpatialWindow();
+    }
+
+    private void EnsureSpatialWindow()
+    {
+        if (windowTransform == null)
+        {
+            return;
+        }
+
+        if (spatialWindow == null)
+        {
+            spatialWindow = windowTransform.GetComponent<SpatialWindow>();
+            if (spatialWindow == null)
+            {
+                spatialWindow = windowTransform.gameObject.AddComponent<SpatialWindow>();
+            }
+        }
+
+        Transform boundsSource = windowRenderer != null ? windowRenderer.transform : windowTransform;
+        spatialWindow.ConfigureWindowRoot(windowTransform, boundsSource);
+        spatialWindow.SetViewer(Camera.main != null ? Camera.main.transform : null);
+        spatialWindow.SetPinned(true, false);
+        spatialWindow.SetAllowResize(false);
+        spatialWindow.SetChromeVisible(false);
+        spatialWindow.SetInteractionsEnabled(false);
+        if (Application.isPlaying)
+        {
+            spatialWindow.RemoveChrome();
+        }
     }
 
     private void EnsureFrameVisuals()
@@ -492,23 +639,17 @@ public class VideoPopupWindow : MonoBehaviour
         ApplyUnlitColor(backplate.GetComponent<MeshRenderer>(), FrameBackColor);
 
         Transform topBar = surfaceTx.Find("VideoFrameTopBar");
-        if (topBar == null)
+        if (topBar != null)
         {
-            GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            go.name = "VideoFrameTopBar";
-            topBar = go.transform;
-            topBar.SetParent(surfaceTx, false);
-            Collider col = go.GetComponent<Collider>();
-            if (col != null)
+            if (Application.isPlaying)
             {
-                if (Application.isPlaying) Destroy(col);
-                else DestroyImmediate(col);
+                Destroy(topBar.gameObject);
+            }
+            else
+            {
+                topBar.gameObject.SetActive(false);
             }
         }
-
-        topBar.localPosition = new Vector3(0f, 0.54f, -0.001f);
-        topBar.localScale = new Vector3(1f, 0.08f, 1f);
-        ApplyUnlitColor(topBar.GetComponent<MeshRenderer>(), FrameBarColor);
     }
 
     private static void ApplyUnlitColor(MeshRenderer renderer, Color color)
@@ -763,6 +904,8 @@ public class VideoPopupWindow : MonoBehaviour
 
         titleLabel = FindOrCreateText(panelRect, "VideoTitle", new Vector2(0.02f, 0.58f), new Vector2(0.32f, 0.94f), 28f, FontStyles.Bold, TextAlignmentOptions.Left);
         timeLabel = FindOrCreateText(panelRect, "TimeLabel", new Vector2(0.76f, 0.58f), new Vector2(0.98f, 0.94f), 24f, FontStyles.Normal, TextAlignmentOptions.Right);
+        pinButton = FindOrCreateButton(panelRect, "PinButton", new Vector2(0.33f, 0.58f), new Vector2(0.42f, 0.94f), "📌", SecondaryButtonColor, TextColor);
+        if (pinButton != null) pinButton.gameObject.SetActive(showPinButton);
 
         playPauseButton = FindOrCreateButton(panelRect, "PlayPauseButton", new Vector2(0.02f, 0.12f), new Vector2(0.12f, 0.52f), "Play", PrimaryButtonColor, Color.white);
         stopButton = FindOrCreateButton(panelRect, "StopButton", new Vector2(0.13f, 0.12f), new Vector2(0.21f, 0.52f), "Stop", SecondaryButtonColor, TextColor);
@@ -776,6 +919,7 @@ public class VideoPopupWindow : MonoBehaviour
         if (stopButton != null) stopButton.onClick.AddListener(StopPlayback);
         if (rewindButton != null) rewindButton.onClick.AddListener(() => SeekBy(-Mathf.Max(1f, seekStepSeconds)));
         if (forwardButton != null) forwardButton.onClick.AddListener(() => SeekBy(Mathf.Max(1f, seekStepSeconds)));
+        if (pinButton != null) pinButton.onClick.AddListener(TogglePinState);
         if (seekSlider != null)
         {
             seekSlider.onValueChanged.AddListener(OnSeekSliderChanged);
@@ -790,6 +934,7 @@ public class VideoPopupWindow : MonoBehaviour
         }
 
         controlsBound = true;
+        UpdatePinButtonState();
     }
 
     private void RefreshControlsUi()
@@ -827,6 +972,41 @@ public class VideoPopupWindow : MonoBehaviour
             seekSlider.minValue = 0f;
             seekSlider.maxValue = Mathf.Max(1f, total);
             seekSlider.SetValueWithoutNotify((float)Math.Max(0d, videoPlayer.time));
+        }
+
+        UpdatePinButtonState();
+    }
+
+    private void TogglePinState()
+    {
+        EnsureSpatialWindow();
+        if (spatialWindow == null)
+        {
+            return;
+        }
+
+        spatialWindow.TogglePinned();
+        UpdatePinButtonState();
+    }
+
+    private void UpdatePinButtonState()
+    {
+        if (pinButton == null || spatialWindow == null)
+        {
+            return;
+        }
+
+        TMP_Text label = pinButton.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+        {
+            label.text = spatialWindow.IsPinned ? "📌" : "Pin";
+            label.color = TextColor;
+        }
+
+        Image image = pinButton.GetComponent<Image>();
+        if (image != null)
+        {
+            image.color = spatialWindow.IsPinned ? PrimaryButtonColor : SecondaryButtonColor;
         }
     }
 
@@ -1066,17 +1246,7 @@ public class VideoPopupWindow : MonoBehaviour
             Destroy(windowTransform.gameObject);
         }
 
-        if (!string.IsNullOrWhiteSpace(cachedLocalVideoPath) && File.Exists(cachedLocalVideoPath))
-        {
-            try
-            {
-                File.Delete(cachedLocalVideoPath);
-            }
-            catch
-            {
-                // Ignore cleanup errors for temp files.
-            }
-        }
+        ClearTrackedTempVideoFiles();
     }
 
     [ContextMenu("Create/Refresh Video Window")]
@@ -1090,3 +1260,4 @@ public class VideoPopupWindow : MonoBehaviour
         EnsureEditorPreviewMaterial();
     }
 }
+
