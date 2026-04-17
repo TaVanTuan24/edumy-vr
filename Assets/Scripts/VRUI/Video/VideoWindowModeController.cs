@@ -23,6 +23,8 @@ public class VideoWindowModeController : MonoBehaviour
 
     public VideoDisplayMode CurrentMode { get; private set; }
     public bool IsFloatingMode => CurrentMode == VideoDisplayMode.Floating;
+    public float FloatingDistance => floatingDistance;
+    public float FloatingHeightOffset => floatingHeightOffset;
 
     private void Awake()
     {
@@ -49,6 +51,17 @@ public class VideoWindowModeController : MonoBehaviour
     public void ToggleMode()
     {
         ApplyMode(IsFloatingMode ? VideoDisplayMode.Fixed : VideoDisplayMode.Floating, forcePlaceFloating: true);
+    }
+
+    public void SetFloatingPlacement(float distance, float heightOffset)
+    {
+        floatingDistance = Mathf.Max(0.5f, distance);
+        floatingHeightOffset = heightOffset;
+
+        if (IsFloatingMode)
+        {
+            ApplyMode(VideoDisplayMode.Floating, forcePlaceFloating: true);
+        }
     }
 
     public void ApplyCurrentMode(bool forcePlaceFloating)

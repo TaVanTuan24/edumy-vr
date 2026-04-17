@@ -135,6 +135,7 @@ public class SlidePopupWindow : MonoBehaviour
     }
 
     public Transform WindowRootTransform => windowTransform;
+    public float HorizontalOffset => horizontalOffset;
 
     public void PlaceAtAnchor(Transform anchor, bool copyScale = false)
     {
@@ -171,6 +172,20 @@ public class SlidePopupWindow : MonoBehaviour
         }
 
         PositionWindow(viewer, distance, heightOffset);
+    }
+
+    public void SetPlacementOffsets(float distance, float heightOffset, float horizontal)
+    {
+        horizontalOffset = horizontal;
+
+        if (windowTransform != null && windowTransform.gameObject.activeInHierarchy)
+        {
+            Transform viewer = activeViewer != null ? activeViewer : (Camera.main != null ? Camera.main.transform : null);
+            if (viewer != null)
+            {
+                PlaceInFrontOf(viewer, distance, heightOffset);
+            }
+        }
     }
 
     public bool Show(LessonData lesson, Transform viewer, float distance, float heightOffset)

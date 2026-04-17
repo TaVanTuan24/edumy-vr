@@ -61,6 +61,10 @@ public class CourseToggleController : MonoBehaviour
     private UGUIButton floatingButton;
     private readonly UIGraphicImage[] floatingGlyphLines = new UIGraphicImage[3];
 
+    public float PanelDistance => panelDistance;
+    public float PanelHeightOffset => panelHeightOffset;
+    public float PanelRightOffset => panelRightOffset;
+
     private void Awake()
     {
         toggleDocument = toggleDocumentOverride != null ? toggleDocumentOverride : GetComponent<UIDocument>();
@@ -620,6 +624,18 @@ public class CourseToggleController : MonoBehaviour
         if (toViewer.sqrMagnitude > 0.001f)
         {
             floatingButtonRoot.rotation = Quaternion.LookRotation(toViewer.normalized, Vector3.up) * Quaternion.Euler(0f, 180f, 0f);
+        }
+    }
+
+    public void SetPanelPlacement(float distance, float heightOffset, float rightOffset)
+    {
+        panelDistance = Mathf.Max(0.3f, distance);
+        panelHeightOffset = heightOffset;
+        panelRightOffset = rightOffset;
+
+        if (isOpen && positionRightOfViewerOnOpen)
+        {
+            PlaceCoursePanelNearViewer();
         }
     }
 

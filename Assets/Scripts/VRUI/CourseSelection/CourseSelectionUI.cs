@@ -13,6 +13,14 @@ using UnityEditor;
 [RequireComponent(typeof(UIDocument))]
 public class CourseSelectionUI : MonoBehaviour
 {
+    private enum SettingsTarget
+    {
+        Slide,
+        Quiz,
+        Video,
+        CourseSelection
+    }
+
     [Header("UI Toolkit Assets")]
     [SerializeField] private VisualTreeAsset lessonSelectionViewTree;
     [SerializeField] private StyleSheet courseSelectionStyle;
@@ -66,10 +74,16 @@ public class CourseSelectionUI : MonoBehaviour
     private Label statusLabel;
     private Button backButton;
     private Button closeButton;
+    private Button settingsButton;
     private Button videoModeButton;
     private Label sectionsTitle;
     private ScrollView sectionsScroll;
     private Label sectionsStatus;
+    private VisualElement settingsOverlay;
+    private VisualElement settingsPanel;
+    private VisualElement settingsContent;
+    private VisualElement settingsTabs;
+    private SettingsTarget activeSettingsTarget = SettingsTarget.Slide;
     private readonly List<CourseData> courses = new List<CourseData>();
     private readonly List<LessonData> activeLessons = new List<LessonData>();
     private readonly List<LessonItemElement> renderedLessonItems = new List<LessonItemElement>();
@@ -293,10 +307,12 @@ public class CourseSelectionUI : MonoBehaviour
         courseList = lessonSelectionWindow.Q<ListView>("course-list");
         backButton = lessonSelectionWindow.Q<Button>("back-button");
         closeButton = EnsureCloseButton();
+        settingsButton = EnsureSettingsButton();
         videoModeButton = EnsureVideoModeButton();
         sectionsTitle = lessonSelectionWindow.Q<Label>("sections-title");
         sectionsScroll = lessonSelectionWindow.Q<ScrollView>("sections-scroll");
         sectionsStatus = lessonSelectionWindow.Q<Label>("sections-status");
+        EnsureSettingsPanel();
 
         if (timedQuizPopupWindow == null)
         {
@@ -323,6 +339,12 @@ public class CourseSelectionUI : MonoBehaviour
         {
             videoModeButton.clicked -= ToggleVideoWindowMode;
             videoModeButton.clicked += ToggleVideoWindowMode;
+        }
+
+        if (settingsButton != null)
+        {
+            settingsButton.clicked -= ToggleSettingsPanel;
+            settingsButton.clicked += ToggleSettingsPanel;
         }
 
         if (videoPopupWindow != null)
@@ -417,6 +439,50 @@ public class CourseSelectionUI : MonoBehaviour
         return button;
     }
 
+    private Button EnsureSettingsButton()
+    {
+        if (lessonSelectionWindow == null)
+        {
+            return null;
+        }
+
+        Button button = lessonSelectionWindow.Q<Button>("course-selection-settings-button");
+        if (button != null)
+        {
+            return button;
+        }
+
+        button = new Button { name = "course-selection-settings-button", text = "\u2699" };
+        button.style.position = Position.Absolute;
+        button.style.top = 18f;
+        button.style.right = 236f;
+        button.style.width = 34f;
+        button.style.height = 34f;
+        button.style.paddingLeft = 0f;
+        button.style.paddingRight = 0f;
+        button.style.paddingTop = 0f;
+        button.style.paddingBottom = 0f;
+        button.style.backgroundColor = new Color(0.92f, 0.95f, 1f, 0.98f);
+        button.style.color = new Color(0.08f, 0.12f, 0.18f, 1f);
+        button.style.borderTopLeftRadius = 10f;
+        button.style.borderTopRightRadius = 10f;
+        button.style.borderBottomLeftRadius = 10f;
+        button.style.borderBottomRightRadius = 10f;
+        button.style.borderTopWidth = 1f;
+        button.style.borderRightWidth = 1f;
+        button.style.borderBottomWidth = 1f;
+        button.style.borderLeftWidth = 1f;
+        button.style.borderTopColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.borderRightColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.borderBottomColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.borderLeftColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        button.style.unityFontStyleAndWeight = FontStyle.Bold;
+        button.style.fontSize = 16f;
+        lessonSelectionWindow.Add(button);
+        button.BringToFront();
+        return button;
+    }
+
     private VideoWindowModeController EnsureVideoWindowModeController()
     {
         if (videoWindowModeController != null)
@@ -447,6 +513,254 @@ public class CourseSelectionUI : MonoBehaviour
         }
 
         return videoWindowModeController;
+    }
+
+    private void EnsureSettingsPanel()
+    {
+        if (lessonSelectionWindow == null)
+        {
+            return;
+        }
+
+        settingsOverlay = lessonSelectionWindow.Q<VisualElement>("course-selection-settings-overlay");
+        if (settingsOverlay != null)
+        {
+            settingsPanel = settingsOverlay.Q<VisualElement>("course-selection-settings-panel");
+            settingsTabs = settingsOverlay.Q<VisualElement>("course-selection-settings-tabs");
+            settingsContent = settingsOverlay.Q<VisualElement>("course-selection-settings-content");
+            RebuildSettingsContent();
+            return;
+        }
+
+        settingsOverlay = new VisualElement { name = "course-selection-settings-overlay" };
+        settingsOverlay.style.position = Position.Absolute;
+        settingsOverlay.style.top = 60f;
+        settingsOverlay.style.right = 18f;
+        settingsOverlay.style.width = 360f;
+        settingsOverlay.style.display = DisplayStyle.None;
+
+        settingsPanel = new VisualElement { name = "course-selection-settings-panel" };
+        settingsPanel.style.paddingLeft = 14f;
+        settingsPanel.style.paddingRight = 14f;
+        settingsPanel.style.paddingTop = 14f;
+        settingsPanel.style.paddingBottom = 14f;
+        settingsPanel.style.backgroundColor = new Color(0.98f, 0.99f, 1f, 0.98f);
+        settingsPanel.style.borderTopLeftRadius = 16f;
+        settingsPanel.style.borderTopRightRadius = 16f;
+        settingsPanel.style.borderBottomLeftRadius = 16f;
+        settingsPanel.style.borderBottomRightRadius = 16f;
+        settingsPanel.style.borderTopWidth = 1f;
+        settingsPanel.style.borderRightWidth = 1f;
+        settingsPanel.style.borderBottomWidth = 1f;
+        settingsPanel.style.borderLeftWidth = 1f;
+        settingsPanel.style.borderTopColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        settingsPanel.style.borderRightColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        settingsPanel.style.borderBottomColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+        settingsPanel.style.borderLeftColor = new Color(0.72f, 0.81f, 0.93f, 1f);
+
+        Label title = new Label("Window Settings");
+        title.style.unityFontStyleAndWeight = FontStyle.Bold;
+        title.style.fontSize = 18f;
+        title.style.color = new Color(0.08f, 0.12f, 0.18f, 1f);
+        title.style.marginBottom = 12f;
+        settingsPanel.Add(title);
+
+        settingsTabs = new VisualElement { name = "course-selection-settings-tabs" };
+        settingsTabs.style.flexDirection = FlexDirection.Row;
+        settingsTabs.style.flexWrap = Wrap.Wrap;
+        settingsTabs.style.marginBottom = 12f;
+        settingsPanel.Add(settingsTabs);
+
+        settingsContent = new VisualElement { name = "course-selection-settings-content" };
+        settingsPanel.Add(settingsContent);
+
+        settingsOverlay.Add(settingsPanel);
+        lessonSelectionWindow.Add(settingsOverlay);
+        settingsOverlay.BringToFront();
+        RebuildSettingsContent();
+    }
+
+    private Button CreateSettingsTabButton(string text, SettingsTarget target)
+    {
+        Button button = new Button(() =>
+        {
+            activeSettingsTarget = target;
+            RebuildSettingsContent();
+        })
+        {
+            text = text
+        };
+        button.style.height = 28f;
+        button.style.paddingLeft = 10f;
+        button.style.paddingRight = 10f;
+        button.style.backgroundColor = activeSettingsTarget == target
+            ? new Color(0.2f, 0.55f, 0.93f, 0.98f)
+            : new Color(0.92f, 0.95f, 1f, 0.98f);
+        button.style.color = activeSettingsTarget == target ? Color.white : new Color(0.08f, 0.12f, 0.18f, 1f);
+        button.style.borderTopLeftRadius = 8f;
+        button.style.borderTopRightRadius = 8f;
+        button.style.borderBottomLeftRadius = 8f;
+        button.style.borderBottomRightRadius = 8f;
+        button.style.marginRight = 8f;
+        button.style.marginBottom = 8f;
+        button.style.borderTopWidth = 0f;
+        button.style.borderRightWidth = 0f;
+        button.style.borderBottomWidth = 0f;
+        button.style.borderLeftWidth = 0f;
+        return button;
+    }
+
+    private void ToggleSettingsPanel()
+    {
+        EnsureSettingsPanel();
+        if (settingsOverlay == null)
+        {
+            return;
+        }
+
+        bool open = settingsOverlay.style.display != DisplayStyle.Flex;
+        settingsOverlay.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
+        if (open)
+        {
+            RebuildSettingsContent();
+        }
+    }
+
+    private void RebuildSettingsContent()
+    {
+        if (settingsContent == null)
+        {
+            return;
+        }
+
+        if (settingsTabs != null)
+        {
+            settingsTabs.Clear();
+            settingsTabs.Add(CreateSettingsTabButton("Slide", SettingsTarget.Slide));
+            settingsTabs.Add(CreateSettingsTabButton("Quiz", SettingsTarget.Quiz));
+            settingsTabs.Add(CreateSettingsTabButton("Video", SettingsTarget.Video));
+            settingsTabs.Add(CreateSettingsTabButton("Course Selection", SettingsTarget.CourseSelection));
+        }
+
+        settingsContent.Clear();
+
+        switch (activeSettingsTarget)
+        {
+            case SettingsTarget.Slide:
+                AddSettingsHeader("Slide Window");
+                AddSettingSlider("Distance", slideWindowDistance, 0.5f, 4f, value =>
+                {
+                    slideWindowDistance = value;
+                    RepositionVisibleSlideWindow();
+                });
+                AddSettingSlider("Height", slideWindowHeightOffset, -1f, 1f, value =>
+                {
+                    slideWindowHeightOffset = value;
+                    RepositionVisibleSlideWindow();
+                });
+                AddSettingSlider("Horizontal Offset", slidePopupWindow != null ? slidePopupWindow.HorizontalOffset : -0.35f, -2f, 2f, value =>
+                {
+                    if (slidePopupWindow != null)
+                    {
+                        slidePopupWindow.SetPlacementOffsets(slideWindowDistance, slideWindowHeightOffset, value);
+                    }
+                });
+                break;
+            case SettingsTarget.Quiz:
+                AddSettingsHeader("Quiz Window");
+                AddSettingSlider("Distance", quizWindowDistance, 0.5f, 4f, value =>
+                {
+                    quizWindowDistance = value;
+                    RepositionVisibleQuizWindow();
+                });
+                AddSettingSlider("Height", quizWindowHeightOffset, -1f, 1f, value =>
+                {
+                    quizWindowHeightOffset = value;
+                    RepositionVisibleQuizWindow();
+                });
+                AddSettingSlider("Horizontal Offset", quizPopupWindow != null ? quizPopupWindow.HorizontalOffset : -0.35f, -2f, 2f, value =>
+                {
+                    if (quizPopupWindow != null)
+                    {
+                        quizPopupWindow.SetPlacementOffsets(quizWindowDistance, quizWindowHeightOffset, value);
+                    }
+                });
+                break;
+            case SettingsTarget.Video:
+                AddSettingsHeader("Video Window");
+                VideoWindowModeController controller = EnsureVideoWindowModeController();
+                float videoFloatDistance = controller != null ? controller.FloatingDistance : 3f;
+                float videoFloatHeight = controller != null ? controller.FloatingHeightOffset : 0.02f;
+                AddSettingSlider("Float Distance", videoFloatDistance, 0.5f, 5f, value =>
+                {
+                    controller = EnsureVideoWindowModeController();
+                    controller?.SetFloatingPlacement(value, controller.FloatingHeightOffset);
+                    UpdateVideoModeButton();
+                });
+                AddSettingSlider("Float Height", videoFloatHeight, -1f, 1f, value =>
+                {
+                    controller = EnsureVideoWindowModeController();
+                    controller?.SetFloatingPlacement(controller.FloatingDistance, value);
+                    UpdateVideoModeButton();
+                });
+                break;
+            case SettingsTarget.CourseSelection:
+                AddSettingsHeader("Course Selection");
+                CourseToggleController toggleController = GetCourseToggleController();
+                float panelDistance = toggleController != null ? toggleController.PanelDistance : 1.1f;
+                float panelHeight = toggleController != null ? toggleController.PanelHeightOffset : 0.02f;
+                float panelRight = toggleController != null ? toggleController.PanelRightOffset : 0.22f;
+                AddSettingSlider("Distance", panelDistance, 0.3f, 3f, value =>
+                {
+                    toggleController = GetCourseToggleController();
+                    toggleController?.SetPanelPlacement(value, toggleController.PanelHeightOffset, toggleController.PanelRightOffset);
+                });
+                AddSettingSlider("Height", panelHeight, -1f, 1f, value =>
+                {
+                    toggleController = GetCourseToggleController();
+                    toggleController?.SetPanelPlacement(toggleController.PanelDistance, value, toggleController.PanelRightOffset);
+                });
+                AddSettingSlider("Right Offset", panelRight, -2f, 2f, value =>
+                {
+                    toggleController = GetCourseToggleController();
+                    toggleController?.SetPanelPlacement(toggleController.PanelDistance, toggleController.PanelHeightOffset, value);
+                });
+                break;
+        }
+    }
+
+    private void AddSettingsHeader(string text)
+    {
+        Label label = new Label(text);
+        label.style.unityFontStyleAndWeight = FontStyle.Bold;
+        label.style.fontSize = 14f;
+        label.style.color = new Color(0.17f, 0.24f, 0.35f, 1f);
+        label.style.marginBottom = 8f;
+        settingsContent.Add(label);
+    }
+
+    private void AddSettingSlider(string labelText, float currentValue, float minValue, float maxValue, Action<float> onChanged)
+    {
+        VisualElement row = new VisualElement();
+        row.style.marginBottom = 10f;
+
+        Label label = new Label($"{labelText}: {currentValue:0.00}");
+        label.style.fontSize = 12f;
+        label.style.color = new Color(0.32f, 0.39f, 0.5f, 1f);
+        label.style.marginBottom = 4f;
+        row.Add(label);
+
+        Slider slider = new Slider(minValue, maxValue)
+        {
+            value = currentValue
+        };
+        slider.RegisterValueChangedCallback(evt =>
+        {
+            label.text = $"{labelText}: {evt.newValue:0.00}";
+            onChanged?.Invoke(evt.newValue);
+        });
+        row.Add(slider);
+        settingsContent.Add(row);
     }
 
     private void ToggleVideoWindowMode()
@@ -1412,6 +1726,45 @@ public class CourseSelectionUI : MonoBehaviour
         }
 
         UpdateVideoModeButton();
+    }
+
+    private CourseToggleController GetCourseToggleController()
+    {
+        CourseToggleController toggleController = GetComponent<CourseToggleController>();
+        if (toggleController == null)
+        {
+            toggleController = FindAnyObjectByType<CourseToggleController>();
+        }
+
+        return toggleController;
+    }
+
+    private void RepositionVisibleSlideWindow()
+    {
+        if (slidePopupWindow == null || slidePopupWindow.WindowRootTransform == null || !slidePopupWindow.WindowRootTransform.gameObject.activeInHierarchy)
+        {
+            return;
+        }
+
+        Transform viewer = GetViewerTransform();
+        if (viewer != null)
+        {
+            slidePopupWindow.PlaceInFrontOf(viewer, slideWindowDistance, slideWindowHeightOffset);
+        }
+    }
+
+    private void RepositionVisibleQuizWindow()
+    {
+        if (quizPopupWindow == null || quizPopupWindow.WindowRootTransform == null || !quizPopupWindow.WindowRootTransform.gameObject.activeInHierarchy)
+        {
+            return;
+        }
+
+        Transform viewer = GetViewerTransform();
+        if (viewer != null)
+        {
+            quizPopupWindow.PlaceInFrontOf(viewer, quizWindowDistance, quizWindowHeightOffset);
+        }
     }
 
     private Func<double> BuildYouTubeTimeProvider(string sourceUrl)
