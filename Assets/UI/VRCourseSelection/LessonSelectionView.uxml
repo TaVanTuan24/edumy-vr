@@ -5,6 +5,26 @@
                 <ui:Label name="title-label" text="Enrolled Courses" class="screen-title" />
                 <ui:Label text="Learn at your own pace" class="screen-subtitle" />
             </ui:VisualElement>
+            <ui:VisualElement name="vr-login-panel" class="vr-login-panel">
+                <ui:VisualElement class="vr-login-panel__header">
+                    <ui:Label text="VR Login" class="vr-login-panel__title" />
+                    <ui:Label name="vr-login-user" text="" class="vr-login-panel__user" />
+                </ui:VisualElement>
+                <ui:Label
+                    name="vr-login-status"
+                    text="Not logged in."
+                    class="vr-login-panel__status"
+                />
+                <ui:VisualElement name="vr-login-code-group" class="vr-login-code-group">
+                    <ui:Label text="Pairing PIN" class="vr-login-panel__caption" />
+                    <ui:Label name="vr-login-code" text="00000" class="vr-login-panel__code" />
+                    <ui:Label name="vr-login-timer" text="Expires in 02:00" class="vr-login-panel__timer" />
+                </ui:VisualElement>
+                <ui:VisualElement class="vr-login-panel__actions">
+                    <ui:Button name="vr-login-request-button" text="Get Login Code" class="vr-login-primary-button" />
+                    <ui:Button name="vr-login-refresh-button" text="Refresh Code" class="vr-login-secondary-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
             <ui:ListView name="course-list" class="course-list modern-scroll" />
             <ui:Label name="status-label" text="Loading data..." class="status-label" />
         </ui:VisualElement>

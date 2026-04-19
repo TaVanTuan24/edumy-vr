@@ -23,7 +23,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 112}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 1
-  controlID: 935
+  controlID: 204
   draggingID: 0
 --- !u!114 &2
 MonoBehaviour:
@@ -152,7 +152,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 112}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 936
+  controlID: 205
   draggingID: 0
 --- !u!114 &4
 MonoBehaviour:
@@ -178,7 +178,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 112}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 937
+  controlID: 206
   draggingID: 0
 --- !u!114 &5
 MonoBehaviour:
@@ -204,7 +204,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 56}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 938
+  controlID: 207
   draggingID: 0
 --- !u!114 &6
 MonoBehaviour:
@@ -898,9 +898,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: -4.8955116, y: 0.7786139, z: 11.988765}
+    m_Target: {x: -3.963148, y: 1.2391862, z: 13.586373}
     speed: 2
-    m_Value: {x: -4.8955116, y: 0.7786139, z: 11.988765}
+    m_Value: {x: -3.963148, y: 1.2391862, z: 13.586373}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -947,9 +947,9 @@ MonoBehaviour:
     m_gridOpacity: 0.5
     m_NearestPlaneToHandleMode: 0
   m_Rotation:
-    m_Target: {x: -0.05248663, y: 0.55135435, z: -0.034787364, w: -0.831899}
+    m_Target: {x: -0.023400081, y: 0.42154276, z: -0.010882653, w: -0.9064491}
     speed: 2
-    m_Value: {x: -0.052486304, y: 0.55135095, z: -0.03478715, w: -0.8318938}
+    m_Value: {x: -0.023399917, y: 0.4215398, z: -0.010882577, w: -0.9064427}
   m_Size:
     m_Target: 3.108173
     speed: 2
@@ -1082,18 +1082,17 @@ MonoBehaviour:
   m_FolderTreeState:
     scrollPos: {x: 0, y: 942.8}
     m_SelectedIDs:
-    - m_Data: 79232
+    - m_Data: 92472
     m_LastClickedID:
-      m_Data: 79232
+      m_Data: 92472
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 62884
-    - m_Data: 77438
-    - m_Data: 77440
+    - m_Data: 62888
     - m_Data: 77442
     - m_Data: 77444
     - m_Data: 77446
-    - m_Data: 2147483647
+    - m_Data: 77448
+    - m_Data: 77450
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1127,13 +1126,12 @@ MonoBehaviour:
       m_Data: 0
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 62884
-    - m_Data: 77438
-    - m_Data: 77440
+    - m_Data: 62888
     - m_Data: 77442
     - m_Data: 77444
     - m_Data: 77446
-    - m_Data: 2147483647
+    - m_Data: 77448
+    - m_Data: 77450
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

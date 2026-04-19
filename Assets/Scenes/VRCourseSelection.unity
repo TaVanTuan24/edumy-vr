@@ -20220,7 +20220,7 @@ MonoBehaviour:
   localUrl: http://192.168.1.1:3000
   productionUrl: https://api.edumy-vr.com
   useProduction: 0
-  authToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE2OWIwYTA1NTA3MWI3ZTQ0MTBiOGYiLCJlbWFpbCI6ImFAZ2cuY29tIiwicm9sZSI6bnVsbCwiaWF0IjoxNzc1MzYyMTU0LCJleHAiOjE3Nzc5NTQxNTR9.QwtpOrEt_UaTFXZQLLE_QXZW6DGKFSMflrUH_17QHeg
+  authToken: 
   loadTokenFromPlayerPrefs: 0
   persistTokenInPlayerPrefs: 0
   errorTextDisplay: {fileID: 0}

@@ -1406,8 +1406,8 @@
     <ProjectReference Include="Unity.Collections.csproj" />
     <ProjectReference Include="Unity.PathTracing.Runtime.csproj" />
     <ProjectReference Include="Unity.PathTracing.Editor.csproj" />
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.TestRunner.csproj" />
     <ProjectReference Include="UnityEditor.TestRunner.csproj" />
   </ItemGroup>

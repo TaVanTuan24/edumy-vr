@@ -10200,7 +10200,7 @@ MonoBehaviour:
   localUrl: http://localhost:3000
   productionUrl: https://api.edumy-vr.com
   useProduction: 0
-  authToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE2OWIwYTA1NTA3MWI3ZTQ0MTBiOGYiLCJlbWFpbCI6ImFAZ2cuY29tIiwicm9sZSI6bnVsbCwiaWF0IjoxNzc1MzcyMzQwLCJleHAiOjE3Nzc5NjQzNDB9.FubmIs93MmJiqRbkJ7n7RyHPqLJsOVA-L2VMRRTi3sM
+  authToken: 
   errorTextDisplay: {fileID: 1206660092}
   debugUrlText: {fileID: 875018842}
 --- !u!4 &1091226086

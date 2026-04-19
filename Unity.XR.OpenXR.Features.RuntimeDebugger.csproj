@@ -1104,8 +1104,8 @@
   <ItemGroup>
     <ProjectReference Include="Unity.XR.OpenXR.csproj" />
     <ProjectReference Include="Unity.XR.OpenXR.Editor.csproj" />
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>

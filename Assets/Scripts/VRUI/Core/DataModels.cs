@@ -181,3 +181,35 @@ public class StreamResolveResponse
     public StreamResolveData data;
     public ApiError error;
 }
+
+[Serializable]
+public class VRLoginCodeRequest
+{
+    public string deviceId;
+}
+
+[Serializable]
+public class VRLoginCodeResponse
+{
+    public bool success;
+    public string code;
+    public int expiresIn;
+    public string message;
+}
+
+[Serializable]
+public class VRLoginUserData
+{
+    public string id;
+    public string username;
+}
+
+[Serializable]
+public class VRLoginPollResponse
+{
+    public bool success;
+    public string status;
+    public string accessToken;
+    public string message;
+    public VRLoginUserData user;
+}

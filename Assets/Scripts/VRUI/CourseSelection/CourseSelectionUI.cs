@@ -70,12 +70,20 @@ public class CourseSelectionUI : MonoBehaviour
     private VisualElement lessonSelectionWindow;
     private VisualElement coursesPage;
     private VisualElement sectionsPage;
+    private VisualElement vrLoginPanel;
+    private VisualElement vrLoginCodeGroup;
     private ListView courseList;
     private Label statusLabel;
+    private Label vrLoginStatusLabel;
+    private Label vrLoginCodeLabel;
+    private Label vrLoginTimerLabel;
+    private Label vrLoginUserLabel;
     private Button backButton;
     private Button closeButton;
     private Button settingsButton;
     private Button videoModeButton;
+    private Button vrLoginRequestButton;
+    private Button vrLoginRefreshButton;
     private Label sectionsTitle;
     private ScrollView sectionsScroll;
     private Label sectionsStatus;
@@ -91,6 +99,7 @@ public class CourseSelectionUI : MonoBehaviour
     private string selectedLessonId;
     private int refreshCoursesRequestVersion;
     private int openSectionsRequestVersion;
+    private VRAuthManager vrAuthManager;
 
     private async void Start()
     {
@@ -130,7 +139,17 @@ public class CourseSelectionUI : MonoBehaviour
         }
 
         BuildUi();
-        await RefreshCourses();
+        EnsureVrAuthManager();
+        UpdateVrLoginUi();
+
+        if (vrAuthManager != null && vrAuthManager.IsAuthenticated)
+        {
+            await RefreshCourses();
+        }
+        else
+        {
+            ResetCourseViewForLoggedOutState();
+        }
     }
 
     private void LateUpdate()
@@ -142,6 +161,12 @@ public class CourseSelectionUI : MonoBehaviour
     {
         int requestVersion = ++refreshCoursesRequestVersion;
         if (statusLabel != null) statusLabel.text = "Loading courses...";
+
+        if (!alwaysUseMockData && vrAuthManager != null && !vrAuthManager.IsAuthenticated)
+        {
+            ResetCourseViewForLoggedOutState();
+            return;
+        }
 
         bool usedMock = false;
 
@@ -164,6 +189,19 @@ public class CourseSelectionUI : MonoBehaviour
                 response = await ApiManager.Instance.GetCoursesAsync();
                 if (requestVersion != refreshCoursesRequestVersion)
                 {
+                    return;
+                }
+
+                if (response == null && ApiManager.Instance.LastResponseStatusCode == 401)
+                {
+                    if (vrAuthManager != null)
+                    {
+                        vrAuthManager.HandleUnauthorizedSession();
+                    }
+                    else
+                    {
+                        ResetCourseViewForLoggedOutState("You must log in to view your courses.");
+                    }
                     return;
                 }
 
@@ -303,15 +341,24 @@ public class CourseSelectionUI : MonoBehaviour
 
         coursesPage = lessonSelectionWindow.Q<VisualElement>("courses-page");
         sectionsPage = lessonSelectionWindow.Q<VisualElement>("sections-page");
+        vrLoginPanel = lessonSelectionWindow.Q<VisualElement>("vr-login-panel");
+        vrLoginCodeGroup = lessonSelectionWindow.Q<VisualElement>("vr-login-code-group");
         statusLabel = lessonSelectionWindow.Q<Label>("status-label");
+        vrLoginStatusLabel = lessonSelectionWindow.Q<Label>("vr-login-status");
+        vrLoginCodeLabel = lessonSelectionWindow.Q<Label>("vr-login-code");
+        vrLoginTimerLabel = lessonSelectionWindow.Q<Label>("vr-login-timer");
+        vrLoginUserLabel = lessonSelectionWindow.Q<Label>("vr-login-user");
         courseList = lessonSelectionWindow.Q<ListView>("course-list");
         backButton = lessonSelectionWindow.Q<Button>("back-button");
         closeButton = EnsureCloseButton();
         settingsButton = EnsureSettingsButton();
         videoModeButton = EnsureVideoModeButton();
+        vrLoginRequestButton = lessonSelectionWindow.Q<Button>("vr-login-request-button");
+        vrLoginRefreshButton = lessonSelectionWindow.Q<Button>("vr-login-refresh-button");
         sectionsTitle = lessonSelectionWindow.Q<Label>("sections-title");
         sectionsScroll = lessonSelectionWindow.Q<ScrollView>("sections-scroll");
         sectionsStatus = lessonSelectionWindow.Q<Label>("sections-status");
+        EnsureVrLoginPanelUi();
         EnsureSettingsPanel();
 
         if (timedQuizPopupWindow == null)
@@ -345,6 +392,18 @@ public class CourseSelectionUI : MonoBehaviour
         {
             settingsButton.clicked -= ToggleSettingsPanel;
             settingsButton.clicked += ToggleSettingsPanel;
+        }
+
+        if (vrLoginRequestButton != null)
+        {
+            vrLoginRequestButton.clicked -= HandleVrLoginRequestClicked;
+            vrLoginRequestButton.clicked += HandleVrLoginRequestClicked;
+        }
+
+        if (vrLoginRefreshButton != null)
+        {
+            vrLoginRefreshButton.clicked -= HandleVrLoginRefreshClicked;
+            vrLoginRefreshButton.clicked += HandleVrLoginRefreshClicked;
         }
 
         if (videoPopupWindow != null)
@@ -1948,6 +2007,339 @@ public class CourseSelectionUI : MonoBehaviour
         return int.MaxValue;
     }
 
+    private void EnsureVrLoginPanelUi()
+    {
+        if (coursesPage == null)
+        {
+            Debug.LogWarning("[CourseSelectionUI] courses-page was not found. VR login panel cannot be created.");
+            return;
+        }
+
+        bool hasAllRefs = vrLoginPanel != null
+            && vrLoginCodeGroup != null
+            && vrLoginStatusLabel != null
+            && vrLoginCodeLabel != null
+            && vrLoginTimerLabel != null
+            && vrLoginUserLabel != null
+            && vrLoginRequestButton != null
+            && vrLoginRefreshButton != null;
+
+        if (hasAllRefs)
+        {
+            return;
+        }
+
+        Debug.LogWarning("[CourseSelectionUI] VR login UI references are missing from the runtime UXML. Building a fallback panel in code.");
+
+        if (vrLoginPanel == null)
+        {
+            vrLoginPanel = new VisualElement { name = "vr-login-panel" };
+            vrLoginPanel.AddToClassList("vr-login-panel");
+
+            var header = new VisualElement();
+            header.AddToClassList("vr-login-panel__header");
+
+            var title = new Label("VR Login");
+            title.AddToClassList("vr-login-panel__title");
+            header.Add(title);
+
+            vrLoginUserLabel = new Label();
+            vrLoginUserLabel.name = "vr-login-user";
+            vrLoginUserLabel.AddToClassList("vr-login-panel__user");
+            header.Add(vrLoginUserLabel);
+
+            vrLoginPanel.Add(header);
+
+            vrLoginStatusLabel = new Label("Not logged in.");
+            vrLoginStatusLabel.name = "vr-login-status";
+            vrLoginStatusLabel.AddToClassList("vr-login-panel__status");
+            vrLoginPanel.Add(vrLoginStatusLabel);
+
+            vrLoginCodeGroup = new VisualElement { name = "vr-login-code-group" };
+            vrLoginCodeGroup.AddToClassList("vr-login-code-group");
+
+            var caption = new Label("Pairing PIN");
+            caption.AddToClassList("vr-login-panel__caption");
+            vrLoginCodeGroup.Add(caption);
+
+            vrLoginCodeLabel = new Label("00000");
+            vrLoginCodeLabel.name = "vr-login-code";
+            vrLoginCodeLabel.AddToClassList("vr-login-panel__code");
+            vrLoginCodeGroup.Add(vrLoginCodeLabel);
+
+            vrLoginTimerLabel = new Label("Expires in 02:00");
+            vrLoginTimerLabel.name = "vr-login-timer";
+            vrLoginTimerLabel.AddToClassList("vr-login-panel__timer");
+            vrLoginCodeGroup.Add(vrLoginTimerLabel);
+
+            vrLoginPanel.Add(vrLoginCodeGroup);
+
+            var actions = new VisualElement();
+            actions.AddToClassList("vr-login-panel__actions");
+
+            vrLoginRequestButton = new Button
+            {
+                name = "vr-login-request-button",
+                text = "Get Login Code"
+            };
+            vrLoginRequestButton.AddToClassList("vr-login-primary-button");
+            actions.Add(vrLoginRequestButton);
+
+            vrLoginRefreshButton = new Button
+            {
+                name = "vr-login-refresh-button",
+                text = "Refresh Code"
+            };
+            vrLoginRefreshButton.AddToClassList("vr-login-secondary-button");
+            actions.Add(vrLoginRefreshButton);
+
+            vrLoginPanel.Add(actions);
+
+            int insertIndex = courseList != null ? coursesPage.IndexOf(courseList) : -1;
+            if (insertIndex >= 0)
+            {
+                coursesPage.Insert(insertIndex, vrLoginPanel);
+            }
+            else
+            {
+                coursesPage.Add(vrLoginPanel);
+            }
+        }
+        else
+        {
+            if (vrLoginUserLabel == null)
+            {
+                vrLoginUserLabel = vrLoginPanel.Q<Label>("vr-login-user");
+            }
+            if (vrLoginStatusLabel == null)
+            {
+                vrLoginStatusLabel = vrLoginPanel.Q<Label>("vr-login-status");
+            }
+            if (vrLoginCodeGroup == null)
+            {
+                vrLoginCodeGroup = vrLoginPanel.Q<VisualElement>("vr-login-code-group");
+            }
+            if (vrLoginCodeLabel == null)
+            {
+                vrLoginCodeLabel = vrLoginPanel.Q<Label>("vr-login-code");
+            }
+            if (vrLoginTimerLabel == null)
+            {
+                vrLoginTimerLabel = vrLoginPanel.Q<Label>("vr-login-timer");
+            }
+            if (vrLoginRequestButton == null)
+            {
+                vrLoginRequestButton = vrLoginPanel.Q<Button>("vr-login-request-button");
+            }
+            if (vrLoginRefreshButton == null)
+            {
+                vrLoginRefreshButton = vrLoginPanel.Q<Button>("vr-login-refresh-button");
+            }
+        }
+
+        WarnIfVrLoginRefMissing(vrLoginPanel, "vr-login-panel");
+        WarnIfVrLoginRefMissing(vrLoginCodeGroup, "vr-login-code-group");
+        WarnIfVrLoginRefMissing(vrLoginStatusLabel, "vr-login-status");
+        WarnIfVrLoginRefMissing(vrLoginCodeLabel, "vr-login-code");
+        WarnIfVrLoginRefMissing(vrLoginTimerLabel, "vr-login-timer");
+        WarnIfVrLoginRefMissing(vrLoginUserLabel, "vr-login-user");
+        WarnIfVrLoginRefMissing(vrLoginRequestButton, "vr-login-request-button");
+        WarnIfVrLoginRefMissing(vrLoginRefreshButton, "vr-login-refresh-button");
+    }
+
+    private void WarnIfVrLoginRefMissing(UnityEngine.Object reference, string elementName)
+    {
+        if (reference == null)
+        {
+            Debug.LogWarning($"[CourseSelectionUI] Missing VR login UI reference: {elementName}");
+        }
+    }
+
+    private void WarnIfVrLoginRefMissing(VisualElement reference, string elementName)
+    {
+        if (reference == null)
+        {
+            Debug.LogWarning($"[CourseSelectionUI] Missing VR login UI reference: {elementName}");
+        }
+    }
+
+    private void EnsureVrAuthManager()
+    {
+        if (vrAuthManager == null)
+        {
+            vrAuthManager = GetComponent<VRAuthManager>();
+        }
+
+        if (vrAuthManager == null)
+        {
+            vrAuthManager = gameObject.AddComponent<VRAuthManager>();
+        }
+
+        vrAuthManager.StateUpdated -= HandleVrAuthStateUpdated;
+        vrAuthManager.StateUpdated += HandleVrAuthStateUpdated;
+        vrAuthManager.AuthenticationChanged -= HandleVrAuthenticationChanged;
+        vrAuthManager.AuthenticationChanged += HandleVrAuthenticationChanged;
+        vrAuthManager.Initialize();
+    }
+
+    private async void HandleVrAuthenticationChanged(bool isAuthenticated)
+    {
+        UpdateVrLoginUi();
+
+        if (isAuthenticated)
+        {
+            await RefreshCourses();
+            return;
+        }
+
+        ResetCourseViewForLoggedOutState();
+    }
+
+    private void HandleVrAuthStateUpdated()
+    {
+        UpdateVrLoginUi();
+    }
+
+    private async void HandleVrLoginRequestClicked()
+    {
+        if (vrAuthManager == null)
+        {
+            return;
+        }
+
+        await vrAuthManager.RequestLoginCode();
+    }
+
+    private async void HandleVrLoginRefreshClicked()
+    {
+        if (vrAuthManager == null)
+        {
+            return;
+        }
+
+        await vrAuthManager.RefreshLoginCode();
+    }
+
+    private void UpdateVrLoginUi()
+    {
+        bool isAuthenticated = vrAuthManager != null && vrAuthManager.IsAuthenticated;
+        bool isPending = vrAuthManager != null && vrAuthManager.IsPending;
+        string code = vrAuthManager != null ? vrAuthManager.CurrentCode : string.Empty;
+        string username = vrAuthManager != null ? vrAuthManager.Username : string.Empty;
+        string authStatus = vrAuthManager != null ? vrAuthManager.StatusMessage : "Not logged in.";
+        int remainingSeconds = vrAuthManager != null ? vrAuthManager.RemainingSeconds : 0;
+
+        if (vrLoginStatusLabel != null)
+        {
+            vrLoginStatusLabel.text = authStatus;
+        }
+        else
+        {
+            Debug.LogWarning("[CourseSelectionUI] vr-login-status label is missing. PIN state cannot be shown.");
+        }
+
+        if (vrLoginUserLabel != null)
+        {
+            vrLoginUserLabel.text = string.IsNullOrWhiteSpace(username)
+                ? "Signed in"
+                : username;
+            vrLoginUserLabel.style.display = isAuthenticated ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        if (vrLoginCodeGroup != null)
+        {
+            vrLoginCodeGroup.style.display = isPending ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+        else
+        {
+            Debug.LogWarning("[CourseSelectionUI] vr-login-code-group is missing. PIN container cannot be shown.");
+        }
+
+        if (vrLoginCodeLabel != null)
+        {
+            vrLoginCodeLabel.text = string.IsNullOrWhiteSpace(code) ? "00000" : code;
+            vrLoginCodeLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            vrLoginCodeLabel.style.fontSize = 40f;
+            vrLoginCodeLabel.style.opacity = isPending ? 1f : 0.8f;
+        }
+        else
+        {
+            Debug.LogWarning("[CourseSelectionUI] vr-login-code label is missing. The pairing PIN cannot be rendered.");
+        }
+
+        if (vrLoginTimerLabel != null)
+        {
+            int minutes = Mathf.Max(0, remainingSeconds) / 60;
+            int seconds = Mathf.Max(0, remainingSeconds) % 60;
+            vrLoginTimerLabel.text = $"Expires in {minutes:00}:{seconds:00}";
+        }
+        else
+        {
+            Debug.LogWarning("[CourseSelectionUI] vr-login-timer label is missing. Countdown cannot be shown.");
+        }
+
+        if (vrLoginRequestButton != null)
+        {
+            vrLoginRequestButton.style.display = isAuthenticated || isPending ? DisplayStyle.None : DisplayStyle.Flex;
+            vrLoginRequestButton.SetEnabled(!isAuthenticated && !isPending);
+        }
+
+        if (vrLoginRefreshButton != null)
+        {
+            vrLoginRefreshButton.style.display = isPending ? DisplayStyle.Flex : DisplayStyle.None;
+            vrLoginRefreshButton.SetEnabled(isPending);
+        }
+
+        if (courseList != null)
+        {
+            courseList.style.display = isAuthenticated || alwaysUseMockData ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        if (!isAuthenticated && !alwaysUseMockData && statusLabel != null)
+        {
+            statusLabel.text = isPending
+                ? "Approve the pairing PIN on your profile page to load courses."
+                : "Not logged in. Request a login code to pair this device.";
+        }
+
+        if (isPending)
+        {
+            Debug.Log($"[CourseSelectionUI] Showing pairing PIN in UI: {code}");
+        }
+    }
+
+    private void ResetCourseViewForLoggedOutState(string message = "Log in with the VR pairing code to view your courses.")
+    {
+        courses.Clear();
+        activeLessons.Clear();
+        renderedLessonItems.Clear();
+        activeCourse = null;
+        selectedLessonId = null;
+
+        if (courseList != null)
+        {
+            courseList.Rebuild();
+            courseList.style.display = alwaysUseMockData ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        if (sectionsScroll != null)
+        {
+            sectionsScroll.Clear();
+        }
+
+        if (sectionsStatus != null)
+        {
+            sectionsStatus.text = string.Empty;
+        }
+
+        if (statusLabel != null)
+        {
+            statusLabel.text = message;
+        }
+
+        ShowCoursesPage();
+    }
+
     private void ShowCoursesPage()
     {
         if (coursesPage != null) coursesPage.RemoveFromClassList("hidden");
@@ -1974,6 +2366,11 @@ public class CourseSelectionUI : MonoBehaviour
     {
         refreshCoursesRequestVersion++;
         openSectionsRequestVersion++;
+        if (vrAuthManager != null)
+        {
+            vrAuthManager.StateUpdated -= HandleVrAuthStateUpdated;
+            vrAuthManager.AuthenticationChanged -= HandleVrAuthenticationChanged;
+        }
         StopVideo();
     }
 

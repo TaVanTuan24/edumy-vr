@@ -7,8 +7,8 @@ using TMPro;
 
 public class ApiManager : MonoBehaviour
 {
-    private const string JwtTokenPlayerPrefsKey = "JWT_TOKEN";
-    private const string JwtTokenEnvironmentVariable = "EDUMY_VR_JWT_TOKEN";
+    private const string AccessTokenPlayerPrefsKey = "VR_ACCESS_TOKEN";
+    private const string LegacyJwtTokenPlayerPrefsKey = "JWT_TOKEN";
 
     public static ApiManager Instance { get; private set; }
 
@@ -38,6 +38,7 @@ public class ApiManager : MonoBehaviour
     private bool lessonProgressSyncDisableLogged;
     public string LastStreamResolveErrorCode { get; private set; }
     public string LastStreamResolveErrorMessage { get; private set; }
+    public long LastResponseStatusCode { get; private set; }
 
     private void Awake()
     {
@@ -66,26 +67,63 @@ public class ApiManager : MonoBehaviour
     public void SetAuthToken(string token)
     {
         authToken = string.IsNullOrWhiteSpace(token) ? string.Empty : token.Trim();
-        if (persistTokenInPlayerPrefs && !string.IsNullOrWhiteSpace(authToken))
+        if (!persistTokenInPlayerPrefs)
         {
-            PlayerPrefs.SetString(JwtTokenPlayerPrefsKey, authToken);
+            Debug.Log("[ApiManager] Auth token updated. Persisted: false");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(authToken))
+        {
+            PlayerPrefs.SetString(AccessTokenPlayerPrefsKey, authToken);
+            if (PlayerPrefs.HasKey(LegacyJwtTokenPlayerPrefsKey))
+            {
+                PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
+            }
             PlayerPrefs.Save();
         }
-        else if (PlayerPrefs.HasKey(JwtTokenPlayerPrefsKey))
+        else
         {
-            PlayerPrefs.DeleteKey(JwtTokenPlayerPrefsKey);
-            PlayerPrefs.Save();
+            bool changed = false;
+            if (PlayerPrefs.HasKey(AccessTokenPlayerPrefsKey))
+            {
+                PlayerPrefs.DeleteKey(AccessTokenPlayerPrefsKey);
+                changed = true;
+            }
+
+            if (PlayerPrefs.HasKey(LegacyJwtTokenPlayerPrefsKey))
+            {
+                PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
+                changed = true;
+            }
+
+            if (changed)
+            {
+                PlayerPrefs.Save();
+            }
         }
-        Debug.Log($"[ApiManager] Auth token updated. Persisted: {persistTokenInPlayerPrefs && !string.IsNullOrWhiteSpace(authToken)}");
+        Debug.Log($"[ApiManager] Auth token updated. Persisted: {!string.IsNullOrWhiteSpace(authToken)}");
     }
 
     public void ClearAuthToken()
     {
         authToken = string.Empty;
 
-        if (PlayerPrefs.HasKey(JwtTokenPlayerPrefsKey))
+        bool changed = false;
+        if (PlayerPrefs.HasKey(AccessTokenPlayerPrefsKey))
         {
-            PlayerPrefs.DeleteKey(JwtTokenPlayerPrefsKey);
+            PlayerPrefs.DeleteKey(AccessTokenPlayerPrefsKey);
+            changed = true;
+        }
+
+        if (PlayerPrefs.HasKey(LegacyJwtTokenPlayerPrefsKey))
+        {
+            PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
+            changed = true;
+        }
+
+        if (changed)
+        {
             PlayerPrefs.Save();
         }
     }
@@ -220,6 +258,45 @@ public class ApiManager : MonoBehaviour
         return null;
     }
 
+    public async Task<VRLoginCodeResponse> RequestVrLoginCodeAsync(string deviceId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            return new VRLoginCodeResponse
+            {
+                success = false,
+                message = "Device ID is required."
+            };
+        }
+
+        string url = BuildUrl("api/vr-auth/request-code");
+        VRLoginCodeRequest payload = new VRLoginCodeRequest
+        {
+            deviceId = deviceId.Trim()
+        };
+
+        return await SendPostJsonRequestForResponse<VRLoginCodeResponse>(url, JsonUtility.ToJson(payload));
+    }
+
+    public async Task<VRLoginPollResponse> PollVrLoginStatusAsync(string code, string deviceId)
+    {
+        if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(deviceId))
+        {
+            return new VRLoginPollResponse
+            {
+                success = false,
+                status = "expired",
+                message = "Missing pairing code or device ID."
+            };
+        }
+
+        string url = BuildUrl(
+            $"api/vr-auth/poll/{UnityWebRequest.EscapeURL(code.Trim())}?deviceId={UnityWebRequest.EscapeURL(deviceId.Trim())}"
+        );
+
+        return await SendGetRequestForObject<VRLoginPollResponse>(url);
+    }
+
     private string BuildUrl(string relativePath)
     {
         string baseUrl = BaseUrl?.TrimEnd('/') ?? string.Empty;
@@ -229,23 +306,36 @@ public class ApiManager : MonoBehaviour
 
     private void LoadAuthToken()
     {
+        authToken = string.IsNullOrWhiteSpace(authToken) ? string.Empty : authToken.Trim();
         if (!string.IsNullOrWhiteSpace(authToken))
         {
-            authToken = authToken.Trim();
             return;
         }
 
-        string envToken = Environment.GetEnvironmentVariable(JwtTokenEnvironmentVariable);
-        if (!string.IsNullOrWhiteSpace(envToken))
+        if (!loadTokenFromPlayerPrefs)
         {
-            authToken = envToken.Trim();
-            Debug.Log($"[ApiManager] Loaded auth token from environment variable {JwtTokenEnvironmentVariable}.");
             return;
         }
 
-        if (loadTokenFromPlayerPrefs && PlayerPrefs.HasKey(JwtTokenPlayerPrefsKey))
+        string storedToken = string.Empty;
+        if (PlayerPrefs.HasKey(AccessTokenPlayerPrefsKey))
         {
-            authToken = PlayerPrefs.GetString(JwtTokenPlayerPrefsKey)?.Trim() ?? string.Empty;
+            storedToken = PlayerPrefs.GetString(AccessTokenPlayerPrefsKey)?.Trim() ?? string.Empty;
+        }
+        else if (PlayerPrefs.HasKey(LegacyJwtTokenPlayerPrefsKey))
+        {
+            storedToken = PlayerPrefs.GetString(LegacyJwtTokenPlayerPrefsKey)?.Trim() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(storedToken))
+            {
+                PlayerPrefs.SetString(AccessTokenPlayerPrefsKey, storedToken);
+            }
+            PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
+            PlayerPrefs.Save();
+        }
+
+        if (!string.IsNullOrWhiteSpace(storedToken))
+        {
+            authToken = storedToken;
             Debug.Log("[ApiManager] Loaded auth token from PlayerPrefs.");
         }
     }
@@ -263,6 +353,7 @@ public class ApiManager : MonoBehaviour
     private async Task<T> SendGetRequest<T>(string url)
     {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
+        LastResponseStatusCode = 0;
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
@@ -273,6 +364,7 @@ public class ApiManager : MonoBehaviour
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
+                LastResponseStatusCode = webRequest.responseCode;
                 string jsonResponse = webRequest.downloadHandler.text;
                 Debug.Log($"[ApiManager] Raw JSON: {jsonResponse}");
                 
@@ -298,6 +390,7 @@ public class ApiManager : MonoBehaviour
             else
             {
                 long statusCode = webRequest.responseCode;
+                LastResponseStatusCode = statusCode;
                 string responseBody = webRequest.downloadHandler?.text;
                 Debug.LogError($"[ApiManager] Request failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
 
@@ -313,6 +406,7 @@ public class ApiManager : MonoBehaviour
     private async Task<string> SendGetRawRequest(string url)
     {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
+        LastResponseStatusCode = 0;
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
@@ -323,12 +417,14 @@ public class ApiManager : MonoBehaviour
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
+                LastResponseStatusCode = webRequest.responseCode;
                 string jsonResponse = webRequest.downloadHandler.text;
                 Debug.Log($"[ApiManager] Raw JSON: {jsonResponse}");
                 return jsonResponse;
             }
 
             long statusCode = webRequest.responseCode;
+            LastResponseStatusCode = statusCode;
             string responseBody = webRequest.downloadHandler?.text;
             Debug.LogError($"[ApiManager] Request failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
 
@@ -344,6 +440,7 @@ public class ApiManager : MonoBehaviour
     private async Task<PostStatus> SendPostJsonRequest(string url, string jsonBody)
     {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
+        LastResponseStatusCode = 0;
 
         using (UnityWebRequest webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
         {
@@ -359,19 +456,73 @@ public class ApiManager : MonoBehaviour
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
+                LastResponseStatusCode = webRequest.responseCode;
                 return PostStatus.Success;
             }
 
             long statusCode = webRequest.responseCode;
+            LastResponseStatusCode = statusCode;
             string responseBody = webRequest.downloadHandler?.text;
             Debug.LogWarning($"[ApiManager] POST failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
             return statusCode == 404 ? PostStatus.NotFound : PostStatus.Failed;
         }
     }
 
+    private async Task<T> SendGetRequestForObject<T>(string url)
+    {
+        if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
+        LastResponseStatusCode = 0;
+
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+        {
+            TrySetAuthHeader(webRequest);
+
+            var operation = webRequest.SendWebRequest();
+            while (!operation.isDone) await Task.Yield();
+
+            string responseBody = webRequest.downloadHandler?.text;
+            LastResponseStatusCode = webRequest.responseCode;
+
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                if (string.IsNullOrWhiteSpace(responseBody)) return default;
+
+                try
+                {
+                    return JsonUtility.FromJson<T>(responseBody);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[ApiManager] Parse GET response failed: {ex.Message} | URL: {url} | Body: {responseBody}");
+                    return default;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(responseBody))
+            {
+                try
+                {
+                    T parsedErrorResponse = JsonUtility.FromJson<T>(responseBody);
+                    if (parsedErrorResponse != null)
+                    {
+                        return parsedErrorResponse;
+                    }
+                }
+                catch
+                {
+                    // Ignore parse errors and continue with generic logging below.
+                }
+            }
+
+            Debug.LogWarning($"[ApiManager] GET failed: {webRequest.error} | Status: {LastResponseStatusCode} | URL: {url} | Body: {responseBody}");
+            return default;
+        }
+    }
+
     private async Task<T> SendPostJsonRequestForResponse<T>(string url, string jsonBody)
     {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
+        LastResponseStatusCode = 0;
 
         using (UnityWebRequest webRequest = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
         {
@@ -388,6 +539,7 @@ public class ApiManager : MonoBehaviour
             string responseBody = webRequest.downloadHandler?.text;
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
+                LastResponseStatusCode = webRequest.responseCode;
                 if (string.IsNullOrWhiteSpace(responseBody)) return default;
 
                 try
@@ -402,6 +554,7 @@ public class ApiManager : MonoBehaviour
             }
 
             long statusCode = webRequest.responseCode;
+            LastResponseStatusCode = statusCode;
             if (!string.IsNullOrWhiteSpace(responseBody))
             {
                 try
