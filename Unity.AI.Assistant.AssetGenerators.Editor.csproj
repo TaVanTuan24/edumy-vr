@@ -50,30 +50,30 @@
     <Analyzer Include="D:\Unity_Project\My project\Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Core\SourceGenerator\SourceGenerators.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Tools\Constants.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\PreviewElementFactory.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Tools\EditAudioClipTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\AssemblyInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Tools\GenerateAssetTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Tools\ManageInterruptedAssetGenerationsTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Tools\EditAnimationClipTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Tools\GetAssetGenerationModelsTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Tools\SelectGeneratedAssetsTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Tools\ConvertAssetTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\SelectGeneratedAssetsInteraction.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Tools\GetCompositionPatternsTool.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\AssetFunctionCallElements.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\AssetPreviewFactory.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\AssetPreviewWidgetRenderer.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\AssetGenerationCostCalculator.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\SelectGeneratedAssetsFunctionCallElement.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Tools\Constants.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\PreviewElementFactory.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Tools\EditAudioClipTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Tools\GenerateAssetTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Tools\ManageInterruptedAssetGenerationsTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Tools\EditAnimationClipTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Tools\GetAssetGenerationModelsTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Tools\SelectGeneratedAssetsTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Tools\ConvertAssetTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\SelectGeneratedAssetsInteraction.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Tools\GetCompositionPatternsTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\AssetFunctionCallElements.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\AssetPreviewFactory.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\AssetPreviewWidgetRenderer.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\AssetGenerationCostCalculator.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\SelectGeneratedAssetsFunctionCallElement.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\SelectGeneratedAssetsInteraction.uss" />
-    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\SelectGeneratedAssetsInteraction.uxml" />
-    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\Unity.AI.Assistant.AssetGenerators.Editor.asmdef" />
-    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\GenerationPreviewElement.uxml" />
-    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Editor\Assistant\AssetGenerators\UI\GenerationSelector.uss" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\SelectGeneratedAssetsInteraction.uss" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\SelectGeneratedAssetsInteraction.uxml" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\Unity.AI.Assistant.AssetGenerators.Editor.asmdef" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\GenerationPreviewElement.uxml" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Editor\Assistant\AssetGenerators\UI\GenerationSelector.uss" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -649,7 +649,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Plugins\Shared\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Plugins\Shared\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
@@ -657,15 +657,15 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Plugins\CodeAnalysis\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Collections.Immutable">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Plugins\Shared\System.Collections.Immutable.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Plugins\Shared\System.Collections.Immutable.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Android.Types">
@@ -1183,8 +1183,8 @@
     <ProjectReference Include="Unity.AI.Generators.Tools.csproj" />
     <ProjectReference Include="Unity.AI.Assistant.UI.Editor.csproj" />
     <ProjectReference Include="Unity.AI.Toolkit.Async.csproj" />
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.TestRunner.csproj" />
     <ProjectReference Include="UnityEditor.TestRunner.csproj" />
   </ItemGroup>

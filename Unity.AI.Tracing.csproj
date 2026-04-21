@@ -49,19 +49,19 @@
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\TraceSinks.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\TraceWriter.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\TraceCategories.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\TraceLogDir.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\AssemblyInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\TraceSinkConfigManager.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\TraceTypes.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\TraceConfigFileWriter.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\Trace.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\TraceLogger.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\TraceSinks.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\TraceWriter.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\TraceCategories.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\TraceLogDir.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\TraceSinkConfigManager.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\TraceTypes.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\TraceConfigFileWriter.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\Trace.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\TraceLogger.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Tracing\Unity.AI.Tracing.asmdef" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Tracing\Unity.AI.Tracing.asmdef" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -1110,8 +1110,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
+    <ProjectReference Include="UnityEditor.UI.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>

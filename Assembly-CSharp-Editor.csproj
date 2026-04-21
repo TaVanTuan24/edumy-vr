@@ -63,7 +63,7 @@
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\GltfImporter.uxml" />
     <None Include="Library\PackageCache\com.unity.dt.app-ui@8ac7e730dd5d\PackageResources\Editor\ProjectSettings.uxml" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\Dependency-style.uss" />
-    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\Dependency.uxml" />
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\GltfImporter-style.uss" />
   </ItemGroup>
@@ -657,7 +657,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">

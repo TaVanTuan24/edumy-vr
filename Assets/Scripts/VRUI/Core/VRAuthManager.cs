@@ -7,6 +7,7 @@ public class VRAuthManager : MonoBehaviour
 {
     private const string DeviceIdPlayerPrefsKey = "VR_DEVICE_ID";
     private const string AccessTokenPlayerPrefsKey = "VR_ACCESS_TOKEN";
+    private const string LegacyJwtTokenPlayerPrefsKey = "JWT_TOKEN";
     private const string UserIdPlayerPrefsKey = "VR_USER_ID";
     private const string UsernamePlayerPrefsKey = "VR_USERNAME";
     private const int DefaultCodeExpirySeconds = 120;
@@ -208,9 +209,10 @@ public class VRAuthManager : MonoBehaviour
         accessToken = string.Empty;
         userId = string.Empty;
         username = string.Empty;
-        statusMessage = message;
+        statusMessage = string.IsNullOrWhiteSpace(message) ? "You have been logged out." : message;
 
         PlayerPrefs.DeleteKey(AccessTokenPlayerPrefsKey);
+        PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
         PlayerPrefs.DeleteKey(UserIdPlayerPrefsKey);
         PlayerPrefs.DeleteKey(UsernamePlayerPrefsKey);
         PlayerPrefs.Save();

@@ -92,6 +92,7 @@ public class CourseSelectionUI : MonoBehaviour
     private VisualElement settingsContent;
     private VisualElement settingsTabs;
     private SettingsTarget activeSettingsTarget = SettingsTarget.Slide;
+    private bool isLogoutConfirmationVisible;
     private readonly List<CourseData> courses = new List<CourseData>();
     private readonly List<LessonData> activeLessons = new List<LessonData>();
     private readonly List<LessonItemElement> renderedLessonItems = new List<LessonItemElement>();
@@ -784,6 +785,8 @@ public class CourseSelectionUI : MonoBehaviour
                     toggleController = GetCourseToggleController();
                     toggleController?.SetPanelPlacement(toggleController.PanelDistance, toggleController.PanelHeightOffset, value);
                 });
+                AddSettingsSeparator();
+                AddAccountSettingsSection();
                 break;
         }
     }
@@ -820,6 +823,186 @@ public class CourseSelectionUI : MonoBehaviour
         });
         row.Add(slider);
         settingsContent.Add(row);
+    }
+
+    private void AddSettingsSeparator()
+    {
+        if (settingsContent == null)
+        {
+            return;
+        }
+
+        VisualElement separator = new VisualElement();
+        separator.style.height = 1f;
+        separator.style.marginTop = 8f;
+        separator.style.marginBottom = 12f;
+        separator.style.backgroundColor = new Color(0.85f, 0.89f, 0.95f, 1f);
+        settingsContent.Add(separator);
+    }
+
+    private void AddAccountSettingsSection()
+    {
+        if (settingsContent == null)
+        {
+            return;
+        }
+
+        AddSettingsHeader("Account");
+
+        bool isAuthenticated = vrAuthManager != null && vrAuthManager.IsAuthenticated;
+        string username = vrAuthManager != null ? vrAuthManager.Username : string.Empty;
+        string accountMessage = isAuthenticated
+            ? string.IsNullOrWhiteSpace(username)
+                ? "This VR device is signed in."
+                : $"Signed in as {username}."
+            : "This VR device is currently signed out.";
+
+        VisualElement accountCard = new VisualElement();
+        accountCard.style.paddingLeft = 12f;
+        accountCard.style.paddingRight = 12f;
+        accountCard.style.paddingTop = 12f;
+        accountCard.style.paddingBottom = 12f;
+        accountCard.style.marginBottom = 10f;
+        accountCard.style.backgroundColor = new Color(1f, 0.97f, 0.97f, 1f);
+        accountCard.style.borderTopLeftRadius = 12f;
+        accountCard.style.borderTopRightRadius = 12f;
+        accountCard.style.borderBottomLeftRadius = 12f;
+        accountCard.style.borderBottomRightRadius = 12f;
+        accountCard.style.borderTopWidth = 1f;
+        accountCard.style.borderRightWidth = 1f;
+        accountCard.style.borderBottomWidth = 1f;
+        accountCard.style.borderLeftWidth = 1f;
+        accountCard.style.borderTopColor = new Color(0.93f, 0.76f, 0.76f, 1f);
+        accountCard.style.borderRightColor = new Color(0.93f, 0.76f, 0.76f, 1f);
+        accountCard.style.borderBottomColor = new Color(0.93f, 0.76f, 0.76f, 1f);
+        accountCard.style.borderLeftColor = new Color(0.93f, 0.76f, 0.76f, 1f);
+        settingsContent.Add(accountCard);
+
+        Label accountTitle = new Label("Authentication");
+        accountTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
+        accountTitle.style.fontSize = 13f;
+        accountTitle.style.color = new Color(0.48f, 0.14f, 0.14f, 1f);
+        accountTitle.style.marginBottom = 4f;
+        accountCard.Add(accountTitle);
+
+        Label accountStatus = new Label(accountMessage);
+        accountStatus.style.whiteSpace = WhiteSpace.Normal;
+        accountStatus.style.fontSize = 12f;
+        accountStatus.style.color = new Color(0.4f, 0.24f, 0.24f, 1f);
+        accountStatus.style.marginBottom = 10f;
+        accountCard.Add(accountStatus);
+
+        if (isLogoutConfirmationVisible && isAuthenticated)
+        {
+            Label confirmLabel = new Label("Are you sure you want to log out?");
+            confirmLabel.style.whiteSpace = WhiteSpace.Normal;
+            confirmLabel.style.fontSize = 12f;
+            confirmLabel.style.color = new Color(0.56f, 0.17f, 0.17f, 1f);
+            confirmLabel.style.marginBottom = 8f;
+            accountCard.Add(confirmLabel);
+
+            VisualElement confirmActions = new VisualElement();
+            confirmActions.style.flexDirection = FlexDirection.Row;
+            confirmActions.style.justifyContent = Justify.FlexEnd;
+            confirmActions.style.flexWrap = Wrap.Wrap;
+            accountCard.Add(confirmActions);
+
+            Button cancelButton = CreateSettingsActionButton(
+                "Cancel",
+                HandleLogoutCanceled,
+                new Color(1f, 1f, 1f, 0.95f),
+                new Color(0.23f, 0.27f, 0.33f, 1f),
+                new Color(0.79f, 0.83f, 0.9f, 1f));
+            cancelButton.style.marginRight = 8f;
+            confirmActions.Add(cancelButton);
+
+            Button confirmButton = CreateSettingsActionButton(
+                "Confirm Logout",
+                HandleLogoutConfirmed,
+                new Color(0.84f, 0.19f, 0.21f, 0.98f),
+                Color.white,
+                new Color(0.7f, 0.12f, 0.15f, 1f));
+            confirmActions.Add(confirmButton);
+            return;
+        }
+
+        Button logoutButton = CreateSettingsActionButton(
+            isAuthenticated ? "Logout" : "Signed Out",
+            HandleLogoutRequested,
+            isAuthenticated ? new Color(1f, 0.92f, 0.92f, 1f) : new Color(0.96f, 0.96f, 0.96f, 1f),
+            isAuthenticated ? new Color(0.62f, 0.12f, 0.12f, 1f) : new Color(0.53f, 0.58f, 0.66f, 1f),
+            isAuthenticated ? new Color(0.89f, 0.5f, 0.5f, 1f) : new Color(0.86f, 0.88f, 0.92f, 1f));
+        logoutButton.SetEnabled(isAuthenticated);
+        accountCard.Add(logoutButton);
+    }
+
+    private Button CreateSettingsActionButton(string text, Action onClicked, Color backgroundColor, Color textColor, Color borderColor)
+    {
+        Button button = new Button(() => onClicked?.Invoke())
+        {
+            text = text
+        };
+        button.style.minHeight = 34f;
+        button.style.paddingLeft = 12f;
+        button.style.paddingRight = 12f;
+        button.style.paddingTop = 6f;
+        button.style.paddingBottom = 6f;
+        button.style.backgroundColor = backgroundColor;
+        button.style.color = textColor;
+        button.style.unityFontStyleAndWeight = FontStyle.Bold;
+        button.style.borderTopLeftRadius = 10f;
+        button.style.borderTopRightRadius = 10f;
+        button.style.borderBottomLeftRadius = 10f;
+        button.style.borderBottomRightRadius = 10f;
+        button.style.borderTopWidth = 1f;
+        button.style.borderRightWidth = 1f;
+        button.style.borderBottomWidth = 1f;
+        button.style.borderLeftWidth = 1f;
+        button.style.borderTopColor = borderColor;
+        button.style.borderRightColor = borderColor;
+        button.style.borderBottomColor = borderColor;
+        button.style.borderLeftColor = borderColor;
+        return button;
+    }
+
+    private void HandleLogoutRequested()
+    {
+        if (vrAuthManager == null || !vrAuthManager.IsAuthenticated)
+        {
+            isLogoutConfirmationVisible = false;
+            RebuildSettingsContent();
+            return;
+        }
+
+        isLogoutConfirmationVisible = true;
+        RebuildSettingsContent();
+    }
+
+    private void HandleLogoutCanceled()
+    {
+        if (!isLogoutConfirmationVisible)
+        {
+            return;
+        }
+
+        isLogoutConfirmationVisible = false;
+        RebuildSettingsContent();
+    }
+
+    private void HandleLogoutConfirmed()
+    {
+        isLogoutConfirmationVisible = false;
+        PrepareForLoggedOutUiTransition();
+
+        if (vrAuthManager != null)
+        {
+            vrAuthManager.Logout("You have been logged out. Request a new login code to continue.");
+            return;
+        }
+
+        ApiManager.Instance?.ClearAuthToken();
+        ResetCourseViewForLoggedOutState("You have been logged out. Request a new login code to continue.");
+        UpdateVrLoginUi();
     }
 
     private void ToggleVideoWindowMode()
@@ -915,6 +1098,13 @@ public class CourseSelectionUI : MonoBehaviour
     private async Task OpenSectionsPageAsync(CourseData course)
     {
         if (course == null || ApiManager.Instance == null) return;
+
+        if (!alwaysUseMockData && vrAuthManager != null && !vrAuthManager.IsAuthenticated)
+        {
+            ResetCourseViewForLoggedOutState();
+            return;
+        }
+
         int requestVersion = ++openSectionsRequestVersion;
 
         activeCourse = course;
@@ -2311,6 +2501,7 @@ public class CourseSelectionUI : MonoBehaviour
 
     private void ResetCourseViewForLoggedOutState(string message = "Log in with the VR pairing code to view your courses.")
     {
+        PrepareForLoggedOutUiTransition();
         courses.Clear();
         activeLessons.Clear();
         renderedLessonItems.Clear();
@@ -2337,7 +2528,20 @@ public class CourseSelectionUI : MonoBehaviour
         {
             statusLabel.text = message;
         }
+    }
 
+    private void PrepareForLoggedOutUiTransition()
+    {
+        refreshCoursesRequestVersion++;
+        openSectionsRequestVersion++;
+        isLogoutConfirmationVisible = false;
+
+        if (settingsOverlay != null)
+        {
+            settingsOverlay.style.display = DisplayStyle.None;
+        }
+
+        StopVideo();
         ShowCoursesPage();
     }
 

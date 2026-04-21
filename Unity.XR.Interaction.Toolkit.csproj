@@ -226,8 +226,8 @@
     <Compile Include="Library\PackageCache\com.unity.xr.interaction.toolkit@e986f3a5995f\Runtime\Interaction\XRInteractionUpdateOrder.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.interaction.toolkit@e986f3a5995f\Runtime\Interaction\Filtering\Poke\IXRPokeFilter.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.interaction.toolkit@e986f3a5995f\Runtime\UI\TrackedDeviceModel.cs" />
-    <Compile Include="Library\PackageCache\com.unity.xr.interaction.toolkit@e986f3a5995f\Runtime\Interaction\Transformers\XRGeneralGrabTransformer.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.interaction.toolkit@e986f3a5995f\Runtime\Interaction\Interactors\XRGazeInteractor.cs" />
+    <Compile Include="Library\PackageCache\com.unity.xr.interaction.toolkit@e986f3a5995f\Runtime\Interaction\Transformers\XRGeneralGrabTransformer.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.interaction.toolkit@e986f3a5995f\Runtime\Interaction\Interactors\XRRayInteractor.deprecated.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.interaction.toolkit@e986f3a5995f\Runtime\Interaction\Interactables\XRInteractableSnapVolume.cs" />
     <Compile Include="Library\PackageCache\com.unity.xr.interaction.toolkit@e986f3a5995f\Runtime\Locomotion\Climbing\ClimbProvider.cs" />
@@ -1001,7 +1001,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
