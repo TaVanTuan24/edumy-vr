@@ -25,7 +25,7 @@
                     <ui:Button name="vr-login-refresh-button" text="Refresh Code" class="vr-login-secondary-button" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:ListView name="course-list" class="course-list modern-scroll" />
+            <ui:ListView name="course-list" class="course-list modern-scroll" horizontal-scroller-visibility="Hidden" />
             <ui:Label name="status-label" text="Loading data..." class="status-label" />
         </ui:VisualElement>
 
@@ -36,7 +36,7 @@
                     <ui:Label name="sections-title" text="Sections" class="screen-title detail-title" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:ScrollView name="sections-scroll" class="sections-scroll modern-scroll" />
+            <ui:ScrollView name="sections-scroll" class="sections-scroll modern-scroll" mode="Vertical" horizontal-scroller-visibility="Hidden" />
             <ui:Label name="sections-status" text="" class="status-label" />
         </ui:VisualElement>
     </ui:VisualElement>

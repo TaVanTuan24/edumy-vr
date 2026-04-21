@@ -10,7 +10,6 @@
 .slide-surface {
     flex-grow: 1;
     padding: 18px;
-    row-gap: 12px;
     border-top-left-radius: 18px;
     border-top-right-radius: 18px;
     border-bottom-left-radius: 18px;
@@ -42,7 +41,6 @@
 }
 
 .slide-header-left {
-    row-gap: 4px;
 }
 
 .slide-eyebrow {
@@ -119,7 +117,6 @@
 .slide-window .slide-stage {
     flex-grow: 1;
     padding: 12px;
-    row-gap: 10px;
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;
     border-bottom-left-radius: 16px;
@@ -149,7 +146,6 @@
 
 .slide-window .slide-toolbar-actions {
     flex-direction: row;
-    column-gap: 8px;
 }
 
 .slide-window .slide-tool-btn {
@@ -159,17 +155,21 @@
     border-top-right-radius: 8px;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
-    border-top-width: 0;
-    border-right-width: 0;
-    border-bottom-width: 0;
-    border-left-width: 0;
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-top-color: rgba(0, 0, 0, 0);
+    border-right-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-left-color: rgba(0, 0, 0, 0);
     background-color: rgb(234, 244, 255);
     color: rgb(40, 93, 156);
     -unity-font-style: bold;
 }
 
 .slide-window .slide-tool-btn:hover {
-    background-color: rgb(220, 236, 255);
+    background-color: rgb(210, 230, 255);
 }
 
 .slide-window .slide-canvas {
@@ -209,8 +209,7 @@
     flex-grow: 1;
     white-space: normal;
     font-size: 22px;
-    line-height: 31px;
-    color: rgb(30, 50, 84);
+    color: rgb(15, 25, 45);
 }
 
 .slide-overlay {
@@ -221,7 +220,6 @@
     bottom: 18px;
     align-items: center;
     justify-content: center;
-    row-gap: 8px;
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
     border-bottom-left-radius: 10px;
@@ -252,7 +250,6 @@
     min-height: 58px;
     flex-direction: row;
     align-items: center;
-    column-gap: 8px;
 }
 
 .slide-footer-spacer {
@@ -266,12 +263,16 @@
     border-top-right-radius: 10px;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
-    border-top-width: 0;
-    border-right-width: 0;
-    border-bottom-width: 0;
-    border-left-width: 0;
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-top-color: rgba(0, 0, 0, 0);
+    border-right-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-left-color: rgba(0, 0, 0, 0);
     -unity-font-style: bold;
-    font-size: 13px;
+    font-size: 15px;
 }
 
 .slide-nav-btn.primary {
@@ -280,7 +281,7 @@
 }
 
 .slide-nav-btn.primary:hover {
-    background-color: rgb(28, 131, 228);
+    background-color: rgb(60, 160, 255);
 }
 
 .slide-nav-btn.subtle {
@@ -289,9 +290,32 @@
 }
 
 .slide-nav-btn.subtle:hover {
-    background-color: rgb(223, 236, 255);
+    background-color: rgb(210, 230, 255);
 }
 
 .slide-nav-btn:disabled {
     opacity: 0.45;
+}
+
+/* --- UNIVERSAL VR INTERACTION FEEDBACK --- */
+Button,
+.course-card,
+.lesson-item,
+.answer-card,
+.section-item__foldout {
+    transition-property: scale, border-color, border-width, background-color;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-in-out;
+}
+
+Button:hover,
+.course-card:hover,
+.lesson-item:hover,
+.answer-card:hover,
+.section-item__foldout:hover {
+    scale: 1.03 !important;
+    border-top-color: rgb(82, 172, 255) !important;
+    border-right-color: rgb(82, 172, 255) !important;
+    border-bottom-color: rgb(82, 172, 255) !important;
+    border-left-color: rgb(82, 172, 255) !important;
 }

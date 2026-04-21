@@ -843,8 +843,9 @@ public class CourseSelectionUI : MonoBehaviour
 
         VideoWindowModeController controller = EnsureVideoWindowModeController();
         videoModeButton.style.display = DisplayStyle.Flex;
-        bool canToggle = controller != null && videoPopupWindow != null && videoPopupWindow.IsPlaying;
-        videoModeButton.SetEnabled(canToggle);
+        bool hasVideoSystem = controller != null && videoPopupWindow != null && videoPopupWindow.Player != null;
+        bool hasMediaLoaded = hasVideoSystem && !string.IsNullOrEmpty(videoPopupWindow.Player.url);
+        videoModeButton.SetEnabled(hasMediaLoaded);
         videoModeButton.text = controller != null && controller.IsFloatingMode ? "Dock Video" : "Float Video";
     }
 

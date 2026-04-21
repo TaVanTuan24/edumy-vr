@@ -49,16 +49,16 @@
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.Sdk\TraceIdProvider.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.Sdk\PackageInfoProvider.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.Sdk\AuthenticationTokenProvider.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.Sdk\Extensions.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.Sdk\NonDisposingStreamWrapper.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.Sdk\AssemblyInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.Sdk\Constants.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Generators.Sdk\TraceIdProvider.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Generators.Sdk\PackageInfoProvider.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Generators.Sdk\AuthenticationTokenProvider.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Generators.Sdk\Extensions.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Generators.Sdk\NonDisposingStreamWrapper.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Generators.Sdk\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Generators.Sdk\Constants.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Generators.Sdk\Unity.AI.Generators.Sdk.asmdef" />
+    <None Include="Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Generators.Sdk\Unity.AI.Generators.Sdk.asmdef" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -650,7 +650,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
-      <HintPath>Library\PackageCache\com.unity.ai.assistant@b7ff2f2a65cc\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.ai.assistant@fc16ca46e208\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">

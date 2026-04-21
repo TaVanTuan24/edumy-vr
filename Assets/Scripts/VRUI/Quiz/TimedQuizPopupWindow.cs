@@ -300,7 +300,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
         feedbackText.color = MutedTextColor;
 
         closeButton = FindOrCreateButton(panelRect, "CloseButton", "Continue", new Vector2(0.8f, 0.9f), new Vector2(0.96f, 0.98f));
-        pinButton = FindOrCreateButton(panelRect, "PinButton", "📌", new Vector2(0.7f, 0.9f), new Vector2(0.79f, 0.98f));
+        pinButton = FindOrCreateButton(panelRect, "PinButton", "[Pin]", new Vector2(0.7f, 0.9f), new Vector2(0.79f, 0.98f));
         SetButtonColor(closeButton, ContinueButtonColor, Color.white);
         SetButtonColor(pinButton, OptionDefaultColor, TitleColor);
 
@@ -364,7 +364,7 @@ public class TimedQuizPopupWindow : MonoBehaviour
         TextMeshProUGUI label = pinButton.GetComponentInChildren<TextMeshProUGUI>(true);
         if (label != null)
         {
-            label.text = spatialWindow.IsPinned ? "📌" : "Pin";
+            label.text = spatialWindow.IsPinned ? "[Pin]" : "Pin";
             label.color = spatialWindow.IsPinned ? Color.white : TitleColor;
         }
 

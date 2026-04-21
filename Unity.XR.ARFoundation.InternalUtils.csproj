@@ -1136,8 +1136,8 @@
     <ProjectReference Include="Unity.XR.ARSubsystems.csproj" />
     <ProjectReference Include="Unity.XR.CoreUtils.csproj" />
     <ProjectReference Include="Unity.XR.Management.csproj" />
-    <ProjectReference Include="UnityEngine.UI.csproj" />
     <ProjectReference Include="UnityEditor.UI.csproj" />
+    <ProjectReference Include="UnityEngine.UI.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>

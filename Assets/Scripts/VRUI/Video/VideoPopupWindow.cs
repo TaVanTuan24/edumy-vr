@@ -904,7 +904,7 @@ public class VideoPopupWindow : MonoBehaviour
 
         titleLabel = FindOrCreateText(panelRect, "VideoTitle", new Vector2(0.02f, 0.58f), new Vector2(0.32f, 0.94f), 28f, FontStyles.Bold, TextAlignmentOptions.Left);
         timeLabel = FindOrCreateText(panelRect, "TimeLabel", new Vector2(0.76f, 0.58f), new Vector2(0.98f, 0.94f), 24f, FontStyles.Normal, TextAlignmentOptions.Right);
-        pinButton = FindOrCreateButton(panelRect, "PinButton", new Vector2(0.33f, 0.58f), new Vector2(0.42f, 0.94f), "📌", SecondaryButtonColor, TextColor);
+        pinButton = FindOrCreateButton(panelRect, "PinButton", new Vector2(0.33f, 0.58f), new Vector2(0.42f, 0.94f), "[Pin]", SecondaryButtonColor, TextColor);
         if (pinButton != null) pinButton.gameObject.SetActive(showPinButton);
 
         playPauseButton = FindOrCreateButton(panelRect, "PlayPauseButton", new Vector2(0.02f, 0.12f), new Vector2(0.12f, 0.52f), "Play", PrimaryButtonColor, Color.white);
@@ -999,7 +999,7 @@ public class VideoPopupWindow : MonoBehaviour
         TMP_Text label = pinButton.GetComponentInChildren<TMP_Text>(true);
         if (label != null)
         {
-            label.text = spatialWindow.IsPinned ? "📌" : "Pin";
+            label.text = spatialWindow.IsPinned ? "[Pin]" : "Pin";
             label.color = TextColor;
         }
 

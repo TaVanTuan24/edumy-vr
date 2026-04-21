@@ -420,7 +420,7 @@ public class SlidePopupWindow : MonoBehaviour
         EnsureSlideViewport(panelRect);
 
         closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.79f, 0.885f), new Vector2(0.95f, 0.97f));
-        pinButton = FindOrCreateButton(panelRect, "PinButton", "📌", new Vector2(0.69f, 0.885f), new Vector2(0.78f, 0.97f));
+        pinButton = FindOrCreateButton(panelRect, "PinButton", "[Pin]", new Vector2(0.69f, 0.885f), new Vector2(0.78f, 0.97f));
         prevButton = FindOrCreateButton(panelRect, "PrevButton", "Prev", new Vector2(0.05f, 0.03f), new Vector2(0.25f, 0.11f));
         nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.27f, 0.03f), new Vector2(0.47f, 0.11f));
         SetButtonColor(closeButton, SecondaryButtonColor);
@@ -464,7 +464,7 @@ public class SlidePopupWindow : MonoBehaviour
         TextMeshProUGUI label = pinButton.GetComponentInChildren<TextMeshProUGUI>(true);
         if (label != null)
         {
-            label.text = spatialWindow.IsPinned ? "📌" : "Pin";
+            label.text = spatialWindow.IsPinned ? "[Pin]" : "Pin";
         }
 
         SetButtonColor(pinButton, spatialWindow.IsPinned ? PrimaryButtonColor : SecondaryButtonColor);

@@ -1165,8 +1165,8 @@
     <ProjectReference Include="Unity.XR.OpenXR.Features.RuntimeDebugger.csproj" />
     <ProjectReference Include="Unity.XR.OpenXR.csproj" />
     <ProjectReference Include="Unity.XR.OpenXR.Editor.csproj" />
-    <ProjectReference Include="UnityEngine.UI.csproj" />
     <ProjectReference Include="UnityEditor.UI.csproj" />
+    <ProjectReference Include="UnityEngine.UI.csproj" />
     <ProjectReference Include="UnityEngine.TestRunner.csproj" />
     <ProjectReference Include="UnityEditor.TestRunner.csproj" />
   </ItemGroup>

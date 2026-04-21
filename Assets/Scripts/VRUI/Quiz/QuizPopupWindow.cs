@@ -10,8 +10,8 @@ using System.Linq;
 public class QuizPopupWindow : MonoBehaviour
 {
     private static readonly Color OptionDefaultColor = new Color(0.92f, 0.96f, 1f, 0.98f);
-    private static readonly Color OptionCorrectColor = new Color(0.894f, 0.98f, 0.933f, 0.98f);
-    private static readonly Color OptionWrongColor = new Color(1f, 0.933f, 0.933f, 0.98f);
+    private static readonly Color OptionCorrectColor = new Color(0.086f, 0.639f, 0.290f, 0.98f);
+    private static readonly Color OptionWrongColor = new Color(0.863f, 0.149f, 0.149f, 0.98f);    private static readonly Color OptionDefaultTextColor = new Color(0.15f, 0.3f, 0.49f, 1f);    private static readonly Color OptionSelectedTextColor = new Color(1f, 1f, 1f, 1f);
     private static readonly Color PanelColor = new Color(0.985f, 0.992f, 1f, 0.98f);
     private static readonly Color HeaderColor = new Color(0.82f, 0.9f, 1f, 0.99f);
     private static readonly Color ActionButtonColor = new Color(0.16f, 0.58f, 0.93f, 0.98f);
@@ -351,23 +351,23 @@ public class QuizPopupWindow : MonoBehaviour
         questionText.textWrappingMode = TextWrappingModes.Normal;
         questionText.color = new Color(0.15f, 0.24f, 0.38f, 1f);
 
-        feedbackText = FindOrCreateText(panel, "Feedback", new Vector2(0.05f, 0.14f), new Vector2(0.95f, 0.24f), 22, FontStyles.Italic, TextAlignmentOptions.TopLeft);
+        feedbackText = FindOrCreateText(panel, "Feedback", new Vector2(0.05f, 0.125f), new Vector2(0.95f, 0.23f), 22, FontStyles.Italic, TextAlignmentOptions.TopLeft);
         feedbackText.textWrappingMode = TextWrappingModes.Normal;
         feedbackText.color = new Color(0.27f, 0.39f, 0.56f, 1f);
 
         closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.78f, 0.9f), new Vector2(0.95f, 0.975f));
-        pinButton = FindOrCreateButton(panelRect, "PinButton", "📌", new Vector2(0.68f, 0.9f), new Vector2(0.77f, 0.975f));
+        pinButton = FindOrCreateButton(panelRect, "PinButton", "[Pin]", new Vector2(0.68f, 0.9f), new Vector2(0.77f, 0.975f));
         nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.73f, 0.03f), new Vector2(0.95f, 0.11f));
         SetButtonBaseColor(closeButton, SecondaryButtonColor);
         SetButtonBaseColor(pinButton, SecondaryButtonColor);
         SetButtonBaseColor(nextButton, ActionButtonColor);
 
         optionButtons.Clear();
-        float top = 0.6f;
-        float height = 0.1f;
+        float top = 0.63f;
+        float height = 0.09f;
         for (int i = 0; i < 4; i++)
         {
-            float yMax = top - i * 0.11f;
+            float yMax = top - i * 0.1f;
             float yMin = yMax - height;
             Button b = FindOrCreateButton(panelRect, $"Option{i}", $"Option {i + 1}", new Vector2(0.05f, yMin), new Vector2(0.95f, yMax));
             SetButtonBaseColor(b, OptionDefaultColor);
@@ -419,7 +419,7 @@ public class QuizPopupWindow : MonoBehaviour
         TextMeshProUGUI label = pinButton.GetComponentInChildren<TextMeshProUGUI>(true);
         if (label != null)
         {
-            label.text = spatialWindow.IsPinned ? "📌" : "Pin";
+            label.text = spatialWindow.IsPinned ? "[Pin]" : "Pin";
         }
 
         SetButtonBaseColor(pinButton, spatialWindow.IsPinned ? ActionButtonColor : SecondaryButtonColor);
@@ -600,6 +600,9 @@ public class QuizPopupWindow : MonoBehaviour
         {
             string displayQuestion = GetQuestionText(q);
             questionText.text = string.IsNullOrWhiteSpace(displayQuestion) ? "Question" : displayQuestion;
+            questionText.overflowMode = TextOverflowModes.Overflow;
+            questionText.gameObject.SetActive(true);
+            questionText.transform.SetAsLastSibling();
             if (enableDebugLogs)
             {
                 Debug.Log($"[QuizPopupWindow] render pass questionIndex={currentQuestionIndex} chosenText='{questionText.text}'");
@@ -631,18 +634,22 @@ public class QuizPopupWindow : MonoBehaviour
                 if (!hasAnswered)
                 {
                     image.color = OptionDefaultColor;
+                    if (label != null) label.color = OptionDefaultTextColor;
                 }
                 else if (i == correctIndex)
                 {
                     image.color = OptionCorrectColor;
+                    if (label != null) label.color = OptionSelectedTextColor;
                 }
                 else if (i == selectedIndex && selectedIndex != correctIndex)
                 {
                     image.color = OptionWrongColor;
+                    if (label != null) label.color = OptionSelectedTextColor;
                 }
                 else
                 {
                     image.color = OptionDefaultColor;
+                    if (label != null) label.color = OptionDefaultTextColor;
                 }
             }
 
@@ -654,17 +661,23 @@ public class QuizPopupWindow : MonoBehaviour
             if (!hasAnswered)
             {
                 feedbackText.text = "Select one answer.";
+                feedbackText.color = new Color(0.27f, 0.39f, 0.56f, 1f);
             }
             else if (selectedIndex == correctIndex)
             {
-                feedbackText.text = "Chinh xac!";
+                feedbackText.text = "Correct!";
+                feedbackText.color = OptionCorrectColor;
             }
             else
             {
                 string correctAnswerText = (correctIndex >= 0 && correctIndex < q.options.Count)
                     ? q.options[correctIndex]
                     : "(unknown)";
-                feedbackText.text = $"Incorrect. Correct answer: {correctAnswerText}";
+                string explanation = FirstNonEmpty(q.explanation, q.explain, q.reason, q.solution, q.wrongExplanation);
+                feedbackText.text = string.IsNullOrWhiteSpace(explanation)
+                    ? $"Incorrect. Correct answer: {correctAnswerText}"
+                    : $"Incorrect. Correct answer: {correctAnswerText}\nExplanation: {explanation}";
+                feedbackText.color = OptionWrongColor;
             }
         }
 
@@ -916,4 +929,6 @@ public class QuizPopupWindow : MonoBehaviour
         return replacement.transform;
     }
 }
+
+
 
