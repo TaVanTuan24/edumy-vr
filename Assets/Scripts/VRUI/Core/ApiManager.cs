@@ -9,18 +9,24 @@ public class ApiManager : MonoBehaviour
 {
     private const string AccessTokenPlayerPrefsKey = "VR_ACCESS_TOKEN";
     private const string LegacyJwtTokenPlayerPrefsKey = "JWT_TOKEN";
+    private const string ApiBaseUrlPlayerPrefsKey = "VR_API_BASE_URL";
+    private const int MinimumRequestTimeoutSeconds = 5;
+    private const int DefaultRequestTimeoutSeconds = 15;
 
     public static ApiManager Instance { get; private set; }
 
     [Header("API Settings")]
     [Tooltip("Địa chỉ LAN IP của bạn (Ví dụ: http://192.168.1.1:3000)")]
-    [SerializeField] private string localUrl = "http://192.168.1.1:3000";
+    [SerializeField] private string localUrl = "http://172.16.33.125:3000";
     
     [Tooltip("Địa chỉ production (Ví dụ: https://api.edumy-vr.com)")]
     [SerializeField] private string productionUrl = "https://api.edumy-vr.com";
 
     [Tooltip("Bật để sử dụng Production URL, tắt để sử dụng Local URL")]
     public bool useProduction = false;
+
+    [Header("Networking")]
+    [SerializeField, Min(MinimumRequestTimeoutSeconds)] private int requestTimeoutSeconds = DefaultRequestTimeoutSeconds;
 
     [Header("Authentication")]
     [Tooltip("JWT Token dùng để xác thực. Token này sẽ được gửi tự động trong header Authorization.")]
@@ -30,9 +36,8 @@ public class ApiManager : MonoBehaviour
 
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI errorTextDisplay; 
-    [SerializeField] private TextMeshProUGUI debugUrlText;    
 
-    public string BaseUrl => useProduction ? productionUrl : localUrl;
+    public string BaseUrl => ResolveBaseUrl();
     public bool HasAuthToken => !string.IsNullOrWhiteSpace(authToken);
     private bool lessonProgressSyncDisabled;
     private bool lessonProgressSyncDisableLogged;
@@ -55,21 +60,11 @@ public class ApiManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        // Log thông tin khởi tạo theo yêu cầu
-        Debug.Log($"ApiManager initialized. BaseUrl: {BaseUrl} | Auth configured: {HasAuthToken}");
-        
-        if (debugUrlText != null) 
-            debugUrlText.text = $"API: {BaseUrl}";
-    }
-
     public void SetAuthToken(string token)
     {
         authToken = string.IsNullOrWhiteSpace(token) ? string.Empty : token.Trim();
         if (!persistTokenInPlayerPrefs)
         {
-            Debug.Log("[ApiManager] Auth token updated. Persisted: false");
             return;
         }
 
@@ -102,7 +97,6 @@ public class ApiManager : MonoBehaviour
                 PlayerPrefs.Save();
             }
         }
-        Debug.Log($"[ApiManager] Auth token updated. Persisted: {!string.IsNullOrWhiteSpace(authToken)}");
     }
 
     public void ClearAuthToken()
@@ -269,13 +263,29 @@ public class ApiManager : MonoBehaviour
             };
         }
 
+        if (!TryValidateVrAuthRequest(out string validationError))
+        {
+            return CreateLoginCodeErrorResponse(validationError);
+        }
+
         string url = BuildUrl("api/vr-auth/request-code");
         VRLoginCodeRequest payload = new VRLoginCodeRequest
         {
             deviceId = deviceId.Trim()
         };
 
-        return await SendPostJsonRequestForResponse<VRLoginCodeResponse>(url, JsonUtility.ToJson(payload));
+        VRLoginCodeResponse response = await SendPostJsonRequestForResponse<VRLoginCodeResponse>(url, JsonUtility.ToJson(payload));
+        if (response != null)
+        {
+            if (!response.success && string.IsNullOrWhiteSpace(response.message))
+            {
+                response.message = BuildVrAuthFailureMessage("Unable to request a login code.");
+            }
+
+            return response;
+        }
+
+        return CreateLoginCodeErrorResponse(BuildVrAuthFailureMessage("Unable to request a login code."));
     }
 
     public async Task<VRLoginPollResponse> PollVrLoginStatusAsync(string code, string deviceId)
@@ -290,11 +300,27 @@ public class ApiManager : MonoBehaviour
             };
         }
 
+        if (!TryValidateVrAuthRequest(out string validationError))
+        {
+            return CreateLoginPollErrorResponse("error", validationError);
+        }
+
         string url = BuildUrl(
             $"api/vr-auth/poll/{UnityWebRequest.EscapeURL(code.Trim())}?deviceId={UnityWebRequest.EscapeURL(deviceId.Trim())}"
         );
 
-        return await SendGetRequestForObject<VRLoginPollResponse>(url);
+        VRLoginPollResponse response = await SendGetRequestForObject<VRLoginPollResponse>(url);
+        if (response != null)
+        {
+            if (!response.success && string.IsNullOrWhiteSpace(response.message) && LastResponseStatusCode != 404 && LastResponseStatusCode != 410)
+            {
+                response.message = BuildVrAuthFailureMessage("Unable to verify the login code yet.");
+            }
+
+            return response;
+        }
+
+        return CreateLoginPollErrorResponse("error", BuildVrAuthFailureMessage("Unable to verify the login code yet."));
     }
 
     private string BuildUrl(string relativePath)
@@ -302,6 +328,126 @@ public class ApiManager : MonoBehaviour
         string baseUrl = BaseUrl?.TrimEnd('/') ?? string.Empty;
         string path = relativePath?.TrimStart('/') ?? string.Empty;
         return $"{baseUrl}/{path}";
+    }
+
+    private string ResolveBaseUrl()
+    {
+        string configuredUrl = useProduction ? productionUrl : localUrl;
+        if (!useProduction)
+        {
+            string overrideUrl = PlayerPrefs.GetString(ApiBaseUrlPlayerPrefsKey, string.Empty)?.Trim() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(overrideUrl))
+            {
+                configuredUrl = overrideUrl;
+            }
+        }
+
+        return string.IsNullOrWhiteSpace(configuredUrl)
+            ? string.Empty
+            : configuredUrl.Trim().TrimEnd('/');
+    }
+
+    private bool TryValidateVrAuthRequest(out string errorMessage)
+    {
+        errorMessage = null;
+
+        if (Application.internetReachability == NetworkReachability.NotReachable)
+        {
+            errorMessage = "No network connection is available on this device.";
+            return false;
+        }
+
+        string baseUrl = BaseUrl;
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            errorMessage = "The API base URL is not configured.";
+            return false;
+        }
+
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri uri))
+        {
+            errorMessage = $"The API base URL is invalid: {baseUrl}";
+            return false;
+        }
+
+        string host = uri.Host ?? string.Empty;
+        bool isLoopbackHost =
+            host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+            host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+            host.Equals("0.0.0.0", StringComparison.OrdinalIgnoreCase);
+
+        if (Application.platform == RuntimePlatform.Android && isLoopbackHost)
+        {
+            errorMessage = "Quest cannot reach localhost. Set ApiManager.localUrl to your PC LAN IP, for example http://172.16.33.125:3000.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ApplyRequestDefaults(UnityWebRequest webRequest)
+    {
+        if (webRequest == null)
+        {
+            return;
+        }
+
+        webRequest.timeout = Mathf.Max(MinimumRequestTimeoutSeconds, requestTimeoutSeconds);
+        TrySetAuthHeader(webRequest);
+    }
+
+    private VRLoginCodeResponse CreateLoginCodeErrorResponse(string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            ShowError(message);
+        }
+
+        return new VRLoginCodeResponse
+        {
+            success = false,
+            message = string.IsNullOrWhiteSpace(message) ? "Unable to request a login code." : message
+        };
+    }
+
+    private VRLoginPollResponse CreateLoginPollErrorResponse(string status, string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            ShowError(message);
+        }
+
+        return new VRLoginPollResponse
+        {
+            success = false,
+            status = string.IsNullOrWhiteSpace(status) ? "error" : status,
+            message = string.IsNullOrWhiteSpace(message) ? "Unable to verify the login code yet." : message
+        };
+    }
+
+    private string BuildVrAuthFailureMessage(string fallbackMessage)
+    {
+        if (LastResponseStatusCode == 404)
+        {
+            return "The VR auth endpoint was not found. Verify the backend route and API URL.";
+        }
+
+        if (LastResponseStatusCode == 429)
+        {
+            return "Too many requests. Please wait a moment and try again.";
+        }
+
+        if (LastResponseStatusCode == 0)
+        {
+            return $"Cannot reach the backend at {BaseUrl}. On Quest, use your PC LAN IP such as http://172.16.33.125:3000 and keep both devices on the same Wi-Fi.";
+        }
+
+        if (LastResponseStatusCode >= 500)
+        {
+            return "The backend returned a server error while processing VR login.";
+        }
+
+        return fallbackMessage;
     }
 
     private void LoadAuthToken()
@@ -357,7 +503,7 @@ public class ApiManager : MonoBehaviour
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
-            TrySetAuthHeader(webRequest);
+            ApplyRequestDefaults(webRequest);
             
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();
@@ -410,7 +556,7 @@ public class ApiManager : MonoBehaviour
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
-            TrySetAuthHeader(webRequest);
+            ApplyRequestDefaults(webRequest);
 
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();
@@ -449,7 +595,7 @@ public class ApiManager : MonoBehaviour
             webRequest.downloadHandler = new DownloadHandlerBuffer();
             webRequest.SetRequestHeader("Content-Type", "application/json");
 
-            TrySetAuthHeader(webRequest);
+            ApplyRequestDefaults(webRequest);
 
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();
@@ -475,7 +621,7 @@ public class ApiManager : MonoBehaviour
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
-            TrySetAuthHeader(webRequest);
+            ApplyRequestDefaults(webRequest);
 
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();
@@ -531,7 +677,7 @@ public class ApiManager : MonoBehaviour
             webRequest.downloadHandler = new DownloadHandlerBuffer();
             webRequest.SetRequestHeader("Content-Type", "application/json");
 
-            TrySetAuthHeader(webRequest);
+            ApplyRequestDefaults(webRequest);
 
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();

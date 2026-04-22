@@ -25,7 +25,7 @@ public class QuizPopupWindow : MonoBehaviour
     [SerializeField] private bool autoCreateWindowInEditor = true;
     [SerializeField] private bool showPreviewInEditor = true;
     [SerializeField] private bool autoPlaceInFrontWhenPlaying = false;
-    [SerializeField] private bool followViewerWhileVisible = true;
+
     [SerializeField] private float horizontalOffset = -0.35f;
     [SerializeField] private float additionalHeightOffset = -0.35f;
     [SerializeField] private bool flipForwardToFaceViewer = true;
@@ -343,31 +343,34 @@ public class QuizPopupWindow : MonoBehaviour
 
         RectTransform panelRect = panel.GetComponent<RectTransform>();
 
-        titleText = FindOrCreateText(panel, "Title", new Vector2(0.05f, 0.9f), new Vector2(0.76f, 0.975f), 36, FontStyles.Bold, TextAlignmentOptions.Left);
+        // VR-sized text: larger fonts for readability in-headset
+        titleText = FindOrCreateText(panel, "Title", new Vector2(0.05f, 0.895f), new Vector2(0.64f, 0.975f), 40, FontStyles.Bold, TextAlignmentOptions.Left);
         titleText.color = TitleTextColor;
-        indicatorText = FindOrCreateText(panel, "Indicator", new Vector2(0.05f, 0.84f), new Vector2(0.45f, 0.9f), 22, FontStyles.Normal, TextAlignmentOptions.Left);
+        indicatorText = FindOrCreateText(panel, "Indicator", new Vector2(0.05f, 0.83f), new Vector2(0.45f, 0.895f), 26, FontStyles.Normal, TextAlignmentOptions.Left);
         indicatorText.color = new Color(0.34f, 0.43f, 0.58f, 1f);
-        questionText = FindOrCreateText(panel, "Question", new Vector2(0.05f, 0.64f), new Vector2(0.95f, 0.82f), 27, FontStyles.Bold, TextAlignmentOptions.TopLeft);
+        questionText = FindOrCreateText(panel, "Question", new Vector2(0.05f, 0.64f), new Vector2(0.95f, 0.82f), 30, FontStyles.Bold, TextAlignmentOptions.TopLeft);
         questionText.textWrappingMode = TextWrappingModes.Normal;
         questionText.color = new Color(0.15f, 0.24f, 0.38f, 1f);
 
-        feedbackText = FindOrCreateText(panel, "Feedback", new Vector2(0.05f, 0.125f), new Vector2(0.95f, 0.23f), 22, FontStyles.Italic, TextAlignmentOptions.TopLeft);
+        feedbackText = FindOrCreateText(panel, "Feedback", new Vector2(0.05f, 0.115f), new Vector2(0.95f, 0.22f), 26, FontStyles.Italic, TextAlignmentOptions.TopLeft);
         feedbackText.textWrappingMode = TextWrappingModes.Normal;
         feedbackText.color = new Color(0.27f, 0.39f, 0.56f, 1f);
 
-        closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.78f, 0.9f), new Vector2(0.95f, 0.975f));
-        pinButton = FindOrCreateButton(panelRect, "PinButton", "[Pin]", new Vector2(0.68f, 0.9f), new Vector2(0.77f, 0.975f));
-        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.73f, 0.03f), new Vector2(0.95f, 0.11f));
+        // VR-sized buttons: taller hit targets for XR ray interaction
+        closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.78f, 0.89f), new Vector2(0.95f, 0.975f));
+        pinButton = FindOrCreateButton(panelRect, "PinButton", "[Pin]", new Vector2(0.65f, 0.89f), new Vector2(0.77f, 0.975f));
+        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.70f, 0.025f), new Vector2(0.95f, 0.11f));
         SetButtonBaseColor(closeButton, SecondaryButtonColor);
         SetButtonBaseColor(pinButton, SecondaryButtonColor);
         SetButtonBaseColor(nextButton, ActionButtonColor);
 
+        // VR-sized answer options: taller cards with generous spacing for easy targeting
         optionButtons.Clear();
         float top = 0.63f;
-        float height = 0.09f;
+        float height = 0.105f;
         for (int i = 0; i < 4; i++)
         {
-            float yMax = top - i * 0.1f;
+            float yMax = top - i * 0.125f;
             float yMin = yMax - height;
             Button b = FindOrCreateButton(panelRect, $"Option{i}", $"Option {i + 1}", new Vector2(0.05f, yMin), new Vector2(0.95f, yMax));
             SetButtonBaseColor(b, OptionDefaultColor);
@@ -873,7 +876,7 @@ public class QuizPopupWindow : MonoBehaviour
         TextMeshProUGUI text = existing.GetComponentInChildren<TextMeshProUGUI>(true);
         text.text = label;
         text.color = new Color(0.15f, 0.3f, 0.49f, 1f);
-        text.fontSize = 24f;
+        text.fontSize = 28f;
         text.fontStyle = FontStyles.Bold;
         text.alignment = TextAlignmentOptions.Center;
 

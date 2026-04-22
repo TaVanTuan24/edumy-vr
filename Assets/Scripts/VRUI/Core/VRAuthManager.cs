@@ -15,6 +15,7 @@ public class VRAuthManager : MonoBehaviour
 
     private CancellationTokenSource pollingCancellation;
     private bool initialized;
+    private bool isRequestInFlight;
     private bool lastNotifiedAuthState;
     private int lastBroadcastRemainingSeconds = -1;
     private string deviceId = string.Empty;
@@ -35,6 +36,7 @@ public class VRAuthManager : MonoBehaviour
     public string CurrentCode => currentCode;
     public string StatusMessage => statusMessage;
     public bool IsAuthenticated => !string.IsNullOrWhiteSpace(accessToken);
+    public bool IsRequestInFlight => isRequestInFlight;
     public bool IsPending => !IsAuthenticated && !string.IsNullOrWhiteSpace(currentCode);
     public int RemainingSeconds
     {
@@ -139,6 +141,11 @@ public class VRAuthManager : MonoBehaviour
 
     public async Task RequestLoginCode()
     {
+        if (isRequestInFlight)
+        {
+            return;
+        }
+
         if (IsAuthenticated)
         {
             statusMessage = string.IsNullOrWhiteSpace(username)
@@ -161,6 +168,7 @@ public class VRAuthManager : MonoBehaviour
         }
 
         statusMessage = "Requesting login code...";
+        isRequestInFlight = true;
         NotifyStateUpdated();
 
         VRLoginCodeResponse response = null;
@@ -170,7 +178,16 @@ public class VRAuthManager : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogWarning($"[VRAuthManager] RequestLoginCode failed: {ex.Message}");
+            Debug.LogError($"[VRAuthManager] RequestLoginCode failed: {ex.Message}");
+            response = new VRLoginCodeResponse
+            {
+                success = false,
+                message = "Unable to request a login code."
+            };
+        }
+        finally
+        {
+            isRequestInFlight = false;
         }
 
         if (response == null || !response.success || string.IsNullOrWhiteSpace(response.code))
@@ -186,7 +203,6 @@ public class VRAuthManager : MonoBehaviour
         codeExpiresAtUtc = DateTime.UtcNow.AddSeconds(response.expiresIn > 0 ? response.expiresIn : DefaultCodeExpirySeconds);
         statusMessage = "Waiting for approval...";
         lastBroadcastRemainingSeconds = -1;
-        Debug.Log($"[VRAuthManager] Login code received: {currentCode}");
         NotifyStateUpdated();
         StartPolling();
     }
@@ -288,7 +304,9 @@ public class VRAuthManager : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[VRAuthManager] PollLoginStatus failed: {ex.Message}");
+                Debug.LogError($"[VRAuthManager] PollLoginStatus failed: {ex.Message}");
+                statusMessage = "Unable to reach the server. Check the API URL and network connection.";
+                NotifyStateUpdated();
             }
 
             if (cancellationToken.IsCancellationRequested || !IsPending)

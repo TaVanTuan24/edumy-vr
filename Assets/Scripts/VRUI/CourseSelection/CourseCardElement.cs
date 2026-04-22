@@ -66,10 +66,14 @@ public partial class CourseCardElement : VisualElement
         content.Add(descriptionLabel);
         content.Add(lessonCountLabel);
         content.Add(progressRow);
-        content.Add(openButton);
+
+        VisualElement actionArea = new VisualElement();
+        actionArea.AddToClassList("course-card__action");
+        actionArea.Add(openButton);
 
         Add(thumbnail);
         Add(content);
+        Add(actionArea);
     }
 
     public void Bind(CourseData course, Action<CourseData> onOpen)

@@ -341,7 +341,9 @@ public class CourseSelectionUI : MonoBehaviour
         root.Add(lessonSelectionWindow);
 
         coursesPage = lessonSelectionWindow.Q<VisualElement>("courses-page");
+
         sectionsPage = lessonSelectionWindow.Q<VisualElement>("sections-page");
+
         vrLoginPanel = lessonSelectionWindow.Q<VisualElement>("vr-login-panel");
         vrLoginCodeGroup = lessonSelectionWindow.Q<VisualElement>("vr-login-code-group");
         statusLabel = lessonSelectionWindow.Q<Label>("status-label");
@@ -2414,6 +2416,7 @@ public class CourseSelectionUI : MonoBehaviour
     private void UpdateVrLoginUi()
     {
         bool isAuthenticated = vrAuthManager != null && vrAuthManager.IsAuthenticated;
+        bool isRequestInFlight = vrAuthManager != null && vrAuthManager.IsRequestInFlight;
         bool isPending = vrAuthManager != null && vrAuthManager.IsPending;
         string code = vrAuthManager != null ? vrAuthManager.CurrentCode : string.Empty;
         string username = vrAuthManager != null ? vrAuthManager.Username : string.Empty;
@@ -2472,13 +2475,14 @@ public class CourseSelectionUI : MonoBehaviour
         if (vrLoginRequestButton != null)
         {
             vrLoginRequestButton.style.display = isAuthenticated || isPending ? DisplayStyle.None : DisplayStyle.Flex;
-            vrLoginRequestButton.SetEnabled(!isAuthenticated && !isPending);
+            vrLoginRequestButton.text = isRequestInFlight ? "Requesting..." : "Get Login Code";
+            vrLoginRequestButton.SetEnabled(!isAuthenticated && !isPending && !isRequestInFlight);
         }
 
         if (vrLoginRefreshButton != null)
         {
             vrLoginRefreshButton.style.display = isPending ? DisplayStyle.Flex : DisplayStyle.None;
-            vrLoginRefreshButton.SetEnabled(isPending);
+            vrLoginRefreshButton.SetEnabled(isPending && !isRequestInFlight);
         }
 
         if (courseList != null)
@@ -2490,12 +2494,9 @@ public class CourseSelectionUI : MonoBehaviour
         {
             statusLabel.text = isPending
                 ? "Approve the pairing PIN on your profile page to load courses."
-                : "Not logged in. Request a login code to pair this device.";
-        }
-
-        if (isPending)
-        {
-            Debug.Log($"[CourseSelectionUI] Showing pairing PIN in UI: {code}");
+                : isRequestInFlight
+                    ? "Requesting a login code from the backend..."
+                    : "Not logged in. Request a login code to pair this device.";
         }
     }
 

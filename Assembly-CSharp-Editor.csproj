@@ -55,6 +55,7 @@
     <Compile Include="Assets\Editor\VRUI\VRUIPopupPrefabCreator.cs" />
     <Compile Include="Assets\Editor\VRUI\VRHttpSetupTool.cs" />
     <Compile Include="Assets\Editor\VRUI\VRUICleanupUtility.cs" />
+    <Compile Include="Assets\Editor\QuestBuildTools.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Library\PackageCache\com.unity.cloud.gltfast@0847aee0f6da\Editor\UI\ReportItem-style.uss" />

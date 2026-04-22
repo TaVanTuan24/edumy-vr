@@ -26,14 +26,14 @@ public class SpatialWindowHandle : XRBaseInteractable
     protected override void OnEnable()
     {
         base.OnEnable();
-        selectEntered.AddListener(OnSelectEntered);
-        selectExited.AddListener(OnSelectExited);
+        selectEntered.AddListener(HandleSelectEntered);
+        selectExited.AddListener(HandleSelectExited);
     }
 
     protected override void OnDisable()
     {
-        selectEntered.RemoveListener(OnSelectEntered);
-        selectExited.RemoveListener(OnSelectExited);
+        selectEntered.RemoveListener(HandleSelectEntered);
+        selectExited.RemoveListener(HandleSelectExited);
         base.OnDisable();
     }
 
@@ -59,12 +59,12 @@ public class SpatialWindowHandle : XRBaseInteractable
         owner.ProcessHandleSelection(this, interactorsSelecting[0]);
     }
 
-    private void OnSelectEntered(SelectEnterEventArgs args)
+    private void HandleSelectEntered(SelectEnterEventArgs args)
     {
         owner?.OnHandleSelectEntered(this, args.interactorObject);
     }
 
-    private void OnSelectExited(SelectExitEventArgs args)
+    private void HandleSelectExited(SelectExitEventArgs args)
     {
         owner?.OnHandleSelectExited(this, args.interactorObject);
     }

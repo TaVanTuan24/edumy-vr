@@ -798,15 +798,9 @@ public class CourseToggleController : MonoBehaviour
 
     private bool RequiresCoursePanelFacingFlip()
     {
-        UIDocument document = courseSelectionDocument;
-        if (document == null && courseSelectionUI != null)
-        {
-            document = courseSelectionUI.GetComponent<UIDocument>();
-        }
-
-        return document != null
-            && document.panelSettings != null
-            && document.panelSettings.targetTexture == null;
+        // World-space UIDocuments face away from the camera by default.
+        // Always flip 180° so the panel faces the viewer.
+        return true;
     }
 
 #if UNITY_EDITOR

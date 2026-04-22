@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -35,8 +36,52 @@ public class VRSimulatorBootstrap : MonoBehaviour
     {
         yield return null;
         yield return null;
-        yield return EnsureXrRunning();
-        ApplySceneBindings();
+
+        IEnumerator xrRoutine = null;
+        try
+        {
+            xrRoutine = EnsureXrRunning();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[VRSimulatorBootstrap] Failed to prepare XR bootstrap.\n{ex}");
+        }
+
+        while (xrRoutine != null)
+        {
+            object currentYield = null;
+            bool hasNextStep;
+
+            try
+            {
+                hasNextStep = xrRoutine.MoveNext();
+                if (hasNextStep)
+                {
+                    currentYield = xrRoutine.Current;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[VRSimulatorBootstrap] XR bootstrap failed while starting the loader.\n{ex}");
+                break;
+            }
+
+            if (!hasNextStep)
+            {
+                break;
+            }
+
+            yield return currentYield;
+        }
+
+        try
+        {
+            ApplySceneBindings();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[VRSimulatorBootstrap] Scene binding failed.\n{ex}");
+        }
     }
 
     private static IEnumerator EnsureXrRunning()
@@ -50,12 +95,18 @@ public class VRSimulatorBootstrap : MonoBehaviour
 
         if (manager.activeLoader == null)
         {
+            Debug.Log("[VRSimulatorBootstrap] Initializing Android XR loader...");
             yield return manager.InitializeLoader();
         }
 
         if (manager.activeLoader != null)
         {
+            Debug.Log($"[VRSimulatorBootstrap] Starting XR subsystems with loader {manager.activeLoader.name}.");
             manager.StartSubsystems();
+        }
+        else
+        {
+            Debug.LogError("[VRSimulatorBootstrap] No active XR loader was found after initialization.");
         }
     }
 

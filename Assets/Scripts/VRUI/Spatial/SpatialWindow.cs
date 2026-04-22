@@ -392,12 +392,6 @@ public class SpatialWindow : MonoBehaviour
             return transform;
         }
 
-        Transform uiSurface = windowRoot.Find("UISurface");
-        if (uiSurface != null)
-        {
-            return uiSurface;
-        }
-
         RectTransform rect = windowRoot.GetComponent<RectTransform>();
         if (rect != null)
         {
