@@ -21,6 +21,15 @@ public class CourseSelectionUI : MonoBehaviour
         CourseSelection
     }
 
+    private enum CourseFilterMode
+    {
+        All,
+        Recent,
+        Favorites,
+        InProgress,
+        Completed
+    }
+
     [Header("UI Toolkit Assets")]
     [SerializeField] private VisualTreeAsset lessonSelectionViewTree;
     [SerializeField] private StyleSheet courseSelectionStyle;
@@ -72,14 +81,29 @@ public class CourseSelectionUI : MonoBehaviour
     private VisualElement sectionsPage;
     private VisualElement vrLoginPanel;
     private VisualElement vrLoginCodeGroup;
+    private VisualElement dashboardCard;
+    private VisualElement continueLearningCard;
+    private VisualElement courseDiscoveryBar;
+    private VisualElement courseFilterChipRow;
+    private VisualElement bookmarksListContainer;
+    private VisualElement dashboardActionsRow;
     private ListView courseList;
+    private TextField courseSearchField;
+    private Label dashboardSummaryLabel;
+    private Label dashboardDetailsLabel;
     private Label statusLabel;
+    private Label continueLearningTitleLabel;
+    private Label continueLearningSubtitleLabel;
     private Label vrLoginStatusLabel;
     private Label vrLoginCodeLabel;
     private Label vrLoginTimerLabel;
     private Label vrLoginUserLabel;
     private Button backButton;
     private Button closeButton;
+    private Button continueLearningButton;
+    private Button dashboardContinueButton;
+    private Button dashboardOpenCourseButton;
+    private Button dashboardReviewQuizButton;
     private Button settingsButton;
     private Button videoModeButton;
     private Button vrLoginRequestButton;
@@ -94,16 +118,30 @@ public class CourseSelectionUI : MonoBehaviour
     private SettingsTarget activeSettingsTarget = SettingsTarget.Slide;
     private bool isLogoutConfirmationVisible;
     private readonly List<CourseData> courses = new List<CourseData>();
+    private readonly List<CourseData> visibleCourses = new List<CourseData>();
     private readonly List<LessonData> activeLessons = new List<LessonData>();
     private readonly List<LessonItemElement> renderedLessonItems = new List<LessonItemElement>();
     private CourseData activeCourse;
     private string selectedLessonId;
+    private CourseFilterMode activeCourseFilter = CourseFilterMode.All;
+    private string courseSearchQuery = string.Empty;
     private int refreshCoursesRequestVersion;
     private int openSectionsRequestVersion;
     private VRAuthManager vrAuthManager;
+    private readonly HashSet<string> warnedMissingVrUiElements = new HashSet<string>(StringComparer.Ordinal);
+    private string backendUrlDraft = string.Empty;
+    private string backendUrlStatusMessage = string.Empty;
+    private Color backendUrlStatusColor = new Color(0.31f, 0.39f, 0.5f, 1f);
+    private bool isBackendConnectionTestInFlight;
+    private LessonData currentOpenedLesson;
+    private string currentOpenedLessonType = string.Empty;
+    private string pendingResumeLessonId = string.Empty;
+    private double pendingResumeVideoTimeSeconds = -1d;
 
     private async void Start()
     {
+        _ = ToastManager.Instance;
+
         if (anchorManager == null)
         {
             anchorManager = GetComponent<VRPanelAnchorManager>();
@@ -141,6 +179,7 @@ public class CourseSelectionUI : MonoBehaviour
 
         BuildUi();
         EnsureVrAuthManager();
+        EnsureAppStateSubscriptions();
         UpdateVrLoginUi();
 
         if (vrAuthManager != null && vrAuthManager.IsAuthenticated)
@@ -162,10 +201,15 @@ public class CourseSelectionUI : MonoBehaviour
     {
         int requestVersion = ++refreshCoursesRequestVersion;
         if (statusLabel != null) statusLabel.text = "Loading courses...";
+        ToastManager.ShowLoading("Loading courses...");
+        AppStateManager.Instance.ClearCurrentCourse();
+        AppStateManager.Instance.ClearCurrentLesson();
+        AppStateManager.Instance.SetActiveWindow(ActiveContentWindowType.None);
 
         if (!alwaysUseMockData && vrAuthManager != null && !vrAuthManager.IsAuthenticated)
         {
             ResetCourseViewForLoggedOutState();
+            ToastManager.HideLoading();
             return;
         }
 
@@ -203,6 +247,7 @@ public class CourseSelectionUI : MonoBehaviour
                     {
                         ResetCourseViewForLoggedOutState("You must log in to view your courses.");
                     }
+                    ToastManager.HideLoading();
                     return;
                 }
 
@@ -233,6 +278,9 @@ public class CourseSelectionUI : MonoBehaviour
                         ? $"Loaded {courses.Count} courses (Editor mock)."
                         : $"Loaded {courses.Count} courses.";
             }
+
+            UpdateContinueLearningCard();
+            RefreshCourseListView();
         }
         catch (Exception ex)
         {
@@ -255,6 +303,8 @@ public class CourseSelectionUI : MonoBehaviour
                 {
                     statusLabel.text = "The API failed. Showing mock data in the Editor for UI testing.";
                 }
+                UpdateContinueLearningCard();
+                RefreshCourseListView();
                 return;
             }
 
@@ -270,6 +320,12 @@ public class CourseSelectionUI : MonoBehaviour
                     statusLabel.text = $"Failed to load courses: {msg}";
                 }
             }
+
+            ToastManager.ShowError($"Failed to load courses. {ex.Message}");
+        }
+        finally
+        {
+            ToastManager.HideLoading();
         }
     }
 
@@ -362,6 +418,7 @@ public class CourseSelectionUI : MonoBehaviour
         sectionsScroll = lessonSelectionWindow.Q<ScrollView>("sections-scroll");
         sectionsStatus = lessonSelectionWindow.Q<Label>("sections-status");
         EnsureVrLoginPanelUi();
+        EnsureContinueLearningCard();
         EnsureSettingsPanel();
 
         if (timedQuizPopupWindow == null)
@@ -417,6 +474,9 @@ public class CourseSelectionUI : MonoBehaviour
         ConfigureListView();
         ShowCoursesPage();
         UpdateVideoModeButton();
+        UpdateContinueLearningCard();
+        RefreshDashboard();
+        RefreshCourseListView();
     }
 
     private Button EnsureCloseButton()
@@ -542,6 +602,285 @@ public class CourseSelectionUI : MonoBehaviour
         button.style.fontSize = 16f;
         lessonSelectionWindow.Add(button);
         button.BringToFront();
+        return button;
+    }
+
+    private void EnsureContinueLearningCard()
+    {
+        if (coursesPage == null)
+        {
+            return;
+        }
+
+        continueLearningCard = lessonSelectionWindow.Q<VisualElement>("continue-learning-card");
+        if (continueLearningCard != null)
+        {
+            continueLearningTitleLabel = continueLearningCard.Q<Label>("continue-learning-title");
+            continueLearningSubtitleLabel = continueLearningCard.Q<Label>("continue-learning-subtitle");
+            continueLearningButton = continueLearningCard.Q<Button>("continue-learning-button");
+        }
+
+        if (continueLearningCard == null)
+        {
+            continueLearningCard = new VisualElement { name = "continue-learning-card" };
+            continueLearningCard.style.display = DisplayStyle.None;
+            continueLearningCard.style.marginBottom = 18f;
+            continueLearningCard.style.paddingLeft = 24f;
+            continueLearningCard.style.paddingRight = 24f;
+            continueLearningCard.style.paddingTop = 20f;
+            continueLearningCard.style.paddingBottom = 20f;
+            continueLearningCard.style.backgroundColor = new Color(0.92f, 0.97f, 1f, 1f);
+            continueLearningCard.style.borderTopLeftRadius = 18f;
+            continueLearningCard.style.borderTopRightRadius = 18f;
+            continueLearningCard.style.borderBottomLeftRadius = 18f;
+            continueLearningCard.style.borderBottomRightRadius = 18f;
+            continueLearningCard.style.borderTopWidth = 1f;
+            continueLearningCard.style.borderRightWidth = 1f;
+            continueLearningCard.style.borderBottomWidth = 1f;
+            continueLearningCard.style.borderLeftWidth = 1f;
+            continueLearningCard.style.borderTopColor = new Color(0.67f, 0.82f, 0.98f, 1f);
+            continueLearningCard.style.borderRightColor = new Color(0.67f, 0.82f, 0.98f, 1f);
+            continueLearningCard.style.borderBottomColor = new Color(0.67f, 0.82f, 0.98f, 1f);
+            continueLearningCard.style.borderLeftColor = new Color(0.67f, 0.82f, 0.98f, 1f);
+
+            Label eyebrow = new Label("Continue Learning");
+            eyebrow.style.unityFontStyleAndWeight = FontStyle.Bold;
+            eyebrow.style.fontSize = 15f;
+            eyebrow.style.color = new Color(0.14f, 0.42f, 0.76f, 1f);
+            continueLearningCard.Add(eyebrow);
+
+            continueLearningTitleLabel = new Label("Resume your last lesson");
+            continueLearningTitleLabel.name = "continue-learning-title";
+            continueLearningTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            continueLearningTitleLabel.style.fontSize = 24f;
+            continueLearningTitleLabel.style.color = new Color(0.12f, 0.2f, 0.32f, 1f);
+            continueLearningTitleLabel.style.marginTop = 6f;
+            continueLearningCard.Add(continueLearningTitleLabel);
+
+            continueLearningSubtitleLabel = new Label(string.Empty);
+            continueLearningSubtitleLabel.name = "continue-learning-subtitle";
+            continueLearningSubtitleLabel.style.whiteSpace = WhiteSpace.Normal;
+            continueLearningSubtitleLabel.style.fontSize = 16f;
+            continueLearningSubtitleLabel.style.color = new Color(0.32f, 0.42f, 0.56f, 1f);
+            continueLearningSubtitleLabel.style.marginTop = 6f;
+            continueLearningCard.Add(continueLearningSubtitleLabel);
+
+            continueLearningButton = new Button(() => _ = ResumeLastLessonAsync())
+            {
+                name = "continue-learning-button",
+                text = "Resume"
+            };
+            continueLearningButton.style.marginTop = 12f;
+            continueLearningButton.style.minHeight = 52f;
+            continueLearningButton.style.minWidth = 180f;
+            continueLearningButton.style.maxWidth = 220f;
+            continueLearningButton.style.backgroundColor = new Color(0.18f, 0.56f, 0.93f, 1f);
+            continueLearningButton.style.color = Color.white;
+            continueLearningButton.style.unityFontStyleAndWeight = FontStyle.Bold;
+            continueLearningButton.style.fontSize = 18f;
+            continueLearningButton.style.borderTopLeftRadius = 14f;
+            continueLearningButton.style.borderTopRightRadius = 14f;
+            continueLearningButton.style.borderBottomLeftRadius = 14f;
+            continueLearningButton.style.borderBottomRightRadius = 14f;
+            continueLearningCard.Add(continueLearningButton);
+
+            int insertIndex = vrLoginPanel != null ? coursesPage.IndexOf(vrLoginPanel) + 1 : (courseList != null ? coursesPage.IndexOf(courseList) : -1);
+            if (insertIndex >= 0)
+            {
+                coursesPage.Insert(insertIndex, continueLearningCard);
+            }
+            else
+            {
+                coursesPage.Add(continueLearningCard);
+            }
+        }
+    }
+
+    private void EnsureDashboardUi()
+    {
+        if (coursesPage == null || dashboardCard != null)
+        {
+            return;
+        }
+
+        dashboardCard = new VisualElement { name = "progress-dashboard-card" };
+        dashboardCard.style.marginBottom = 18f;
+        dashboardCard.style.paddingLeft = 24f;
+        dashboardCard.style.paddingRight = 24f;
+        dashboardCard.style.paddingTop = 20f;
+        dashboardCard.style.paddingBottom = 20f;
+        dashboardCard.style.backgroundColor = new Color(0.95f, 0.98f, 1f, 1f);
+        dashboardCard.style.borderTopLeftRadius = 18f;
+        dashboardCard.style.borderTopRightRadius = 18f;
+        dashboardCard.style.borderBottomLeftRadius = 18f;
+        dashboardCard.style.borderBottomRightRadius = 18f;
+        dashboardCard.style.borderTopWidth = 1f;
+        dashboardCard.style.borderRightWidth = 1f;
+        dashboardCard.style.borderBottomWidth = 1f;
+        dashboardCard.style.borderLeftWidth = 1f;
+        dashboardCard.style.borderTopColor = new Color(0.74f, 0.83f, 0.94f, 1f);
+        dashboardCard.style.borderRightColor = new Color(0.74f, 0.83f, 0.94f, 1f);
+        dashboardCard.style.borderBottomColor = new Color(0.74f, 0.83f, 0.94f, 1f);
+        dashboardCard.style.borderLeftColor = new Color(0.74f, 0.83f, 0.94f, 1f);
+
+        Label title = new Label("Learning Dashboard");
+        title.style.unityFontStyleAndWeight = FontStyle.Bold;
+        title.style.fontSize = 28f;
+        title.style.color = new Color(0.11f, 0.2f, 0.33f, 1f);
+        dashboardCard.Add(title);
+
+        dashboardSummaryLabel = new Label("Loading your study overview...");
+        dashboardSummaryLabel.style.marginTop = 8f;
+        dashboardSummaryLabel.style.fontSize = 17f;
+        dashboardSummaryLabel.style.color = new Color(0.25f, 0.36f, 0.5f, 1f);
+        dashboardCard.Add(dashboardSummaryLabel);
+
+        dashboardDetailsLabel = new Label(string.Empty);
+        dashboardDetailsLabel.style.whiteSpace = WhiteSpace.Normal;
+        dashboardDetailsLabel.style.marginTop = 6f;
+        dashboardDetailsLabel.style.fontSize = 15f;
+        dashboardDetailsLabel.style.color = new Color(0.37f, 0.46f, 0.58f, 1f);
+        dashboardCard.Add(dashboardDetailsLabel);
+
+        dashboardActionsRow = new VisualElement { name = "dashboard-actions-row" };
+        dashboardActionsRow.style.flexDirection = FlexDirection.Row;
+        dashboardActionsRow.style.flexWrap = Wrap.Wrap;
+        dashboardActionsRow.style.marginTop = 12f;
+        dashboardCard.Add(dashboardActionsRow);
+
+        dashboardContinueButton = CreateSettingsActionButton(
+            "Continue",
+            () => _ = ResumeLastLessonAsync(),
+            new Color(0.18f, 0.56f, 0.93f, 0.98f),
+            Color.white,
+            new Color(0.14f, 0.46f, 0.78f, 1f));
+        dashboardContinueButton.style.marginRight = 8f;
+        dashboardActionsRow.Add(dashboardContinueButton);
+
+        dashboardOpenCourseButton = CreateSettingsActionButton(
+            "Open Course",
+            () =>
+            {
+                if (TryGetResumeStateForCurrentUser(out ResumeLessonData state))
+                {
+                    CourseData course = courses.FirstOrDefault(c => c != null && c.id == state.courseId);
+                    if (course != null)
+                    {
+                        _ = OpenSectionsPageAsync(course);
+                    }
+                }
+            },
+            new Color(0.92f, 0.95f, 1f, 1f),
+            new Color(0.16f, 0.29f, 0.49f, 1f),
+            new Color(0.74f, 0.83f, 0.94f, 1f));
+        dashboardOpenCourseButton.style.marginRight = 8f;
+        dashboardActionsRow.Add(dashboardOpenCourseButton);
+
+        dashboardReviewQuizButton = CreateSettingsActionButton(
+            "Review Quiz",
+            () => _ = ResumeLastLessonAsync(),
+            new Color(0.93f, 0.97f, 0.91f, 1f),
+            new Color(0.18f, 0.38f, 0.16f, 1f),
+            new Color(0.71f, 0.86f, 0.69f, 1f));
+        dashboardActionsRow.Add(dashboardReviewQuizButton);
+
+        bookmarksListContainer = new VisualElement { name = "bookmarks-list-container" };
+        bookmarksListContainer.style.marginTop = 12f;
+        dashboardCard.Add(bookmarksListContainer);
+
+        coursesPage.Add(dashboardCard);
+    }
+
+    private void EnsureCourseDiscoveryUi()
+    {
+        if (coursesPage == null || courseDiscoveryBar != null)
+        {
+            return;
+        }
+
+        courseDiscoveryBar = new VisualElement { name = "course-discovery-bar" };
+        courseDiscoveryBar.style.marginBottom = 18f;
+        courseDiscoveryBar.style.paddingLeft = 20f;
+        courseDiscoveryBar.style.paddingRight = 20f;
+        courseDiscoveryBar.style.paddingTop = 16f;
+        courseDiscoveryBar.style.paddingBottom = 16f;
+        courseDiscoveryBar.style.backgroundColor = new Color(0.97f, 0.985f, 1f, 1f);
+        courseDiscoveryBar.style.borderTopLeftRadius = 18f;
+        courseDiscoveryBar.style.borderTopRightRadius = 18f;
+        courseDiscoveryBar.style.borderBottomLeftRadius = 18f;
+        courseDiscoveryBar.style.borderBottomRightRadius = 18f;
+        courseDiscoveryBar.style.borderTopWidth = 1f;
+        courseDiscoveryBar.style.borderRightWidth = 1f;
+        courseDiscoveryBar.style.borderBottomWidth = 1f;
+        courseDiscoveryBar.style.borderLeftWidth = 1f;
+        courseDiscoveryBar.style.borderTopColor = new Color(0.84f, 0.9f, 0.96f, 1f);
+        courseDiscoveryBar.style.borderRightColor = new Color(0.84f, 0.9f, 0.96f, 1f);
+        courseDiscoveryBar.style.borderBottomColor = new Color(0.84f, 0.9f, 0.96f, 1f);
+        courseDiscoveryBar.style.borderLeftColor = new Color(0.84f, 0.9f, 0.96f, 1f);
+
+        courseSearchField = new TextField
+        {
+            label = "Search Courses"
+        };
+        courseSearchField.style.marginBottom = 10f;
+        courseSearchField.RegisterValueChangedCallback(evt =>
+        {
+            courseSearchQuery = evt.newValue ?? string.Empty;
+            RefreshCourseListView();
+        });
+        courseDiscoveryBar.Add(courseSearchField);
+
+        courseFilterChipRow = new VisualElement { name = "course-filter-chip-row" };
+        courseFilterChipRow.style.flexDirection = FlexDirection.Row;
+        courseFilterChipRow.style.flexWrap = Wrap.Wrap;
+        courseDiscoveryBar.Add(courseFilterChipRow);
+
+        foreach (CourseFilterMode mode in Enum.GetValues(typeof(CourseFilterMode)))
+        {
+            courseFilterChipRow.Add(CreateCourseFilterChip(mode));
+        }
+
+        int insertIndex = courseList != null ? coursesPage.IndexOf(courseList) : -1;
+        if (insertIndex >= 0)
+        {
+            coursesPage.Insert(insertIndex, courseDiscoveryBar);
+        }
+        else
+        {
+            coursesPage.Add(courseDiscoveryBar);
+        }
+    }
+
+    private Button CreateCourseFilterChip(CourseFilterMode mode)
+    {
+        string label = mode switch
+        {
+            CourseFilterMode.Recent => "Recent",
+            CourseFilterMode.Favorites => "Favorites",
+            CourseFilterMode.InProgress => "In Progress",
+            CourseFilterMode.Completed => "Completed",
+            _ => "All"
+        };
+
+        Button button = new Button(() =>
+        {
+            activeCourseFilter = mode;
+            RefreshCourseFilterChipVisuals();
+            RefreshCourseListView();
+        })
+        {
+            text = label
+        };
+        button.style.minHeight = 44f;
+        button.style.marginRight = 8f;
+        button.style.marginBottom = 8f;
+        button.style.paddingLeft = 16f;
+        button.style.paddingRight = 16f;
+        button.style.borderTopLeftRadius = 999f;
+        button.style.borderTopRightRadius = 999f;
+        button.style.borderBottomLeftRadius = 999f;
+        button.style.borderBottomRightRadius = 999f;
+        button.userData = mode;
         return button;
     }
 
@@ -684,6 +1023,10 @@ public class CourseSelectionUI : MonoBehaviour
         settingsOverlay.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
         if (open)
         {
+            if (!isBackendConnectionTestInFlight)
+            {
+                backendUrlDraft = ApiConfig.BaseUrl;
+            }
             RebuildSettingsContent();
         }
     }
@@ -788,6 +1131,8 @@ public class CourseSelectionUI : MonoBehaviour
                     toggleController?.SetPanelPlacement(toggleController.PanelDistance, toggleController.PanelHeightOffset, value);
                 });
                 AddSettingsSeparator();
+                AddBackendSettingsSection();
+                AddSettingsSeparator();
                 AddAccountSettingsSection();
                 break;
         }
@@ -840,6 +1185,222 @@ public class CourseSelectionUI : MonoBehaviour
         separator.style.marginBottom = 12f;
         separator.style.backgroundColor = new Color(0.85f, 0.89f, 0.95f, 1f);
         settingsContent.Add(separator);
+    }
+
+    private void AddBackendSettingsSection()
+    {
+        if (settingsContent == null)
+        {
+            return;
+        }
+
+        AddSettingsHeader("Backend Server");
+
+        if (string.IsNullOrWhiteSpace(backendUrlDraft))
+        {
+            backendUrlDraft = ApiConfig.BaseUrl;
+        }
+
+        VisualElement card = new VisualElement();
+        card.style.paddingLeft = 12f;
+        card.style.paddingRight = 12f;
+        card.style.paddingTop = 12f;
+        card.style.paddingBottom = 12f;
+        card.style.marginBottom = 10f;
+        card.style.backgroundColor = new Color(0.95f, 0.98f, 1f, 1f);
+        card.style.borderTopLeftRadius = 12f;
+        card.style.borderTopRightRadius = 12f;
+        card.style.borderBottomLeftRadius = 12f;
+        card.style.borderBottomRightRadius = 12f;
+        card.style.borderTopWidth = 1f;
+        card.style.borderRightWidth = 1f;
+        card.style.borderBottomWidth = 1f;
+        card.style.borderLeftWidth = 1f;
+        card.style.borderTopColor = new Color(0.76f, 0.84f, 0.94f, 1f);
+        card.style.borderRightColor = new Color(0.76f, 0.84f, 0.94f, 1f);
+        card.style.borderBottomColor = new Color(0.76f, 0.84f, 0.94f, 1f);
+        card.style.borderLeftColor = new Color(0.76f, 0.84f, 0.94f, 1f);
+        settingsContent.Add(card);
+
+        Label title = new Label("Backend Server URL");
+        title.style.unityFontStyleAndWeight = FontStyle.Bold;
+        title.style.fontSize = 13f;
+        title.style.color = new Color(0.15f, 0.24f, 0.35f, 1f);
+        title.style.marginBottom = 4f;
+        card.Add(title);
+
+        string overrideUrl = ApiConfig.GetOverrideBaseUrl();
+        string defaultUrl = ApiConfig.DefaultBaseUrl;
+        Label description = new Label(
+            string.IsNullOrWhiteSpace(overrideUrl)
+                ? $"Using default config asset URL: {defaultUrl}"
+                : $"Using PlayerPrefs override: {overrideUrl}");
+        description.style.whiteSpace = WhiteSpace.Normal;
+        description.style.fontSize = 12f;
+        description.style.color = new Color(0.35f, 0.43f, 0.55f, 1f);
+        description.style.marginBottom = 8f;
+        card.Add(description);
+
+        TextField urlField = new TextField
+        {
+            value = backendUrlDraft
+        };
+        urlField.label = "Backend Server URL";
+        urlField.style.marginBottom = 8f;
+        urlField.RegisterValueChangedCallback(evt => backendUrlDraft = evt.newValue);
+        card.Add(urlField);
+
+        Label hint = new Label("Set this to your PC LAN IP when the headset is on a different Wi-Fi than your previous backend address.");
+        hint.style.whiteSpace = WhiteSpace.Normal;
+        hint.style.fontSize = 11f;
+        hint.style.color = new Color(0.38f, 0.46f, 0.58f, 1f);
+        hint.style.marginBottom = 10f;
+        card.Add(hint);
+
+        VisualElement actions = new VisualElement();
+        actions.style.flexDirection = FlexDirection.Row;
+        actions.style.flexWrap = Wrap.Wrap;
+        card.Add(actions);
+
+        Button saveButton = CreateSettingsActionButton(
+            "Save",
+            () => HandleBackendUrlSaved(urlField.value),
+            new Color(0.18f, 0.56f, 0.93f, 0.98f),
+            Color.white,
+            new Color(0.14f, 0.46f, 0.78f, 1f));
+        saveButton.style.marginRight = 8f;
+        actions.Add(saveButton);
+
+        Button testButton = CreateSettingsActionButton(
+            isBackendConnectionTestInFlight ? "Testing..." : "Test Connection",
+            () => _ = HandleBackendConnectionTestAsync(urlField.value),
+            new Color(0.93f, 0.96f, 1f, 1f),
+            new Color(0.14f, 0.29f, 0.47f, 1f),
+            new Color(0.72f, 0.82f, 0.94f, 1f));
+        testButton.SetEnabled(!isBackendConnectionTestInFlight);
+        actions.Add(testButton);
+
+        string backendStatusText = backendUrlStatusMessage;
+        if (string.IsNullOrWhiteSpace(backendStatusText))
+        {
+            BackendStatusSnapshot backendState = AppStateManager.Instance.BackendStatus;
+            backendStatusText = backendState.state switch
+            {
+                BackendConnectionState.Connected => $"Backend status: Connected ({ApiConfig.BaseUrl})",
+                BackendConnectionState.Unreachable => string.IsNullOrWhiteSpace(backendState.message) ? $"Backend status: Cannot connect ({ApiConfig.BaseUrl})" : backendState.message,
+                BackendConnectionState.Unauthorized => string.IsNullOrWhiteSpace(backendState.message) ? "Backend status: Unauthorized" : backendState.message,
+                _ => $"Current URL: {ApiConfig.BaseUrl}"
+            };
+        }
+
+        BackendStatusSnapshot currentBackendState = AppStateManager.Instance.BackendStatus;
+        Color backendStateColor = currentBackendState.state switch
+        {
+            BackendConnectionState.Connected => new Color(0.12f, 0.53f, 0.29f, 1f),
+            BackendConnectionState.Unreachable => new Color(0.74f, 0.18f, 0.18f, 1f),
+            BackendConnectionState.Unauthorized => new Color(0.74f, 0.42f, 0.12f, 1f),
+            _ => new Color(0.31f, 0.39f, 0.5f, 1f)
+        };
+
+        Label status = new Label(backendStatusText);
+        status.style.whiteSpace = WhiteSpace.Normal;
+        status.style.fontSize = 12f;
+        status.style.color = string.IsNullOrWhiteSpace(backendUrlStatusMessage)
+            ? backendStateColor
+            : backendUrlStatusColor;
+        status.style.marginTop = 10f;
+        card.Add(status);
+    }
+
+    private void HandleBackendUrlSaved(string rawValue)
+    {
+        if (!ApiConfig.TryNormalizeBaseUrl(rawValue, out string normalizedUrl, out string errorMessage))
+        {
+            SetBackendStatus(errorMessage, new Color(0.74f, 0.18f, 0.18f, 1f), rawValue);
+            ToastManager.ShowError(errorMessage);
+            RebuildSettingsContent();
+            return;
+        }
+
+        ApiConfig.SetOverrideBaseUrl(normalizedUrl);
+        AppStateManager.Instance.SetBackendStatus(BackendConnectionState.Unknown, $"Backend URL saved. Test connection to verify {normalizedUrl}.", normalizedUrl);
+        backendUrlDraft = normalizedUrl;
+        SetBackendStatus($"Saved backend URL: {normalizedUrl}", new Color(0.12f, 0.53f, 0.29f, 1f), normalizedUrl);
+        ToastManager.ShowSuccess($"Saved backend URL: {normalizedUrl}", 2.6f);
+        RebuildSettingsContent();
+    }
+
+    private async Task HandleBackendConnectionTestAsync(string rawValue)
+    {
+        string draftValue = string.IsNullOrWhiteSpace(rawValue) ? backendUrlDraft : rawValue;
+        backendUrlDraft = draftValue;
+
+        if (!ApiConfig.TryNormalizeBaseUrl(draftValue, out string normalizedUrl, out string errorMessage))
+        {
+            SetBackendStatus(errorMessage, new Color(0.74f, 0.18f, 0.18f, 1f), draftValue);
+            ToastManager.ShowError(errorMessage);
+            RebuildSettingsContent();
+            return;
+        }
+
+        ApiManager apiManager = ApiManager.Instance;
+        if (apiManager == null)
+        {
+            SetBackendStatus("ApiManager is missing from the scene.", new Color(0.74f, 0.18f, 0.18f, 1f), normalizedUrl);
+            ToastManager.ShowError("ApiManager is missing from the scene.");
+            RebuildSettingsContent();
+            return;
+        }
+
+        isBackendConnectionTestInFlight = true;
+        SetBackendStatus($"Testing connection to {normalizedUrl}...", new Color(0.2f, 0.39f, 0.71f, 1f), normalizedUrl);
+        RebuildSettingsContent();
+
+        ApiManager.ConnectionTestResult result = null;
+        try
+        {
+            result = await apiManager.TestConnectionAsync(normalizedUrl);
+        }
+        catch (Exception ex)
+        {
+            result = new ApiManager.ConnectionTestResult
+            {
+                success = false,
+                testedBaseUrl = normalizedUrl,
+                testedUrl = normalizedUrl,
+                message = $"Cannot connect to backend at {normalizedUrl}. {ex.Message}"
+            };
+        }
+        finally
+        {
+            isBackendConnectionTestInFlight = false;
+        }
+
+        if (result != null && result.success)
+        {
+            SetBackendStatus(result.message, new Color(0.12f, 0.53f, 0.29f, 1f), normalizedUrl);
+            ToastManager.ShowSuccess(result.message, 3f);
+        }
+        else
+        {
+            string failureMessage = result != null && !string.IsNullOrWhiteSpace(result.message)
+                ? result.message
+                : $"Cannot connect to backend at {normalizedUrl}. Open Settings and update Backend Server URL.";
+            SetBackendStatus(failureMessage, new Color(0.74f, 0.18f, 0.18f, 1f), normalizedUrl);
+            ToastManager.ShowError(failureMessage, 4f);
+        }
+
+        RebuildSettingsContent();
+    }
+
+    private void SetBackendStatus(string message, Color color, string draftValue = null)
+    {
+        backendUrlStatusMessage = string.IsNullOrWhiteSpace(message) ? string.Empty : message.Trim();
+        backendUrlStatusColor = color;
+        if (!string.IsNullOrWhiteSpace(draftValue))
+        {
+            backendUrlDraft = draftValue.Trim();
+        }
     }
 
     private void AddAccountSettingsSection()
@@ -1016,6 +1577,7 @@ public class CourseSelectionUI : MonoBehaviour
         }
 
         controller.ToggleMode();
+        AppStateManager.Instance.NotifyOnboardingAction(OnboardingActionType.DockFloatToggled);
         UpdateVideoModeButton();
     }
 
@@ -1074,10 +1636,10 @@ public class CourseSelectionUI : MonoBehaviour
     {
         if (courseList == null) return;
 
-        courseList.fixedItemHeight = Mathf.Max(250f, listItemHeight);
+        courseList.fixedItemHeight = Mathf.Max(190f, listItemHeight);
         courseList.virtualizationMethod = CollectionVirtualizationMethod.FixedHeight;
         courseList.selectionType = SelectionType.None;
-        courseList.itemsSource = courses;
+        courseList.itemsSource = visibleCourses;
 
         courseList.makeItem = () =>
         {
@@ -1086,15 +1648,399 @@ public class CourseSelectionUI : MonoBehaviour
 
         courseList.bindItem = (element, index) =>
         {
-            if (index < 0 || index >= courses.Count) return;
+            if (index < 0 || index >= visibleCourses.Count) return;
 
-            CourseData course = courses[index];
+            CourseData course = visibleCourses[index];
             CourseCardElement card = element as CourseCardElement;
             if (card == null) return;
 
-            card.Bind(course, selected => _ = OpenSectionsPageAsync(selected));
+            card.Bind(
+                course,
+                selected => _ = OpenSectionsPageAsync(selected),
+                false,
+                null,
+                null);
             _ = LoadThumbnailIntoAsync(card, course.thumbnailUrl, card.BindVersion);
         };
+    }
+
+    private void UpdateContinueLearningCard()
+    {
+        if (continueLearningCard == null)
+        {
+            return;
+        }
+
+        bool isAuthenticated = vrAuthManager != null && vrAuthManager.IsAuthenticated;
+        if (!isAuthenticated || alwaysUseMockData)
+        {
+            continueLearningCard.style.display = DisplayStyle.None;
+            SetDashboardResumeActions(false, false);
+            return;
+        }
+
+        if (!TryGetResumeStateForCurrentUser(out ResumeLessonData state))
+        {
+            continueLearningCard.style.display = DisplayStyle.None;
+            SetDashboardResumeActions(false, false);
+            return;
+        }
+
+        CourseData course = courses.FirstOrDefault(c => c != null && c.id == state.courseId);
+        if (course == null)
+        {
+            continueLearningCard.style.display = DisplayStyle.None;
+            SetDashboardResumeActions(false, false);
+            return;
+        }
+
+        if (continueLearningTitleLabel != null)
+        {
+            continueLearningTitleLabel.text = $"{course.title} - {state.lessonTitle}";
+        }
+
+        if (continueLearningSubtitleLabel != null)
+        {
+            string typeLabel = string.IsNullOrWhiteSpace(state.lessonType) ? "LESSON" : state.lessonType.ToUpperInvariant();
+            string timeText = state.lessonType == "video" && state.videoTimeSeconds > 1d
+                ? $" Resume at {FormatDuration(state.videoTimeSeconds)}."
+                : string.Empty;
+            continueLearningSubtitleLabel.text = $"{state.sectionName} · {typeLabel}.{timeText}";
+        }
+
+        continueLearningCard.style.display = DisplayStyle.Flex;
+        SetDashboardResumeActions(true, state.lessonType == "quiz");
+    }
+
+    private void SetDashboardResumeActions(bool canResume, bool showReviewQuiz)
+    {
+        if (dashboardContinueButton != null) dashboardContinueButton.SetEnabled(canResume);
+        if (dashboardOpenCourseButton != null) dashboardOpenCourseButton.SetEnabled(canResume);
+        if (dashboardReviewQuizButton != null)
+        {
+            dashboardReviewQuizButton.style.display = showReviewQuiz ? DisplayStyle.Flex : DisplayStyle.None;
+            dashboardReviewQuizButton.SetEnabled(canResume && showReviewQuiz);
+        }
+    }
+
+    private void RefreshDashboard()
+    {
+        if (dashboardCard == null)
+        {
+            return;
+        }
+
+        int totalCourses = courses.Count;
+        int inProgressCourses = courses.Count(c => c != null && c.progress > 0 && c.progress < 100);
+        int completedCourses = courses.Count(c => c != null && c.progress >= 100);
+        int completedLessons = activeLessons.Count(l => l != null && l.isCompleted);
+
+        if (dashboardSummaryLabel != null)
+        {
+            dashboardSummaryLabel.text = totalCourses == 0
+                ? "Sign in to load your courses and recent study activity."
+                : $"{totalCourses} courses · {inProgressCourses} in progress · {completedCourses} completed";
+        }
+
+        if (dashboardDetailsLabel != null)
+        {
+            string recentCourseText = string.Empty;
+            string userId = vrAuthManager != null ? vrAuthManager.UserId : string.Empty;
+            List<RecentCourseEntry> recents = LocalStudyStateManager.GetRecentCourses(userId);
+            if (recents.Count > 0)
+            {
+                recentCourseText = $"Recent course: {recents[0].courseTitle}. ";
+            }
+
+            string recentLessonText = string.Empty;
+            if (TryGetResumeStateForCurrentUser(out ResumeLessonData resumeState))
+            {
+                recentLessonText = $"Recent lesson: {resumeState.lessonTitle}. ";
+            }
+
+            string currentCourseText = activeCourse != null
+                ? $"Current course progress: {activeCourse.progress}% with {completedLessons}/{Mathf.Max(activeCourse.totalLessons, activeLessons.Count)} lessons complete."
+                : "Open a course to see section progress.";
+
+            dashboardDetailsLabel.text = $"{recentCourseText}{recentLessonText}{currentCourseText}";
+        }
+
+        RefreshBookmarksDashboard();
+    }
+
+    private void RefreshBookmarksDashboard()
+    {
+        if (bookmarksListContainer == null)
+        {
+            return;
+        }
+
+        bookmarksListContainer.Clear();
+
+        string userId = vrAuthManager != null ? vrAuthManager.UserId : string.Empty;
+        List<StudyBookmarkData> bookmarks = LocalStudyStateManager.GetBookmarks(userId)
+            .Where(IsDashboardBookmarkVisible)
+            .ToList();
+        if (bookmarks.Count == 0)
+        {
+            Label empty = new Label("Slide and quiz bookmarks will appear here after you save them.");
+            empty.style.whiteSpace = WhiteSpace.Normal;
+            empty.style.fontSize = 14f;
+            empty.style.color = new Color(0.42f, 0.49f, 0.6f, 1f);
+            bookmarksListContainer.Add(empty);
+            return;
+        }
+
+        Label title = new Label("Bookmarks");
+        title.style.unityFontStyleAndWeight = FontStyle.Bold;
+        title.style.fontSize = 18f;
+        title.style.color = new Color(0.15f, 0.23f, 0.37f, 1f);
+        title.style.marginBottom = 8f;
+        bookmarksListContainer.Add(title);
+
+        for (int i = 0; i < Mathf.Min(5, bookmarks.Count); i++)
+        {
+            StudyBookmarkData bookmark = bookmarks[i];
+            Button button = new Button(() => _ = OpenBookmarkAsync(bookmark));
+            button.text = BuildBookmarkLabel(bookmark);
+            button.style.minHeight = 44f;
+            button.style.marginBottom = 8f;
+            button.style.paddingLeft = 16f;
+            button.style.paddingRight = 16f;
+            button.style.whiteSpace = WhiteSpace.Normal;
+            button.style.backgroundColor = new Color(0.92f, 0.96f, 1f, 1f);
+            button.style.color = new Color(0.11f, 0.23f, 0.39f, 1f);
+            button.style.borderTopLeftRadius = 12f;
+            button.style.borderTopRightRadius = 12f;
+            button.style.borderBottomLeftRadius = 12f;
+            button.style.borderBottomRightRadius = 12f;
+            bookmarksListContainer.Add(button);
+        }
+    }
+
+    private string BuildBookmarkLabel(StudyBookmarkData bookmark)
+    {
+        if (bookmark == null)
+        {
+            return "Bookmark";
+        }
+
+        string label = string.IsNullOrWhiteSpace(bookmark.lessonTitle)
+            ? bookmark.courseTitle
+            : $"{bookmark.courseTitle} · {bookmark.lessonTitle}";
+
+        if (bookmark.timestampSeconds > 0d)
+        {
+            label += $" · {FormatDuration(bookmark.timestampSeconds)}";
+        }
+        else if (bookmark.slideIndex >= 0)
+        {
+            label += $" · Slide {bookmark.slideIndex + 1}";
+        }
+        else if (bookmark.questionIndex >= 0)
+        {
+            label += $" · Question {bookmark.questionIndex + 1}";
+        }
+
+        return label;
+    }
+
+    private static bool IsDashboardBookmarkVisible(StudyBookmarkData bookmark)
+    {
+        if (bookmark == null)
+        {
+            return false;
+        }
+
+        bool hasVideoTimestamp = bookmark.timestampSeconds > 0d
+            || string.Equals(bookmark.lessonType, "video", StringComparison.OrdinalIgnoreCase);
+        if (hasVideoTimestamp)
+        {
+            return false;
+        }
+
+        bool isLessonSaveBookmark = !string.IsNullOrWhiteSpace(bookmark.lessonId)
+            && bookmark.slideIndex < 0
+            && bookmark.questionIndex < 0;
+        return !isLessonSaveBookmark;
+    }
+
+    private void RefreshCourseListView()
+    {
+        visibleCourses.Clear();
+        visibleCourses.AddRange(courses.Where(c => c != null));
+
+        if (courseList != null)
+        {
+            courseList.Rebuild();
+        }
+
+        if (statusLabel != null)
+        {
+            statusLabel.text = visibleCourses.Count == 0
+                ? "No courses available."
+                : $"Showing {visibleCourses.Count} courses.";
+        }
+
+        RefreshDashboard();
+    }
+
+    private void RefreshCourseFilterChipVisuals()
+    {
+        if (courseFilterChipRow == null)
+        {
+            return;
+        }
+
+        foreach (VisualElement child in courseFilterChipRow.Children())
+        {
+            if (child is not Button button || button.userData is not CourseFilterMode mode)
+            {
+                continue;
+            }
+
+            bool active = mode == activeCourseFilter;
+            button.style.backgroundColor = active
+                ? new Color(0.18f, 0.56f, 0.93f, 1f)
+                : new Color(0.92f, 0.95f, 1f, 1f);
+            button.style.color = active ? Color.white : new Color(0.17f, 0.31f, 0.5f, 1f);
+            button.style.borderTopWidth = active ? 2f : 1f;
+            button.style.borderRightWidth = active ? 2f : 1f;
+            button.style.borderBottomWidth = active ? 2f : 1f;
+            button.style.borderLeftWidth = active ? 2f : 1f;
+            Color border = active ? new Color(0.12f, 0.42f, 0.75f, 1f) : new Color(0.76f, 0.84f, 0.94f, 1f);
+            button.style.borderTopColor = border;
+            button.style.borderRightColor = border;
+            button.style.borderBottomColor = border;
+            button.style.borderLeftColor = border;
+        }
+
+        if (statusLabel != null)
+        {
+            statusLabel.text = visibleCourses.Count == 0
+                ? "No courses match the current search/filter."
+                : $"Showing {visibleCourses.Count} courses.";
+        }
+    }
+
+    private void HandleCourseFavoriteToggled(CourseData course)
+    {
+        if (course == null)
+        {
+            return;
+        }
+
+        string userId = vrAuthManager != null ? vrAuthManager.UserId : string.Empty;
+        bool isFavorite = LocalStudyStateManager.ToggleFavoriteCourse(userId, course.id);
+        ToastManager.ShowInfo(isFavorite ? $"Added {course.title} to favorites." : $"Removed {course.title} from favorites.", 2.4f);
+        RefreshCourseListView();
+    }
+
+    private void HandleCourseBookmarked(CourseData course)
+    {
+        if (course == null)
+        {
+            return;
+        }
+
+        string userId = vrAuthManager != null ? vrAuthManager.UserId : string.Empty;
+        StudyBookmarkData bookmark = LocalStudyStateManager.BuildBookmark(userId, course, null, "course", "Course", -1, -1);
+        bool saved = LocalStudyStateManager.ToggleBookmark(userId, bookmark);
+        ToastManager.ShowInfo(saved ? $"Saved bookmark for {course.title}." : $"Removed bookmark for {course.title}.", 2.6f);
+        RefreshDashboard();
+    }
+
+    private async Task OpenBookmarkAsync(StudyBookmarkData bookmark)
+    {
+        if (bookmark == null)
+        {
+            return;
+        }
+
+        CourseData course = courses.FirstOrDefault(c => c != null && string.Equals(c.id, bookmark.courseId, StringComparison.Ordinal));
+        if (course == null)
+        {
+            ToastManager.ShowWarning("This bookmarked course is no longer available.");
+            return;
+        }
+
+        await OpenSectionsPageAsync(course);
+
+        if (string.IsNullOrWhiteSpace(bookmark.lessonId))
+        {
+            ToastManager.ShowInfo($"Opened bookmarked course {course.title}.");
+            return;
+        }
+
+        LessonData lesson = activeLessons.FirstOrDefault(l => l != null && string.Equals(l.id, bookmark.lessonId, StringComparison.Ordinal));
+        if (lesson == null)
+        {
+            ToastManager.ShowWarning("This bookmarked lesson is no longer available.");
+            return;
+        }
+
+        pendingResumeLessonId = bookmark.lessonId;
+        pendingResumeVideoTimeSeconds = -1d;
+        OnLessonClicked(lesson);
+
+        if (bookmark.slideIndex >= 0 && slidePopupWindow != null)
+        {
+            slidePopupWindow.TrySetSlideIndex(bookmark.slideIndex);
+        }
+
+        if (bookmark.questionIndex >= 0 && quizPopupWindow != null)
+        {
+            quizPopupWindow.TrySetQuestionIndex(bookmark.questionIndex);
+        }
+    }
+
+    private async Task ResumeLastLessonAsync()
+    {
+        if (!TryGetResumeStateForCurrentUser(out ResumeLessonData state))
+        {
+            continueLearningCard.style.display = DisplayStyle.None;
+            ResumeLearningManager.ClearLastLessonForUser(vrAuthManager != null ? vrAuthManager.UserId : string.Empty);
+            ToastManager.ShowWarning("The saved lesson could not be restored.");
+            return;
+        }
+
+        CourseData course = courses.FirstOrDefault(c => c != null && c.id == state.courseId);
+        if (course == null)
+        {
+            ResumeLearningManager.ClearLastLessonForUser(vrAuthManager != null ? vrAuthManager.UserId : string.Empty);
+            UpdateContinueLearningCard();
+            ToastManager.ShowWarning("The saved course is no longer available.");
+            return;
+        }
+
+        ToastManager.ShowLoading("Restoring your last lesson...");
+        try
+        {
+            await OpenSectionsPageAsync(course);
+
+            LessonData lesson = activeLessons.FirstOrDefault(l => l != null && l.id == state.lessonId);
+            if (lesson == null && state.lessonIndex >= 0 && state.lessonIndex < activeLessons.Count)
+            {
+                lesson = activeLessons[state.lessonIndex];
+            }
+
+            if (lesson == null)
+            {
+                ResumeLearningManager.ClearLastLessonForUser(vrAuthManager != null ? vrAuthManager.UserId : string.Empty);
+                UpdateContinueLearningCard();
+                ToastManager.ShowWarning("The saved lesson is no longer available.");
+                return;
+            }
+
+            pendingResumeLessonId = lesson.id ?? string.Empty;
+            pendingResumeVideoTimeSeconds = state.lessonType == "video" ? Math.Max(0d, state.videoTimeSeconds) : -1d;
+            OnLessonClicked(lesson);
+            ToastManager.ShowSuccess($"Resuming {lesson.title}");
+        }
+        finally
+        {
+            ToastManager.HideLoading();
+        }
     }
 
     private async Task OpenSectionsPageAsync(CourseData course)
@@ -1112,6 +2058,13 @@ public class CourseSelectionUI : MonoBehaviour
         activeCourse = course;
         activeLessons.Clear();
         selectedLessonId = null;
+        currentOpenedLesson = null;
+        currentOpenedLessonType = string.Empty;
+        AppStateManager.Instance.SetCurrentCourse(course.id, course.title, -1);
+        AppStateManager.Instance.ClearCurrentLesson();
+        AppStateManager.Instance.SetActiveWindow(ActiveContentWindowType.None);
+        AppStateManager.Instance.NotifyOnboardingAction(OnboardingActionType.CourseSelected, course.id);
+        LocalStudyStateManager.TrackRecentCourse(vrAuthManager != null ? vrAuthManager.UserId : string.Empty, course);
 
         if (sectionsTitle != null)
         {
@@ -1124,6 +2077,8 @@ public class CourseSelectionUI : MonoBehaviour
         {
             sectionsStatus.text = "Loading sections and lessons...";
         }
+
+        ToastManager.ShowLoading($"Loading lessons for {course.title}...");
 
         if (sectionsScroll != null)
         {
@@ -1140,6 +2095,11 @@ public class CourseSelectionUI : MonoBehaviour
                 return;
             }
 
+            if (HandleUnauthorizedApiState("Your session expired while loading lessons. Please log in again."))
+            {
+                return;
+            }
+
             if (HasRenderableSections(sections))
             {
                 RenderExplicitSections(sections);
@@ -1149,6 +2109,11 @@ public class CourseSelectionUI : MonoBehaviour
             // Fallback cuoi cung neu endpoint hien tai chi tra lesson list.
             List<LessonData> lessons = await ApiManager.Instance.GetLessonsAsync(course.id);
             if (requestVersion != openSectionsRequestVersion)
+            {
+                return;
+            }
+
+            if (HandleUnauthorizedApiState("Your session expired while loading lessons. Please log in again."))
             {
                 return;
             }
@@ -1167,6 +2132,11 @@ public class CourseSelectionUI : MonoBehaviour
             {
                 sectionsStatus.text = $"Failed to load sections: {ex.Message}";
             }
+            ToastManager.ShowError($"Failed to load lessons for {course.title}. {ex.Message}");
+        }
+        finally
+        {
+            ToastManager.HideLoading();
         }
     }
 
@@ -1333,6 +2303,11 @@ public class CourseSelectionUI : MonoBehaviour
         UpdateActiveCourseProgressUI();
 
         bool synced = await ApiManager.Instance.UpdateLessonCompletionAsync(activeCourse.id, lesson.id, lesson.videoUrl, completed);
+        if (HandleUnauthorizedApiState("Your session expired while saving lesson progress. Please log in again."))
+        {
+            return;
+        }
+
         if (synced) return;
 
         // Revert when backend sync failed.
@@ -1466,25 +2441,19 @@ public class CourseSelectionUI : MonoBehaviour
 
     private void OnLessonClicked(LessonData lesson)
     {
+        SnapshotActiveVideoResumeState();
         selectedLessonId = lesson != null ? lesson.id : null;
         RefreshLessonSelectionVisuals();
 
-        Debug.Log($"[CourseSelectionUI] OnLessonClicked start id={lesson?.id} title='{lesson?.title}' type='{lesson?.type}'");
-
-        if (enableSlideDebugLogs)
-        {
-            Debug.Log($"[CourseSelectionUI] Click lesson id={lesson?.id} title='{lesson?.title}' type='{lesson?.type}' slides={(lesson?.slides != null ? lesson.slides.Count : 0)} slideTextLen={(lesson?.slideText != null ? lesson.slideText.Length : 0)} videoUrlEmpty={string.IsNullOrWhiteSpace(lesson?.videoUrl)}");
-        }
+        LogCourseSelectionDebug($"[CourseSelectionUI] OnLessonClicked start id={lesson?.id} title='{lesson?.title}' type='{lesson?.type}'");
+        LogCourseSelectionDebug($"[CourseSelectionUI] Click lesson id={lesson?.id} title='{lesson?.title}' type='{lesson?.type}' slides={(lesson?.slides != null ? lesson.slides.Count : 0)} slideTextLen={(lesson?.slideText != null ? lesson.slideText.Length : 0)} videoUrlEmpty={string.IsNullOrWhiteSpace(lesson?.videoUrl)}");
 
         string normalizedType = DetermineLessonType(lesson);
-        if (enableSlideDebugLogs)
-        {
-            Debug.Log($"[CourseSelectionUI] Route decision normalizedType={normalizedType} slideCount={GetSlideCount(lesson)} quizCount={GetQuizQuestionCount(lesson)} timedQuizCount={GetTimedQuizCount(lesson)} hasPlayableVideo={HasPlayableVideoSource(lesson)}");
-        }
+        LogCourseSelectionDebug($"[CourseSelectionUI] Route decision normalizedType={normalizedType} slideCount={GetSlideCount(lesson)} quizCount={GetQuizQuestionCount(lesson)} timedQuizCount={GetTimedQuizCount(lesson)} hasPlayableVideo={HasPlayableVideoSource(lesson)}");
 
         if (normalizedType == "slide")
         {
-            Debug.Log($"[CourseSelectionUI] Routing to slide popup id={lesson?.id} title='{lesson?.title}'");
+            LogCourseSelectionDebug($"[CourseSelectionUI] Routing to slide popup id={lesson?.id} title='{lesson?.title}'");
             if (ShowSlideIndependentScreen(lesson))
             {
                 return;
@@ -1494,6 +2463,7 @@ public class CourseSelectionUI : MonoBehaviour
             {
                 sectionsStatus.text = "This slide lesson has no valid data, or SlidePopupWindow is not assigned.";
             }
+            ToastManager.ShowWarning("This slide lesson could not be opened.");
             return;
         }
 
@@ -1514,6 +2484,7 @@ public class CourseSelectionUI : MonoBehaviour
             {
                 sectionsStatus.text = "This quiz lesson has no valid data, or QuizPopupWindow is not assigned.";
             }
+            ToastManager.ShowWarning("This quiz lesson could not be opened.");
             return;
         }
 
@@ -1522,19 +2493,20 @@ public class CourseSelectionUI : MonoBehaviour
         {
             sectionsStatus.text = "This lesson does not have a supported content type yet.";
         }
+        ToastManager.ShowWarning("This lesson type is not supported yet.");
     }
 
     private bool ShowSlideIndependentScreen(LessonData lesson)
     {
         if (lesson == null) return false;
 
-        Debug.Log($"[CourseSelectionUI] ShowSlideIndependentScreen invoked id={lesson.id} title='{lesson.title}' type='{lesson.type}'");
+        LogCourseSelectionDebug($"[CourseSelectionUI] ShowSlideIndependentScreen invoked id={lesson.id} title='{lesson.title}' type='{lesson.type}'");
 
         try
         {
             if (enableSlideDebugLogs)
             {
-                Debug.Log($"[CourseSelectionUI] ShowSlideIndependentScreen start for lesson id={lesson.id} title='{lesson.title}' type='{lesson.type}'");
+                LogCourseSelectionDebug($"[CourseSelectionUI] ShowSlideIndependentScreen start for lesson id={lesson.id} title='{lesson.title}' type='{lesson.type}'");
             }
 
             if (slidePopupWindow == null)
@@ -1551,11 +2523,11 @@ public class CourseSelectionUI : MonoBehaviour
                 }
             }
 
-            Debug.Log($"[CourseSelectionUI] slidePopupWindow instance={slidePopupWindow.name}, active={slidePopupWindow.gameObject.activeInHierarchy}, enabled={slidePopupWindow.enabled}");
+            LogCourseSelectionDebug($"[CourseSelectionUI] slidePopupWindow instance={slidePopupWindow.name}, active={slidePopupWindow.gameObject.activeInHierarchy}, enabled={slidePopupWindow.enabled}");
 
             if (enableSlideDebugLogs)
             {
-                Debug.Log($"[CourseSelectionUI] slidePopupWindow found: {slidePopupWindow.name}, anchor={(slideScreenAnchor != null ? slideScreenAnchor.name : "<none>")}");
+                LogCourseSelectionDebug($"[CourseSelectionUI] slidePopupWindow found: {slidePopupWindow.name}, anchor={(slideScreenAnchor != null ? slideScreenAnchor.name : "<none>")}");
             }
 
             Transform viewer = GetViewerTransform();
@@ -1574,11 +2546,11 @@ public class CourseSelectionUI : MonoBehaviour
             }
 
             bool shown = slidePopupWindow.Show(lesson, viewer, slideWindowDistance, slideWindowHeightOffset);
-            Debug.Log($"[CourseSelectionUI] slidePopupWindow.Show returned={shown}");
+            LogCourseSelectionDebug($"[CourseSelectionUI] slidePopupWindow.Show returned={shown}");
             if (enableSlideDebugLogs)
             {
                 Transform rt = slidePopupWindow.WindowRootTransform;
-                Debug.Log($"[CourseSelectionUI] slidePopupWindow.Show returned={shown}, rootNull={rt == null}, active={(rt != null && rt.gameObject.activeSelf)}, pos={(rt != null ? rt.position.ToString() : "<null>")}, scale={(rt != null ? rt.localScale.ToString() : "<null>")}");
+                LogCourseSelectionDebug($"[CourseSelectionUI] slidePopupWindow.Show returned={shown}, rootNull={rt == null}, active={(rt != null && rt.gameObject.activeSelf)}, pos={(rt != null ? rt.position.ToString() : "<null>")}, scale={(rt != null ? rt.localScale.ToString() : "<null>")}");
             }
             if (!shown) return false;
 
@@ -1592,6 +2564,8 @@ public class CourseSelectionUI : MonoBehaviour
                 sectionsStatus.text = "Opened the standalone Slide screen in the scene.";
             }
 
+            RegisterOpenedLesson(lesson, "slide");
+
             return true;
         }
         catch (Exception ex)
@@ -1601,6 +2575,7 @@ public class CourseSelectionUI : MonoBehaviour
             {
                 sectionsStatus.text = $"Failed to open the Slide screen: {ex.Message}";
             }
+            ToastManager.ShowError($"Failed to open slide lesson. {ex.Message}");
             return false;
         }
     }
@@ -1647,6 +2622,8 @@ public class CourseSelectionUI : MonoBehaviour
         {
             sectionsStatus.text = "Opened the standalone Quiz screen in the scene.";
         }
+
+        RegisterOpenedLesson(lesson, "quiz");
 
         return true;
     }
@@ -1821,6 +2798,8 @@ public class CourseSelectionUI : MonoBehaviour
     {
         if (lesson == null) return;
 
+        ToastManager.ShowLoading("Opening video lesson...");
+
         string sourceUrl = lesson.videoUrl;
         if (string.IsNullOrWhiteSpace(sourceUrl))
         {
@@ -1828,6 +2807,8 @@ public class CourseSelectionUI : MonoBehaviour
             {
                 sectionsStatus.text = "This video lesson does not have a videoUrl from the API.";
             }
+            ToastManager.ShowWarning("This video lesson does not have a playable video URL.");
+            ToastManager.HideLoading();
             return;
         }
 
@@ -1862,6 +2843,9 @@ public class CourseSelectionUI : MonoBehaviour
                 const string openedMsg = "Opened YouTube externally for playback (Unity VideoPlayer does not support watch/shorts links directly).";
                 if (sectionsStatus != null) sectionsStatus.text = openedMsg;
                 Debug.Log("[CourseSelectionUI] Opened YouTube URL externally.");
+                RegisterOpenedLesson(lesson, "video");
+                ToastManager.ShowInfo("Opened the lesson externally in YouTube.");
+                ToastManager.HideLoading();
                 return;
             }
 
@@ -1871,6 +2855,8 @@ public class CourseSelectionUI : MonoBehaviour
                 : $"Unity could not play the YouTube video because backend stream resolution failed: {resolverReason}. Install ytdl-core/yt-dlp on the server or use an mp4/m3u8 stream URL.";
             if (sectionsStatus != null) sectionsStatus.text = msg;
             Debug.Log("[CourseSelectionUI] Unsupported YouTube webpage URL for VideoPlayer.");
+            ToastManager.ShowWarning(msg);
+            ToastManager.HideLoading();
             return;
         }
 
@@ -1883,6 +2869,8 @@ public class CourseSelectionUI : MonoBehaviour
                 {
                     sectionsStatus.text = "No VideoPopupWindow is available for playback.";
                 }
+                ToastManager.ShowError("Video window is missing from the scene.");
+                ToastManager.HideLoading();
                 return;
             }
         }
@@ -1924,20 +2912,29 @@ public class CourseSelectionUI : MonoBehaviour
                 videoQuizScheduler.StartTracking(lesson, sourceUrl, viewer, ytTimeProvider);
             }
 
+            RegisterOpenedLesson(lesson, "video");
+            TryApplyPendingVideoResume(lesson);
             if (sectionsStatus != null) sectionsStatus.text = "Playing video";
+            ToastManager.ShowSuccess($"Opened video lesson: {displayTitle}", 2.4f);
         }
         catch (Exception ex)
         {
             if (ex is NotSupportedException)
             {
                 Debug.LogWarning($"[CourseSelectionUI] Play video not supported: {ex.Message}");
+                ToastManager.ShowWarning(ex.Message);
             }
             else
             {
                 Debug.LogError($"[CourseSelectionUI] Play video failed: {ex.Message}");
+                ToastManager.ShowError($"Unable to play the video. {ex.Message}");
             }
 
             if (sectionsStatus != null) sectionsStatus.text = $"Unable to play the video: {ex.Message}";
+        }
+        finally
+        {
+            ToastManager.HideLoading();
         }
     }
 
@@ -2017,6 +3014,9 @@ public class CourseSelectionUI : MonoBehaviour
 
     private void StopVideo()
     {
+        SnapshotActiveVideoResumeState();
+        ResumeLearningManager.StopTrackingVideoResume(flushImmediately: true);
+
         if (videoPopupWindow != null)
         {
             videoPopupWindow.StopAndHide();
@@ -2031,6 +3031,11 @@ public class CourseSelectionUI : MonoBehaviour
         if (timedQuizPopupWindow != null)
         {
             timedQuizPopupWindow.HideWindow(resumeVideo: false);
+        }
+
+        if (AppStateManager.Instance.ActiveWindow == ActiveContentWindowType.Video)
+        {
+            AppStateManager.Instance.SetActiveWindow(ActiveContentWindowType.None);
         }
 
         UpdateVideoModeButton();
@@ -2117,6 +3122,205 @@ public class CourseSelectionUI : MonoBehaviour
         return null;
     }
 
+    private void RegisterOpenedLesson(LessonData lesson, string lessonType, double videoTimeSeconds = 0d)
+    {
+        currentOpenedLesson = lesson;
+        currentOpenedLessonType = string.IsNullOrWhiteSpace(lessonType) ? DetermineLessonType(lesson) : lessonType.Trim().ToLowerInvariant();
+        SaveResumeStateForLesson(lesson, currentOpenedLessonType, videoTimeSeconds, immediate: true);
+        int lessonIndex = Mathf.Max(0, activeLessons.FindIndex(l => l != null && l.id == lesson.id));
+        string sectionName = NormalizeSectionLabel(GetSectionName(lesson));
+        int sectionIndex = GetSectionIndexForLesson(sectionName);
+        AppStateManager.Instance.SetCurrentCourse(activeCourse != null ? activeCourse.id : string.Empty, activeCourse != null ? activeCourse.title : string.Empty, sectionIndex);
+        AppStateManager.Instance.SetCurrentLesson(lesson.id, lesson.title, currentOpenedLessonType, sectionIndex, lessonIndex);
+        AppStateManager.Instance.SetActiveWindow(ParseWindowType(currentOpenedLessonType));
+        AppStateManager.Instance.NotifyOnboardingAction(OnboardingActionType.LessonOpened, lesson.id);
+        AppStateManager.Instance.NotifyOnboardingAction(OnboardingActionType.ContentWindowOpened, currentOpenedLessonType);
+        UpdateContinueLearningCard();
+    }
+
+    private void SaveResumeStateForLesson(LessonData lesson, string lessonType, double videoTimeSeconds = 0d, bool immediate = false)
+    {
+        if (lesson == null || activeCourse == null)
+        {
+            return;
+        }
+
+        int lessonIndex = Mathf.Max(0, activeLessons.FindIndex(l => l != null && l.id == lesson.id));
+        string sectionName = NormalizeSectionLabel(GetSectionName(lesson));
+        int sectionIndex = GetSectionIndexForLesson(sectionName);
+        string currentUserId = vrAuthManager != null ? vrAuthManager.UserId : string.Empty;
+
+        ResumeLessonData data = ResumeLearningManager.Build(
+            currentUserId,
+            activeCourse,
+            lesson,
+            lessonType,
+            sectionName,
+            sectionIndex,
+            lessonIndex,
+            videoTimeSeconds);
+
+        if (data != null)
+        {
+            ResumeLearningManager.SaveLastLesson(data, immediate);
+        }
+    }
+
+    private int GetSectionIndexForLesson(string sectionName)
+    {
+        if (string.IsNullOrWhiteSpace(sectionName))
+        {
+            return 0;
+        }
+
+        List<string> orderedSections = new List<string>();
+        for (int i = 0; i < activeLessons.Count; i++)
+        {
+            LessonData lesson = activeLessons[i];
+            if (lesson == null)
+            {
+                continue;
+            }
+
+            string normalized = NormalizeSectionLabel(GetSectionName(lesson));
+            if (!orderedSections.Contains(normalized))
+            {
+                orderedSections.Add(normalized);
+            }
+        }
+
+        int index = orderedSections.IndexOf(sectionName);
+        return index >= 0 ? index : 0;
+    }
+
+    private void SnapshotActiveVideoResumeState()
+    {
+        if (!string.Equals(currentOpenedLessonType, "video", StringComparison.OrdinalIgnoreCase) || currentOpenedLesson == null)
+        {
+            return;
+        }
+
+        if (videoPopupWindow == null || videoPopupWindow.Player == null)
+        {
+            return;
+        }
+
+        double time = Math.Max(0d, videoPopupWindow.Player.time);
+        ResumeLearningManager.UpdateVideoTime(time, immediate: true);
+        UpdateContinueLearningCard();
+    }
+
+    private void TryApplyPendingVideoResume(LessonData lesson)
+    {
+        if (lesson == null || videoPopupWindow == null || videoPopupWindow.Player == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(pendingResumeLessonId) || !string.Equals(pendingResumeLessonId, lesson.id, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (pendingResumeVideoTimeSeconds > 0.5d)
+        {
+            double targetTime = pendingResumeVideoTimeSeconds;
+            double videoLength = videoPopupWindow.Player.length;
+            if (videoLength > 1d)
+            {
+                targetTime = Math.Min(targetTime, Math.Max(0d, videoLength - 1d));
+            }
+
+            videoPopupWindow.Player.time = Math.Max(0d, targetTime);
+            ResumeLearningManager.UpdateVideoTime(targetTime, immediate: true);
+        }
+
+        ResumeLearningManager.StartTrackingVideoResume(
+            ResumeLearningManager.Build(
+                vrAuthManager != null ? vrAuthManager.UserId : string.Empty,
+                activeCourse,
+                lesson,
+                "video",
+                NormalizeSectionLabel(GetSectionName(lesson)),
+                GetSectionIndexForLesson(NormalizeSectionLabel(GetSectionName(lesson))),
+                Mathf.Max(0, activeLessons.FindIndex(l => l != null && l.id == lesson.id)),
+                Math.Max(0d, pendingResumeVideoTimeSeconds > 0d ? pendingResumeVideoTimeSeconds : 0d)),
+            () => videoPopupWindow != null && videoPopupWindow.Player != null ? videoPopupWindow.Player.time : -1d);
+
+        pendingResumeLessonId = string.Empty;
+        pendingResumeVideoTimeSeconds = -1d;
+        UpdateContinueLearningCard();
+    }
+
+    private bool TryGetResumeStateForCurrentUser(out ResumeLessonData state)
+    {
+        state = null;
+        if (!ResumeLearningManager.TryLoadLastLesson(out ResumeLessonData loaded))
+        {
+            return false;
+        }
+
+        string currentUserId = vrAuthManager != null ? (vrAuthManager.UserId ?? string.Empty).Trim() : string.Empty;
+        if (!ResumeLearningManager.IsValidForCurrentUser(currentUserId, loaded))
+        {
+            return false;
+        }
+
+        state = loaded;
+        return true;
+    }
+
+    private static ActiveContentWindowType ParseWindowType(string lessonType)
+    {
+        string normalized = string.IsNullOrWhiteSpace(lessonType) ? string.Empty : lessonType.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "video" => ActiveContentWindowType.Video,
+            "quiz" => ActiveContentWindowType.Quiz,
+            "slide" => ActiveContentWindowType.Slide,
+            _ => ActiveContentWindowType.None
+        };
+    }
+
+    private static string FormatDuration(double totalSeconds)
+    {
+        totalSeconds = Math.Max(0d, totalSeconds);
+        int hours = Mathf.FloorToInt((float)(totalSeconds / 3600d));
+        int minutes = Mathf.FloorToInt((float)((totalSeconds % 3600d) / 60d));
+        int seconds = Mathf.FloorToInt((float)(totalSeconds % 60d));
+        return hours > 0 ? $"{hours:00}:{minutes:00}:{seconds:00}" : $"{minutes:00}:{seconds:00}";
+    }
+
+    private bool HandleUnauthorizedApiState(string fallbackMessage)
+    {
+        if (ApiManager.Instance == null || ApiManager.Instance.LastResponseStatusCode != 401)
+        {
+            return false;
+        }
+
+        if (vrAuthManager != null)
+        {
+            vrAuthManager.HandleUnauthorizedSession(fallbackMessage);
+        }
+        else
+        {
+            ResetCourseViewForLoggedOutState(fallbackMessage);
+            UpdateVrLoginUi();
+        }
+
+        return true;
+    }
+
+    private void LogCourseSelectionDebug(string message)
+    {
+        if (!enableSlideDebugLogs || string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        Debug.Log(message);
+    }
+
     private Transform GetViewerTransform()
     {
         if (anchorManager != null && anchorManager.cameraAnchor != null)
@@ -2126,6 +3330,8 @@ public class CourseSelectionUI : MonoBehaviour
 
         return Camera.main != null ? Camera.main.transform : transform;
     }
+
+    public Transform VideoWindowTransform => videoPopupWindow != null ? videoPopupWindow.WindowRootTransform : null;
 
     private static string GetExplicitSectionName(LessonData lesson)
     {
@@ -2344,7 +3550,7 @@ public class CourseSelectionUI : MonoBehaviour
     {
         if (reference == null)
         {
-            Debug.LogWarning($"[CourseSelectionUI] Missing VR login UI reference: {elementName}");
+            WarnMissingVrUiElementOnce(elementName, $"[CourseSelectionUI] Missing VR login UI reference: {elementName}");
         }
     }
 
@@ -2352,8 +3558,18 @@ public class CourseSelectionUI : MonoBehaviour
     {
         if (reference == null)
         {
-            Debug.LogWarning($"[CourseSelectionUI] Missing VR login UI reference: {elementName}");
+            WarnMissingVrUiElementOnce(elementName, $"[CourseSelectionUI] Missing VR login UI reference: {elementName}");
         }
+    }
+
+    private void WarnMissingVrUiElementOnce(string elementName, string message)
+    {
+        if (string.IsNullOrWhiteSpace(elementName) || !warnedMissingVrUiElements.Add(elementName))
+        {
+            return;
+        }
+
+        Debug.LogWarning(message);
     }
 
     private void EnsureVrAuthManager()
@@ -2375,6 +3591,12 @@ public class CourseSelectionUI : MonoBehaviour
         vrAuthManager.Initialize();
     }
 
+    private void EnsureAppStateSubscriptions()
+    {
+        AppStateManager.Instance.OnBackendStatusChanged -= HandleBackendStatusChanged;
+        AppStateManager.Instance.OnBackendStatusChanged += HandleBackendStatusChanged;
+    }
+
     private async void HandleVrAuthenticationChanged(bool isAuthenticated)
     {
         UpdateVrLoginUi();
@@ -2382,15 +3604,26 @@ public class CourseSelectionUI : MonoBehaviour
         if (isAuthenticated)
         {
             await RefreshCourses();
+            UpdateContinueLearningCard();
             return;
         }
 
         ResetCourseViewForLoggedOutState();
+        UpdateContinueLearningCard();
     }
 
     private void HandleVrAuthStateUpdated()
     {
         UpdateVrLoginUi();
+    }
+
+    private void HandleBackendStatusChanged(BackendStatusSnapshot _)
+    {
+        UpdateVrLoginUi();
+        if (settingsOverlay != null && settingsOverlay.style.display == DisplayStyle.Flex)
+        {
+            RebuildSettingsContent();
+        }
     }
 
     private async void HandleVrLoginRequestClicked()
@@ -2400,6 +3633,7 @@ public class CourseSelectionUI : MonoBehaviour
             return;
         }
 
+        AppStateManager.Instance.NotifyOnboardingAction(OnboardingActionType.LoginCodeRequested);
         await vrAuthManager.RequestLoginCode();
     }
 
@@ -2422,14 +3656,28 @@ public class CourseSelectionUI : MonoBehaviour
         string username = vrAuthManager != null ? vrAuthManager.Username : string.Empty;
         string authStatus = vrAuthManager != null ? vrAuthManager.StatusMessage : "Not logged in.";
         int remainingSeconds = vrAuthManager != null ? vrAuthManager.RemainingSeconds : 0;
+        BackendStatusSnapshot backendStatus = AppStateManager.Instance.BackendStatus;
+        string backendStatusText = backendStatus.state switch
+        {
+            BackendConnectionState.Connected => "Backend: Connected",
+            BackendConnectionState.Unreachable => "Backend: Cannot connect",
+            BackendConnectionState.Unauthorized => "Backend: Unauthorized",
+            _ => string.Empty
+        };
+        if (!string.IsNullOrWhiteSpace(backendStatusText) && !string.IsNullOrWhiteSpace(backendStatus.baseUrl))
+        {
+            backendStatusText = $"{backendStatusText} ({backendStatus.baseUrl})";
+        }
 
         if (vrLoginStatusLabel != null)
         {
-            vrLoginStatusLabel.text = authStatus;
+            vrLoginStatusLabel.text = string.IsNullOrWhiteSpace(backendStatusText)
+                ? authStatus
+                : $"{authStatus}\n{backendStatusText}";
         }
         else
         {
-            Debug.LogWarning("[CourseSelectionUI] vr-login-status label is missing. PIN state cannot be shown.");
+            WarnMissingVrUiElementOnce("vr-login-status", "[CourseSelectionUI] vr-login-status label is missing. PIN state cannot be shown.");
         }
 
         if (vrLoginUserLabel != null)
@@ -2446,7 +3694,7 @@ public class CourseSelectionUI : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[CourseSelectionUI] vr-login-code-group is missing. PIN container cannot be shown.");
+            WarnMissingVrUiElementOnce("vr-login-code-group", "[CourseSelectionUI] vr-login-code-group is missing. PIN container cannot be shown.");
         }
 
         if (vrLoginCodeLabel != null)
@@ -2458,7 +3706,7 @@ public class CourseSelectionUI : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[CourseSelectionUI] vr-login-code label is missing. The pairing PIN cannot be rendered.");
+            WarnMissingVrUiElementOnce("vr-login-code", "[CourseSelectionUI] vr-login-code label is missing. The pairing PIN cannot be rendered.");
         }
 
         if (vrLoginTimerLabel != null)
@@ -2469,7 +3717,7 @@ public class CourseSelectionUI : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[CourseSelectionUI] vr-login-timer label is missing. Countdown cannot be shown.");
+            WarnMissingVrUiElementOnce("vr-login-timer", "[CourseSelectionUI] vr-login-timer label is missing. Countdown cannot be shown.");
         }
 
         if (vrLoginRequestButton != null)
@@ -2504,6 +3752,7 @@ public class CourseSelectionUI : MonoBehaviour
     {
         PrepareForLoggedOutUiTransition();
         courses.Clear();
+        visibleCourses.Clear();
         activeLessons.Clear();
         renderedLessonItems.Clear();
         activeCourse = null;
@@ -2513,6 +3762,11 @@ public class CourseSelectionUI : MonoBehaviour
         {
             courseList.Rebuild();
             courseList.style.display = alwaysUseMockData ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        if (continueLearningCard != null)
+        {
+            continueLearningCard.style.display = DisplayStyle.None;
         }
 
         if (sectionsScroll != null)
@@ -2529,6 +3783,8 @@ public class CourseSelectionUI : MonoBehaviour
         {
             statusLabel.text = message;
         }
+
+        RefreshDashboard();
     }
 
     private void PrepareForLoggedOutUiTransition()
@@ -2543,6 +3799,13 @@ public class CourseSelectionUI : MonoBehaviour
         }
 
         StopVideo();
+        currentOpenedLesson = null;
+        currentOpenedLessonType = string.Empty;
+        pendingResumeLessonId = string.Empty;
+        pendingResumeVideoTimeSeconds = -1d;
+        AppStateManager.Instance.ClearCurrentCourse();
+        AppStateManager.Instance.ClearCurrentLesson();
+        AppStateManager.Instance.SetActiveWindow(ActiveContentWindowType.None);
         ShowCoursesPage();
     }
 
@@ -2552,6 +3815,11 @@ public class CourseSelectionUI : MonoBehaviour
         if (sectionsPage != null) sectionsPage.AddToClassList("hidden");
         if (slidePopupWindow != null) slidePopupWindow.HideWindow();
         if (quizPopupWindow != null) quizPopupWindow.HideWindow();
+        if (AppStateManager.Instance.ActiveWindow == ActiveContentWindowType.Slide
+            || AppStateManager.Instance.ActiveWindow == ActiveContentWindowType.Quiz)
+        {
+            AppStateManager.Instance.SetActiveWindow(ActiveContentWindowType.None);
+        }
         UpdateVideoModeButton();
 
         if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Browsing);
@@ -2563,6 +3831,11 @@ public class CourseSelectionUI : MonoBehaviour
         if (sectionsPage != null) sectionsPage.RemoveFromClassList("hidden");
         if (slidePopupWindow != null) slidePopupWindow.HideWindow();
         if (quizPopupWindow != null) quizPopupWindow.HideWindow();
+        if (AppStateManager.Instance.ActiveWindow == ActiveContentWindowType.Slide
+            || AppStateManager.Instance.ActiveWindow == ActiveContentWindowType.Quiz)
+        {
+            AppStateManager.Instance.SetActiveWindow(ActiveContentWindowType.None);
+        }
         UpdateVideoModeButton();
 
         if (anchorManager != null) anchorManager.SetMode(VRPanelAnchorManager.PanelMode.Browsing);
@@ -2572,12 +3845,30 @@ public class CourseSelectionUI : MonoBehaviour
     {
         refreshCoursesRequestVersion++;
         openSectionsRequestVersion++;
+        SnapshotActiveVideoResumeState();
+        if (AppStateManager.IsAvailable)
+        {
+            AppStateManager.Instance.OnBackendStatusChanged -= HandleBackendStatusChanged;
+        }
         if (vrAuthManager != null)
         {
             vrAuthManager.StateUpdated -= HandleVrAuthStateUpdated;
             vrAuthManager.AuthenticationChanged -= HandleVrAuthenticationChanged;
         }
         StopVideo();
+    }
+
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+        {
+            SnapshotActiveVideoResumeState();
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        SnapshotActiveVideoResumeState();
     }
 
     private async Task LoadThumbnailIntoAsync(CourseCardElement card, string thumbnailUrl, int version)

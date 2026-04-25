@@ -10697,9 +10697,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d718b3aa58bb0347897664ac6a9cdc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ApiManager
-  localUrl: http://172.16.33.125:3000
-  productionUrl: https://api.edumy-vr.com
-  useProduction: 0
   authToken: 
   loadTokenFromPlayerPrefs: 0
   persistTokenInPlayerPrefs: 0

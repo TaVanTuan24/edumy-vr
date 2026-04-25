@@ -9,9 +9,21 @@ using System.Linq;
 [DisallowMultipleComponent]
 public class QuizPopupWindow : MonoBehaviour
 {
+    private class QuizReviewEntry
+    {
+        public int questionIndex;
+        public string questionText;
+        public string selectedAnswer;
+        public string correctAnswer;
+        public string explanation;
+        public bool isCorrect;
+    }
+
     private static readonly Color OptionDefaultColor = new Color(0.92f, 0.96f, 1f, 0.98f);
     private static readonly Color OptionCorrectColor = new Color(0.086f, 0.639f, 0.290f, 0.98f);
-    private static readonly Color OptionWrongColor = new Color(0.863f, 0.149f, 0.149f, 0.98f);    private static readonly Color OptionDefaultTextColor = new Color(0.15f, 0.3f, 0.49f, 1f);    private static readonly Color OptionSelectedTextColor = new Color(1f, 1f, 1f, 1f);
+    private static readonly Color OptionWrongColor = new Color(0.863f, 0.149f, 0.149f, 0.98f);
+    private static readonly Color OptionDefaultTextColor = new Color(0.15f, 0.3f, 0.49f, 1f);
+    private static readonly Color OptionSelectedTextColor = new Color(1f, 1f, 1f, 1f);
     private static readonly Color PanelColor = new Color(0.985f, 0.992f, 1f, 0.98f);
     private static readonly Color HeaderColor = new Color(0.82f, 0.9f, 1f, 0.99f);
     private static readonly Color ActionButtonColor = new Color(0.16f, 0.58f, 0.93f, 0.98f);
@@ -37,12 +49,21 @@ public class QuizPopupWindow : MonoBehaviour
     private TMP_Text indicatorText;
     private TMP_Text questionText;
     private TMP_Text feedbackText;
+    private ScrollRect reviewScrollRect;
+    private RectTransform reviewContentRect;
     private Button closeButton;
+    private Button prevButton;
     private Button nextButton;
     private Button pinButton;
+    private Button reviewAllButton;
+    private Button reviewIncorrectButton;
+    private Button retryButton;
+    private Button retryIncorrectButton;
     private readonly List<Button> optionButtons = new List<Button>();
 
     private readonly List<QuizQuestionData> activeQuizQuestions = new List<QuizQuestionData>();
+    private readonly List<QuizQuestionData> originalQuizQuestions = new List<QuizQuestionData>();
+    private readonly List<QuizReviewEntry> reviewEntries = new List<QuizReviewEntry>();
     private readonly Dictionary<int, int> selectedByQuestion = new Dictionary<int, int>();
     private int currentQuestionIndex;
     private bool bindingsAdded;
@@ -51,6 +72,7 @@ public class QuizPopupWindow : MonoBehaviour
     private float activeDistance;
     private float activeHeightOffset;
     private SpatialWindow spatialWindow;
+    private bool reviewIncorrectOnly;
 
     private void Awake()
     {
@@ -191,6 +213,10 @@ public class QuizPopupWindow : MonoBehaviour
 
         activeQuizQuestions.Clear();
         activeQuizQuestions.AddRange(BuildQuizForLesson(lesson));
+        originalQuizQuestions.Clear();
+        originalQuizQuestions.AddRange(activeQuizQuestions);
+        reviewEntries.Clear();
+        reviewIncorrectOnly = false;
         if (enableDebugLogs)
         {
             Debug.Log($"[QuizPopupWindow] quiz source counts lesson={lesson.id} quizQuestions={SafeCount(lesson.quizQuestions)} questions={SafeCount(lesson.questions)} quizzes={SafeCount(lesson.quizzes)} timed={SafeCount(lesson.timedQuizzes)} interactive={SafeCount(lesson.interactiveQuizzes)} final={activeQuizQuestions.Count}");
@@ -239,6 +265,10 @@ public class QuizPopupWindow : MonoBehaviour
         }
 
         activeViewer = null;
+        if (AppStateManager.IsAvailable && AppStateManager.Instance.ActiveWindow == ActiveContentWindowType.Quiz)
+        {
+            AppStateManager.Instance.SetActiveWindow(ActiveContentWindowType.None);
+        }
     }
 
     private void EnsureWindowExists(bool forceEditorCreation)
@@ -348,29 +378,41 @@ public class QuizPopupWindow : MonoBehaviour
         titleText.color = TitleTextColor;
         indicatorText = FindOrCreateText(panel, "Indicator", new Vector2(0.05f, 0.83f), new Vector2(0.45f, 0.895f), 26, FontStyles.Normal, TextAlignmentOptions.Left);
         indicatorText.color = new Color(0.34f, 0.43f, 0.58f, 1f);
-        questionText = FindOrCreateText(panel, "Question", new Vector2(0.05f, 0.64f), new Vector2(0.95f, 0.82f), 30, FontStyles.Bold, TextAlignmentOptions.TopLeft);
+        questionText = FindOrCreateText(panel, "Question", new Vector2(0.05f, 0.70f), new Vector2(0.95f, 0.82f), 30, FontStyles.Bold, TextAlignmentOptions.TopLeft);
         questionText.textWrappingMode = TextWrappingModes.Normal;
         questionText.color = new Color(0.15f, 0.24f, 0.38f, 1f);
 
-        feedbackText = FindOrCreateText(panel, "Feedback", new Vector2(0.05f, 0.115f), new Vector2(0.95f, 0.22f), 26, FontStyles.Italic, TextAlignmentOptions.TopLeft);
+        feedbackText = FindOrCreateText(panel, "Feedback", new Vector2(0.05f, 0.10f), new Vector2(0.95f, 0.19f), 24, FontStyles.Italic, TextAlignmentOptions.TopLeft);
         feedbackText.textWrappingMode = TextWrappingModes.Normal;
         feedbackText.color = new Color(0.27f, 0.39f, 0.56f, 1f);
+
+        EnsureReviewViewport(panelRect);
 
         // VR-sized buttons: taller hit targets for XR ray interaction
         closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.78f, 0.89f), new Vector2(0.95f, 0.975f));
         pinButton = FindOrCreateButton(panelRect, "PinButton", "[Pin]", new Vector2(0.65f, 0.89f), new Vector2(0.77f, 0.975f));
+        prevButton = FindOrCreateButton(panelRect, "PrevButton", "Previous", new Vector2(0.43f, 0.025f), new Vector2(0.68f, 0.11f));
         nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.70f, 0.025f), new Vector2(0.95f, 0.11f));
+        reviewAllButton = FindOrCreateButton(panelRect, "ReviewAllButton", "Review All", new Vector2(0.05f, 0.025f), new Vector2(0.25f, 0.11f));
+        reviewIncorrectButton = FindOrCreateButton(panelRect, "ReviewWrongButton", "Wrong Only", new Vector2(0.27f, 0.025f), new Vector2(0.47f, 0.11f));
+        retryButton = FindOrCreateButton(panelRect, "RetryButton", "Retry Quiz", new Vector2(0.49f, 0.025f), new Vector2(0.69f, 0.11f));
+        retryIncorrectButton = FindOrCreateButton(panelRect, "RetryWrongButton", "Retry Wrong", new Vector2(0.71f, 0.025f), new Vector2(0.95f, 0.11f));
         SetButtonBaseColor(closeButton, SecondaryButtonColor);
         SetButtonBaseColor(pinButton, SecondaryButtonColor);
+        SetButtonBaseColor(prevButton, SecondaryButtonColor);
         SetButtonBaseColor(nextButton, ActionButtonColor);
+        SetButtonBaseColor(reviewAllButton, SecondaryButtonColor);
+        SetButtonBaseColor(reviewIncorrectButton, SecondaryButtonColor);
+        SetButtonBaseColor(retryButton, ActionButtonColor);
+        SetButtonBaseColor(retryIncorrectButton, SecondaryButtonColor);
 
         // VR-sized answer options: taller cards with generous spacing for easy targeting
         optionButtons.Clear();
-        float top = 0.63f;
-        float height = 0.105f;
+        float top = 0.665f;
+        float height = 0.09f;
         for (int i = 0; i < 4; i++)
         {
-            float yMax = top - i * 0.125f;
+            float yMax = top - i * 0.112f;
             float yMin = yMax - height;
             Button b = FindOrCreateButton(panelRect, $"Option{i}", $"Option {i + 1}", new Vector2(0.05f, yMin), new Vector2(0.95f, yMax));
             SetButtonBaseColor(b, OptionDefaultColor);
@@ -384,7 +426,12 @@ public class QuizPopupWindow : MonoBehaviour
 
         if (closeButton != null) closeButton.onClick.AddListener(HideWindow);
         if (pinButton != null) pinButton.onClick.AddListener(TogglePinnedState);
+        if (prevButton != null) prevButton.onClick.AddListener(PreviousStep);
         if (nextButton != null) nextButton.onClick.AddListener(NextStep);
+        if (reviewAllButton != null) reviewAllButton.onClick.AddListener(() => RenderReviewMode(false));
+        if (reviewIncorrectButton != null) reviewIncorrectButton.onClick.AddListener(() => RenderReviewMode(true));
+        if (retryButton != null) retryButton.onClick.AddListener(() => RestartQuiz(false));
+        if (retryIncorrectButton != null) retryIncorrectButton.onClick.AddListener(() => RestartQuiz(true));
 
         for (int i = 0; i < optionButtons.Count; i++)
         {
@@ -398,6 +445,17 @@ public class QuizPopupWindow : MonoBehaviour
 
         bindingsAdded = true;
         UpdatePinButtonState();
+    }
+
+    private void PreviousStep()
+    {
+        if (currentQuestionIndex <= 0)
+        {
+            return;
+        }
+
+        currentQuestionIndex--;
+        RenderQuestion();
     }
 
     private void TogglePinnedState()
@@ -463,15 +521,7 @@ public class QuizPopupWindow : MonoBehaviour
                 if (string.IsNullOrWhiteSpace(question) || normalizedOptions.Count == 0) continue;
                 string fingerprint = $"{question}::{string.Join("|", normalizedOptions)}";
                 if (!seen.Add(fingerprint)) continue;
-
-                int maxCorrect = Mathf.Max(0, normalizedOptions.Count - 1);
-                int rawCorrectIndex = q.correctIndex;
-                if (rawCorrectIndex <= 0 && q.correctAnswer > 0)
-                {
-                    // Some backends send correctAnswer as 1-based index.
-                    rawCorrectIndex = q.correctAnswer - 1;
-                }
-                int correctedIndex = Mathf.Clamp(rawCorrectIndex, 0, maxCorrect);
+                int correctedIndex = ResolveCorrectIndex(q, normalizedOptions.Count);
 
                 list.Add(new QuizQuestionData
                 {
@@ -479,6 +529,14 @@ public class QuizPopupWindow : MonoBehaviour
                     text = question,
                     prompt = question,
                     options = normalizedOptions,
+                    answers = normalizedOptions,
+                    choices = normalizedOptions,
+                    explanation = q.explanation,
+                    explain = q.explain,
+                    reason = q.reason,
+                    solution = q.solution,
+                    wrongExplanation = q.wrongExplanation,
+                    correctAnswer = q.correctAnswer,
                     correctIndex = correctedIndex
                 });
 
@@ -516,6 +574,32 @@ public class QuizPopupWindow : MonoBehaviour
     private static string GetQuestionText(QuizQuestionData question)
     {
         return FirstNonEmpty(question != null ? question.question : null, question != null ? question.prompt : null, question != null ? question.text : null);
+    }
+
+    private static int ResolveCorrectIndex(QuizQuestionData question, int optionCount)
+    {
+        if (question == null || optionCount <= 0)
+        {
+            return 0;
+        }
+
+        if (question.correctIndex >= 0 && question.correctIndex < optionCount)
+        {
+            return question.correctIndex;
+        }
+
+        int oneBasedAnswer = question.correctAnswer;
+        if (oneBasedAnswer > 0 && oneBasedAnswer <= optionCount)
+        {
+            return oneBasedAnswer - 1;
+        }
+
+        if (question.correctAnswer >= 0 && question.correctAnswer < optionCount)
+        {
+            return question.correctAnswer;
+        }
+
+        return Mathf.Clamp(question.correctIndex, 0, optionCount - 1);
     }
 
     private static int SafeCount<T>(List<T> list)
@@ -580,14 +664,28 @@ public class QuizPopupWindow : MonoBehaviour
         RenderQuestion();
     }
 
+    public void TrySetQuestionIndex(int questionIndex)
+    {
+        if (activeQuizQuestions.Count == 0)
+        {
+            return;
+        }
+
+        currentQuestionIndex = Mathf.Clamp(questionIndex, 0, activeQuizQuestions.Count - 1);
+        RenderQuestion();
+    }
+
     private void RenderQuestion()
     {
+        SetReviewModeVisible(false);
+
         if (activeQuizQuestions.Count == 0)
         {
             if (indicatorText != null) indicatorText.text = "Question 0/0";
             if (questionText != null) questionText.text = "No quiz data.";
             if (feedbackText != null) feedbackText.text = string.Empty;
             if (nextButton != null) nextButton.interactable = false;
+            if (prevButton != null) prevButton.interactable = false;
             return;
         }
 
@@ -605,7 +703,6 @@ public class QuizPopupWindow : MonoBehaviour
             questionText.text = string.IsNullOrWhiteSpace(displayQuestion) ? "Question" : displayQuestion;
             questionText.overflowMode = TextOverflowModes.Overflow;
             questionText.gameObject.SetActive(true);
-            questionText.transform.SetAsLastSibling();
             if (enableDebugLogs)
             {
                 Debug.Log($"[QuizPopupWindow] render pass questionIndex={currentQuestionIndex} chosenText='{questionText.text}'");
@@ -668,7 +765,10 @@ public class QuizPopupWindow : MonoBehaviour
             }
             else if (selectedIndex == correctIndex)
             {
-                feedbackText.text = "Correct!";
+                string explanation = FirstNonEmpty(q.explanation, q.explain, q.reason, q.solution);
+                feedbackText.text = string.IsNullOrWhiteSpace(explanation)
+                    ? "Correct!"
+                    : $"Correct!\nExplanation: {explanation}";
                 feedbackText.color = OptionCorrectColor;
             }
             else
@@ -693,30 +793,51 @@ public class QuizPopupWindow : MonoBehaviour
                 label.text = currentQuestionIndex == activeQuizQuestions.Count - 1 ? "Finish" : "Next";
             }
         }
+
+        if (prevButton != null)
+        {
+            prevButton.interactable = currentQuestionIndex > 0;
+        }
     }
 
     private void RenderSummary()
     {
         int total = activeQuizQuestions.Count;
         int score = 0;
+        reviewEntries.Clear();
 
         for (int i = 0; i < total; i++)
         {
             QuizQuestionData q = activeQuizQuestions[i];
             if (q == null) continue;
-            if (selectedByQuestion.TryGetValue(i, out int selected) && selected == q.correctIndex)
+            int selectedIndex = selectedByQuestion.TryGetValue(i, out int selected) ? selected : -1;
+            int correctIndex = Mathf.Clamp(q.correctIndex, 0, Mathf.Max(0, q.options.Count - 1));
+            bool isCorrect = selectedIndex == correctIndex;
+            if (isCorrect)
             {
                 score++;
             }
+
+            string correctAnswer = correctIndex >= 0 && correctIndex < q.options.Count ? q.options[correctIndex] : "(unknown)";
+            string selectedAnswer = selectedIndex >= 0 && selectedIndex < q.options.Count ? q.options[selectedIndex] : "(not answered)";
+            reviewEntries.Add(new QuizReviewEntry
+            {
+                questionIndex = i,
+                questionText = GetQuestionText(q),
+                selectedAnswer = selectedAnswer,
+                correctAnswer = correctAnswer,
+                explanation = FirstNonEmpty(q.explanation, q.explain, q.reason, q.solution, q.wrongExplanation),
+                isCorrect = isCorrect
+            });
         }
 
         if (indicatorText != null) indicatorText.text = "Summary";
-        if (questionText != null) questionText.text = $"Ket qua: {score}/{total}";
+        if (questionText != null) questionText.text = $"Your score: {score}/{total}";
         if (feedbackText != null)
         {
             feedbackText.text = score >= Mathf.CeilToInt(total * 0.7f)
-                ? "Ban da vuot quiz."
-                : "Ban chua dat. Thu lai nhe.";
+                ? "Great work. You passed this quiz."
+                : "Keep going. Review the lesson and try again.";
         }
 
         foreach (Button b in optionButtons)
@@ -730,6 +851,52 @@ public class QuizPopupWindow : MonoBehaviour
             TextMeshProUGUI label = nextButton.GetComponentInChildren<TextMeshProUGUI>(true);
             if (label != null) label.text = "Done";
         }
+
+        if (prevButton != null)
+        {
+            prevButton.interactable = false;
+        }
+
+        RenderReviewMode(false);
+    }
+
+    private void RenderReviewMode(bool incorrectOnly)
+    {
+        reviewIncorrectOnly = incorrectOnly;
+        SetReviewModeVisible(true);
+        if (questionText != null)
+        {
+            questionText.text = incorrectOnly ? "Reviewing incorrect answers" : "Quiz review";
+        }
+        BuildReviewEntriesUi();
+    }
+
+    private void RestartQuiz(bool incorrectOnly)
+    {
+        List<QuizQuestionData> source = originalQuizQuestions;
+        if (incorrectOnly)
+        {
+            List<QuizQuestionData> wrongQuestions = new List<QuizQuestionData>();
+            for (int i = 0; i < reviewEntries.Count; i++)
+            {
+                if (!reviewEntries[i].isCorrect && reviewEntries[i].questionIndex >= 0 && reviewEntries[i].questionIndex < originalQuizQuestions.Count)
+                {
+                    wrongQuestions.Add(originalQuizQuestions[reviewEntries[i].questionIndex]);
+                }
+            }
+
+            if (wrongQuestions.Count > 0)
+            {
+                source = wrongQuestions;
+            }
+        }
+
+        activeQuizQuestions.Clear();
+        activeQuizQuestions.AddRange(source);
+        selectedByQuestion.Clear();
+        currentQuestionIndex = 0;
+        reviewEntries.Clear();
+        RenderQuestion();
     }
 
     private void PositionWindow(Transform viewer, float distance, float heightOffset)
@@ -787,6 +954,200 @@ public class QuizPopupWindow : MonoBehaviour
         Image image = panel.GetComponent<Image>();
         image.color = PanelColor;
         return panel;
+    }
+
+    private void EnsureReviewViewport(RectTransform panelRect)
+    {
+        if (panelRect == null)
+        {
+            return;
+        }
+
+        Transform viewport = panelRect.Find("ReviewViewport");
+        if (viewport == null)
+        {
+            GameObject viewportGo = new GameObject("ReviewViewport", typeof(RectTransform), typeof(Image), typeof(Mask), typeof(ScrollRect));
+            viewportGo.transform.SetParent(panelRect, false);
+            viewport = viewportGo.transform;
+        }
+
+        RectTransform viewportRect = viewport.GetComponent<RectTransform>();
+        viewportRect.anchorMin = new Vector2(0.05f, 0.20f);
+        viewportRect.anchorMax = new Vector2(0.95f, 0.69f);
+        viewportRect.offsetMin = Vector2.zero;
+        viewportRect.offsetMax = Vector2.zero;
+
+        Image viewportImage = viewport.GetComponent<Image>();
+        viewportImage.color = new Color(0.95f, 0.98f, 1f, 0.92f);
+        viewportImage.raycastTarget = true;
+
+        Mask mask = viewport.GetComponent<Mask>();
+        mask.showMaskGraphic = false;
+
+        Transform content = viewport.Find("Content");
+        if (content == null)
+        {
+            GameObject contentGo = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            contentGo.transform.SetParent(viewport, false);
+            content = contentGo.transform;
+        }
+
+        reviewContentRect = content.GetComponent<RectTransform>();
+        reviewContentRect.anchorMin = new Vector2(0f, 1f);
+        reviewContentRect.anchorMax = new Vector2(1f, 1f);
+        reviewContentRect.pivot = new Vector2(0.5f, 1f);
+        reviewContentRect.offsetMin = new Vector2(12f, 0f);
+        reviewContentRect.offsetMax = new Vector2(-12f, 0f);
+
+        VerticalLayoutGroup layout = content.GetComponent<VerticalLayoutGroup>();
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
+        layout.childForceExpandHeight = false;
+        layout.childForceExpandWidth = true;
+        layout.spacing = 10f;
+
+        ContentSizeFitter fitter = content.GetComponent<ContentSizeFitter>();
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        reviewScrollRect = viewport.GetComponent<ScrollRect>();
+        reviewScrollRect.viewport = viewportRect;
+        reviewScrollRect.content = reviewContentRect;
+        reviewScrollRect.horizontal = false;
+        reviewScrollRect.vertical = true;
+        reviewScrollRect.movementType = ScrollRect.MovementType.Clamped;
+
+        viewport.gameObject.SetActive(false);
+    }
+
+    private void SetReviewModeVisible(bool visible)
+    {
+        if (reviewScrollRect != null)
+        {
+            reviewScrollRect.gameObject.SetActive(visible);
+        }
+
+        if (reviewAllButton != null) reviewAllButton.gameObject.SetActive(visible);
+        if (reviewIncorrectButton != null) reviewIncorrectButton.gameObject.SetActive(visible);
+        if (retryButton != null) retryButton.gameObject.SetActive(visible);
+        if (retryIncorrectButton != null) retryIncorrectButton.gameObject.SetActive(visible);
+
+        for (int i = 0; i < optionButtons.Count; i++)
+        {
+            if (!visible && optionButtons[i] != null)
+            {
+                // handled by RenderQuestion
+            }
+        }
+
+        if (prevButton != null) prevButton.gameObject.SetActive(!visible);
+        if (nextButton != null) nextButton.gameObject.SetActive(!visible);
+    }
+
+    private void BuildReviewEntriesUi()
+    {
+        if (reviewContentRect == null)
+        {
+            return;
+        }
+
+        for (int i = reviewContentRect.childCount - 1; i >= 0; i--)
+        {
+            Transform child = reviewContentRect.GetChild(i);
+            if (Application.isPlaying) Destroy(child.gameObject);
+            else DestroyImmediate(child.gameObject);
+        }
+
+        IEnumerable<QuizReviewEntry> entries = reviewIncorrectOnly ? reviewEntries.Where(entry => !entry.isCorrect) : reviewEntries;
+        bool anyEntry = false;
+        foreach (QuizReviewEntry entry in entries)
+        {
+            anyEntry = true;
+            CreateReviewCard(entry);
+        }
+
+        if (!anyEntry)
+        {
+            GameObject emptyGo = new GameObject("EmptyReviewState", typeof(RectTransform), typeof(TextMeshProUGUI), typeof(LayoutElement));
+            emptyGo.transform.SetParent(reviewContentRect, false);
+            LayoutElement layout = emptyGo.GetComponent<LayoutElement>();
+            layout.preferredHeight = 80f;
+            TextMeshProUGUI text = emptyGo.GetComponent<TextMeshProUGUI>();
+            text.text = reviewIncorrectOnly ? "No incorrect answers to review." : "No review entries available.";
+            text.fontSize = 22f;
+            text.alignment = TextAlignmentOptions.Center;
+            text.color = new Color(0.27f, 0.39f, 0.56f, 1f);
+        }
+    }
+
+    private void CreateReviewCard(QuizReviewEntry entry)
+    {
+        GameObject cardGo = new GameObject($"Review_{entry.questionIndex}", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        cardGo.transform.SetParent(reviewContentRect, false);
+        RectTransform rect = cardGo.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(0f, 220f);
+
+        LayoutElement layout = cardGo.GetComponent<LayoutElement>();
+        layout.preferredHeight = 220f;
+
+        Image cardImage = cardGo.GetComponent<Image>();
+        cardImage.color = entry.isCorrect ? new Color(0.90f, 0.97f, 0.92f, 1f) : new Color(1f, 0.92f, 0.92f, 1f);
+
+        TMP_Text header = FindOrCreateText(cardGo.transform, "Header", new Vector2(0.04f, 0.74f), new Vector2(0.88f, 0.94f), 24f, FontStyles.Bold, TextAlignmentOptions.TopLeft);
+        header.text = $"Q{entry.questionIndex + 1} · {(entry.isCorrect ? "Correct" : "Wrong")}";
+        header.color = entry.isCorrect ? OptionCorrectColor : OptionWrongColor;
+
+        TMP_Text question = FindOrCreateText(cardGo.transform, "Question", new Vector2(0.04f, 0.48f), new Vector2(0.96f, 0.76f), 21f, FontStyles.Bold, TextAlignmentOptions.TopLeft);
+        question.text = entry.questionText;
+        question.textWrappingMode = TextWrappingModes.Normal;
+        question.overflowMode = TextOverflowModes.Overflow;
+        question.color = TitleTextColor;
+
+        TMP_Text answers = FindOrCreateText(cardGo.transform, "Answers", new Vector2(0.04f, 0.18f), new Vector2(0.96f, 0.48f), 18f, FontStyles.Normal, TextAlignmentOptions.TopLeft);
+        answers.text = $"Your answer: {entry.selectedAnswer}\nCorrect answer: {entry.correctAnswer}";
+        answers.textWrappingMode = TextWrappingModes.Normal;
+        answers.overflowMode = TextOverflowModes.Overflow;
+        answers.color = new Color(0.15f, 0.24f, 0.38f, 1f);
+
+        TMP_Text explanation = FindOrCreateText(cardGo.transform, "Explanation", new Vector2(0.04f, 0.02f), new Vector2(0.76f, 0.19f), 16f, FontStyles.Italic, TextAlignmentOptions.TopLeft);
+        explanation.text = string.IsNullOrWhiteSpace(entry.explanation) ? "No explanation available." : entry.explanation;
+        explanation.textWrappingMode = TextWrappingModes.Normal;
+        explanation.overflowMode = TextOverflowModes.Overflow;
+        explanation.color = new Color(0.27f, 0.39f, 0.56f, 1f);
+
+        Button bookmarkButton = FindOrCreateButton(rect, $"BookmarkButton_{entry.questionIndex}", "Save", new Vector2(0.79f, 0.04f), new Vector2(0.96f, 0.18f));
+        SetButtonBaseColor(bookmarkButton, SecondaryButtonColor);
+        bookmarkButton.onClick.RemoveAllListeners();
+        bookmarkButton.onClick.AddListener(() => SaveReviewQuestionBookmark(entry));
+    }
+
+    private void SaveReviewQuestionBookmark(QuizReviewEntry entry)
+    {
+        if (entry == null || !AppStateManager.IsAvailable)
+        {
+            return;
+        }
+
+        CourseStateSnapshot courseState = AppStateManager.Instance.CurrentCourse;
+        LessonStateSnapshot lessonState = AppStateManager.Instance.CurrentLesson;
+        if (string.IsNullOrWhiteSpace(courseState.courseId) || string.IsNullOrWhiteSpace(lessonState.lessonId))
+        {
+            return;
+        }
+
+        CourseData course = new CourseData { id = courseState.courseId, title = courseState.courseTitle };
+        LessonData lesson = new LessonData { id = lessonState.lessonId, title = lessonState.lessonTitle };
+        StudyBookmarkData bookmark = LocalStudyStateManager.BuildBookmark(
+            AppStateManager.Instance.CurrentUserId,
+            course,
+            lesson,
+            "quiz",
+            "Quiz Review",
+            lessonState.sectionIndex,
+            lessonState.lessonIndex,
+            questionIndex: entry.questionIndex);
+
+        bool saved = LocalStudyStateManager.ToggleBookmark(AppStateManager.Instance.CurrentUserId, bookmark);
+        ToastManager.ShowInfo(saved ? $"Bookmarked question {entry.questionIndex + 1}." : $"Removed bookmark for question {entry.questionIndex + 1}.", 2.6f);
     }
 
     private static void EnsurePanelChrome(Transform panel)
@@ -897,6 +1258,15 @@ public class QuizPopupWindow : MonoBehaviour
         {
             image.color = color;
         }
+
+        ColorBlock colors = button.colors;
+        colors.normalColor = color;
+        colors.highlightedColor = Color.Lerp(color, Color.white, 0.22f);
+        colors.selectedColor = colors.highlightedColor;
+        colors.pressedColor = Color.Lerp(color, Color.black, 0.16f);
+        colors.disabledColor = new Color(color.r, color.g, color.b, color.a * 0.55f);
+        colors.fadeDuration = 0.08f;
+        button.colors = colors;
     }
 
     private static Transform EnsureRectTransformRoot(Transform root)

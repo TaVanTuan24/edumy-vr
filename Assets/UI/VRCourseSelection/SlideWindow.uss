@@ -303,19 +303,25 @@ Button,
 .lesson-item,
 .answer-card,
 .section-item__foldout {
-    transition-property: scale, border-color, border-width, background-color;
+    transition-property: border-color, border-width, background-color, color, opacity;
     transition-duration: 0.15s;
     transition-timing-function: ease-in-out;
 }
 
-Button:hover,
-.course-card:hover,
-.lesson-item:hover,
-.answer-card:hover,
-.section-item__foldout:hover {
-    scale: 1.03 !important;
+Button:hover {
     border-top-color: rgb(82, 172, 255) !important;
     border-right-color: rgb(82, 172, 255) !important;
     border-bottom-color: rgb(82, 172, 255) !important;
     border-left-color: rgb(82, 172, 255) !important;
+}
+
+.course-card:hover,
+.lesson-item:hover,
+.answer-card:hover,
+.section-item__foldout:hover {
+    border-top-color: rgb(82, 172, 255) !important;
+    border-right-color: rgb(82, 172, 255) !important;
+    border-bottom-color: rgb(82, 172, 255) !important;
+    border-left-color: rgb(82, 172, 255) !important;
+    background-color: rgba(237, 246, 255, 0.98) !important;
 }

@@ -64,6 +64,8 @@ public class CourseToggleController : MonoBehaviour
     public float PanelDistance => panelDistance;
     public float PanelHeightOffset => panelHeightOffset;
     public float PanelRightOffset => panelRightOffset;
+    public bool IsOpen => isOpen;
+    public Transform FloatingButtonTransform => floatingButtonRoot;
 
     private void Awake()
     {
@@ -376,6 +378,11 @@ public class CourseToggleController : MonoBehaviour
     public void SetOpen(bool open)
     {
         isOpen = open;
+        AppStateManager.Instance.SetMenuOpen(open);
+        if (open)
+        {
+            AppStateManager.Instance.NotifyOnboardingAction(OnboardingActionType.MenuOpened);
+        }
         UpdateToggleVisualState();
 
         if (positionRightOfViewerOnOpen && open)

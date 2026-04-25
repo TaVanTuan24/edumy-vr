@@ -56,6 +56,7 @@ public class VideoPopupWindow : MonoBehaviour
     private Button stopButton;
     private Button rewindButton;
     private Button forwardButton;
+    private Button speedButton;
     private Slider seekSlider;
     private TMP_Text timeLabel;
     private TMP_Text titleLabel;
@@ -65,6 +66,8 @@ public class VideoPopupWindow : MonoBehaviour
     private bool createdRuntimeControlsCanvas;
     private string currentVideoTitle = "Video";
     private SpatialWindow spatialWindow;
+    private int playbackSpeedIndex = 1;
+    private static readonly float[] PlaybackSpeeds = { 0.75f, 1f, 1.25f, 1.5f, 2f };
 
     public VideoPlayer Player => videoPlayer;
     public bool IsPlaying => videoPlayer != null && videoPlayer.isPlaying;
@@ -99,6 +102,7 @@ public class VideoPopupWindow : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(url)) return;
         currentVideoTitle = string.IsNullOrWhiteSpace(title) ? "Video" : title.Trim();
+        playbackSpeedIndex = 1;
         ClearTrackedTempVideoFiles();
 
         if (IsYouTubeUrl(url))
@@ -221,6 +225,7 @@ public class VideoPopupWindow : MonoBehaviour
             videoPlayer.source = VideoSource.Url;
             videoPlayer.url = sourceUrl;
             videoPlayer.isLooping = false;
+            videoPlayer.playbackSpeed = PlaybackSpeeds[playbackSpeedIndex];
             ConfigureVideoAudio();
             videoPlayer.Prepare();
             await tcs.Task;
@@ -266,6 +271,7 @@ public class VideoPopupWindow : MonoBehaviour
             using UnityWebRequest req = new UnityWebRequest(downloadUrl, UnityWebRequest.kHttpVerbGET);
             req.downloadHandler = new DownloadHandlerFile(filePath);
             req.timeout = 25;
+            ApiManager.Instance?.ApplyAuthorizationHeader(req);
 
             await SendRequestAsync(req);
             ValidateDownloadedVideoFile(req, filePath);
@@ -287,6 +293,7 @@ public class VideoPopupWindow : MonoBehaviour
             using UnityWebRequest req = new UnityWebRequest(sourceUrl, UnityWebRequest.kHttpVerbGET);
             req.downloadHandler = new DownloadHandlerFile(filePath);
             req.timeout = 25;
+            ApiManager.Instance?.ApplyAuthorizationHeader(req);
 
             await SendRequestAsync(req);
             ValidateDownloadedVideoFile(req, filePath);
@@ -449,6 +456,11 @@ public class VideoPopupWindow : MonoBehaviour
         if (controlsCanvas != null)
         {
             controlsCanvas.gameObject.SetActive(false);
+        }
+
+        if (AppStateManager.IsAvailable && AppStateManager.Instance.ActiveWindow == ActiveContentWindowType.Video)
+        {
+            AppStateManager.Instance.SetActiveWindow(ActiveContentWindowType.None);
         }
     }
 
@@ -911,7 +923,9 @@ public class VideoPopupWindow : MonoBehaviour
         stopButton = FindOrCreateButton(panelRect, "StopButton", new Vector2(0.13f, 0.12f), new Vector2(0.21f, 0.52f), "Stop", SecondaryButtonColor, TextColor);
         rewindButton = FindOrCreateButton(panelRect, "RewindButton", new Vector2(0.22f, 0.12f), new Vector2(0.30f, 0.52f), "-10", SecondaryButtonColor, TextColor);
         forwardButton = FindOrCreateButton(panelRect, "ForwardButton", new Vector2(0.31f, 0.12f), new Vector2(0.39f, 0.52f), "+10", SecondaryButtonColor, TextColor);
-        seekSlider = FindOrCreateSlider(panelRect, "SeekSlider", new Vector2(0.41f, 0.16f), new Vector2(0.98f, 0.48f));
+        speedButton = FindOrCreateButton(panelRect, "SpeedButton", new Vector2(0.41f, 0.12f), new Vector2(0.49f, 0.52f), "1x", SecondaryButtonColor, TextColor);
+        DisableLegacyBookmarkButton(panelRect);
+        seekSlider = FindOrCreateSlider(panelRect, "SeekSlider", new Vector2(0.50f, 0.16f), new Vector2(0.98f, 0.48f));
 
         if (controlsBound) return;
 
@@ -919,6 +933,7 @@ public class VideoPopupWindow : MonoBehaviour
         if (stopButton != null) stopButton.onClick.AddListener(StopPlayback);
         if (rewindButton != null) rewindButton.onClick.AddListener(() => SeekBy(-Mathf.Max(1f, seekStepSeconds)));
         if (forwardButton != null) forwardButton.onClick.AddListener(() => SeekBy(Mathf.Max(1f, seekStepSeconds)));
+        if (speedButton != null) speedButton.onClick.AddListener(CyclePlaybackSpeed);
         if (pinButton != null) pinButton.onClick.AddListener(TogglePinState);
         if (seekSlider != null)
         {
@@ -966,12 +981,23 @@ public class VideoPopupWindow : MonoBehaviour
             if (txt != null) txt.text = videoPlayer.isPlaying ? "Pause" : "Play";
         }
 
+        if (speedButton != null)
+        {
+            speedButton.gameObject.SetActive(videoPlayer.canSetPlaybackSpeed);
+            TMP_Text txt = speedButton.GetComponentInChildren<TMP_Text>(true);
+            if (txt != null)
+            {
+                txt.text = $"{videoPlayer.playbackSpeed:0.##}x";
+            }
+        }
+
         if (seekSlider != null && !isSeeking)
         {
             float total = videoPlayer.length > 0d ? (float)videoPlayer.length : 1f;
             seekSlider.minValue = 0f;
             seekSlider.maxValue = Mathf.Max(1f, total);
             seekSlider.SetValueWithoutNotify((float)Math.Max(0d, videoPlayer.time));
+            seekSlider.gameObject.SetActive(videoPlayer.canSetTime);
         }
 
         UpdatePinButtonState();
@@ -1018,6 +1044,25 @@ public class VideoPopupWindow : MonoBehaviour
         RefreshControlsUi();
     }
 
+    private void CyclePlaybackSpeed()
+    {
+        if (videoPlayer == null)
+        {
+            return;
+        }
+
+        if (!videoPlayer.canSetPlaybackSpeed)
+        {
+            ToastManager.ShowWarning("This video source does not support playback speed changes.");
+            return;
+        }
+
+        playbackSpeedIndex = (playbackSpeedIndex + 1) % PlaybackSpeeds.Length;
+        videoPlayer.playbackSpeed = PlaybackSpeeds[playbackSpeedIndex];
+        RefreshControlsUi();
+        ToastManager.ShowInfo($"Playback speed set to {PlaybackSpeeds[playbackSpeedIndex]:0.##}x", 2f);
+    }
+
     private void StopPlayback()
     {
         if (videoPlayer == null) return;
@@ -1028,6 +1073,11 @@ public class VideoPopupWindow : MonoBehaviour
     private void SeekBy(float deltaSeconds)
     {
         if (videoPlayer == null) return;
+        if (!videoPlayer.canSetTime)
+        {
+            ToastManager.ShowWarning("This video source does not support seeking.");
+            return;
+        }
         double length = videoPlayer.length;
         double current = videoPlayer.time;
         double target = current + deltaSeconds;
@@ -1054,8 +1104,30 @@ public class VideoPopupWindow : MonoBehaviour
     private void ApplySeekSlider()
     {
         if (videoPlayer == null || seekSlider == null) return;
+        if (!videoPlayer.canSetTime)
+        {
+            ToastManager.ShowWarning("This video source does not support seeking.");
+            return;
+        }
         videoPlayer.time = seekSlider.value;
         RefreshControlsUi();
+    }
+
+    private static void DisableLegacyBookmarkButton(RectTransform panelRect)
+    {
+        Transform legacy = panelRect != null ? panelRect.Find("BookmarkButton") : null;
+        if (legacy == null)
+        {
+            return;
+        }
+
+        Button legacyButton = legacy.GetComponent<Button>();
+        if (legacyButton != null)
+        {
+            legacyButton.onClick.RemoveAllListeners();
+        }
+
+        legacy.gameObject.SetActive(false);
     }
 
     private void EnsureEventSystemSupport()
@@ -1143,6 +1215,15 @@ public class VideoPopupWindow : MonoBehaviour
         textRect.anchorMax = Vector2.one;
         textRect.offsetMin = Vector2.zero;
         textRect.offsetMax = Vector2.zero;
+
+        ColorBlock colors = button.colors;
+        colors.normalColor = backgroundColor;
+        colors.highlightedColor = Color.Lerp(backgroundColor, Color.white, 0.2f);
+        colors.selectedColor = colors.highlightedColor;
+        colors.pressedColor = Color.Lerp(backgroundColor, Color.black, 0.14f);
+        colors.disabledColor = new Color(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a * 0.55f);
+        colors.fadeDuration = 0.08f;
+        button.colors = colors;
 
         return button;
     }

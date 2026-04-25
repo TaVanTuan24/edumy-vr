@@ -7,26 +7,15 @@ using TMPro;
 
 public class ApiManager : MonoBehaviour
 {
-    private const string AccessTokenPlayerPrefsKey = "VR_ACCESS_TOKEN";
-    private const string LegacyJwtTokenPlayerPrefsKey = "JWT_TOKEN";
-    private const string ApiBaseUrlPlayerPrefsKey = "VR_API_BASE_URL";
     private const int MinimumRequestTimeoutSeconds = 5;
     private const int DefaultRequestTimeoutSeconds = 15;
+    private static readonly string[] ConnectionTestEndpoints = { "api/health", "health", string.Empty };
 
     public static ApiManager Instance { get; private set; }
 
-    [Header("API Settings")]
-    [Tooltip("Địa chỉ LAN IP của bạn (Ví dụ: http://192.168.1.1:3000)")]
-    [SerializeField] private string localUrl = "http://172.16.33.125:3000";
-    
-    [Tooltip("Địa chỉ production (Ví dụ: https://api.edumy-vr.com)")]
-    [SerializeField] private string productionUrl = "https://api.edumy-vr.com";
-
-    [Tooltip("Bật để sử dụng Production URL, tắt để sử dụng Local URL")]
-    public bool useProduction = false;
-
     [Header("Networking")]
     [SerializeField, Min(MinimumRequestTimeoutSeconds)] private int requestTimeoutSeconds = DefaultRequestTimeoutSeconds;
+    [SerializeField] private bool enableVerboseLogs;
 
     [Header("Authentication")]
     [Tooltip("JWT Token dùng để xác thực. Token này sẽ được gửi tự động trong header Authorization.")]
@@ -37,13 +26,23 @@ public class ApiManager : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI errorTextDisplay; 
 
-    public string BaseUrl => ResolveBaseUrl();
+    public string BaseUrl => ApiConfig.BaseUrl;
     public bool HasAuthToken => !string.IsNullOrWhiteSpace(authToken);
     private bool lessonProgressSyncDisabled;
     private bool lessonProgressSyncDisableLogged;
     public string LastStreamResolveErrorCode { get; private set; }
     public string LastStreamResolveErrorMessage { get; private set; }
     public long LastResponseStatusCode { get; private set; }
+
+    public class ConnectionTestResult
+    {
+        public bool success;
+        public string testedBaseUrl;
+        public string testedEndpoint;
+        public string testedUrl;
+        public long statusCode;
+        public string message;
+    }
 
     private void Awake()
     {
@@ -52,6 +51,7 @@ public class ApiManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             LoadAuthToken();
+            AppStateManager.Instance.SetBackendStatus(BackendConnectionState.Unknown, baseUrl: BaseUrl);
             
         }
         else
@@ -70,25 +70,25 @@ public class ApiManager : MonoBehaviour
 
         if (!string.IsNullOrWhiteSpace(authToken))
         {
-            PlayerPrefs.SetString(AccessTokenPlayerPrefsKey, authToken);
-            if (PlayerPrefs.HasKey(LegacyJwtTokenPlayerPrefsKey))
+            PlayerPrefs.SetString(VRSessionKeys.AccessToken, authToken);
+            if (PlayerPrefs.HasKey(VRSessionKeys.LegacyJwtToken))
             {
-                PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
+                PlayerPrefs.DeleteKey(VRSessionKeys.LegacyJwtToken);
             }
             PlayerPrefs.Save();
         }
         else
         {
             bool changed = false;
-            if (PlayerPrefs.HasKey(AccessTokenPlayerPrefsKey))
+            if (PlayerPrefs.HasKey(VRSessionKeys.AccessToken))
             {
-                PlayerPrefs.DeleteKey(AccessTokenPlayerPrefsKey);
+                PlayerPrefs.DeleteKey(VRSessionKeys.AccessToken);
                 changed = true;
             }
 
-            if (PlayerPrefs.HasKey(LegacyJwtTokenPlayerPrefsKey))
+            if (PlayerPrefs.HasKey(VRSessionKeys.LegacyJwtToken))
             {
-                PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
+                PlayerPrefs.DeleteKey(VRSessionKeys.LegacyJwtToken);
                 changed = true;
             }
 
@@ -104,15 +104,15 @@ public class ApiManager : MonoBehaviour
         authToken = string.Empty;
 
         bool changed = false;
-        if (PlayerPrefs.HasKey(AccessTokenPlayerPrefsKey))
+        if (PlayerPrefs.HasKey(VRSessionKeys.AccessToken))
         {
-            PlayerPrefs.DeleteKey(AccessTokenPlayerPrefsKey);
+            PlayerPrefs.DeleteKey(VRSessionKeys.AccessToken);
             changed = true;
         }
 
-        if (PlayerPrefs.HasKey(LegacyJwtTokenPlayerPrefsKey))
+        if (PlayerPrefs.HasKey(VRSessionKeys.LegacyJwtToken))
         {
-            PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
+            PlayerPrefs.DeleteKey(VRSessionKeys.LegacyJwtToken);
             changed = true;
         }
 
@@ -126,7 +126,7 @@ public class ApiManager : MonoBehaviour
     {
         // Đồng bộ endpoint theo cùng pattern với lessons
         string url = BuildUrl("api/vr/courses");
-        Debug.Log($"[ApiManager] Fetching courses from: {url}");
+        LogVerbose($"[ApiManager] Fetching courses from: {url}");
         var response = await SendGetRequest<ApiResponse<CourseData>>(url);
         return response?.data;
     }
@@ -138,7 +138,7 @@ public class ApiManager : MonoBehaviour
         if (string.IsNullOrWhiteSpace(jsonResponse)) return null;
 
         List<LessonData> lessons = ParseLessonsFromJson(jsonResponse);
-        Debug.Log($"[ApiManager] Parsed lessons count: {(lessons == null ? 0 : lessons.Count)}");
+        LogVerbose($"[ApiManager] Parsed lessons count: {(lessons == null ? 0 : lessons.Count)}");
         return lessons;
     }
 
@@ -149,7 +149,7 @@ public class ApiManager : MonoBehaviour
         if (string.IsNullOrWhiteSpace(jsonResponse)) return null;
 
         List<SectionData> sections = ParseSectionsFromJson(jsonResponse);
-        Debug.Log($"[ApiManager] Parsed sections count: {(sections == null ? 0 : sections.Count)}");
+        LogVerbose($"[ApiManager] Parsed sections count: {(sections == null ? 0 : sections.Count)}");
         return sections;
     }
 
@@ -242,7 +242,7 @@ public class ApiManager : MonoBehaviour
             LastStreamResolveErrorMessage = string.IsNullOrWhiteSpace(response.error.details)
                 ? response.error.message
                 : $"{response.error.message} | {response.error.details}";
-            Debug.Log($"[ApiManager] Stream resolve failed ({response.error.code}): {LastStreamResolveErrorMessage}");
+            LogVerbose($"[ApiManager] Stream resolve failed ({response.error.code}): {LastStreamResolveErrorMessage}");
         }
         else
         {
@@ -325,26 +325,7 @@ public class ApiManager : MonoBehaviour
 
     private string BuildUrl(string relativePath)
     {
-        string baseUrl = BaseUrl?.TrimEnd('/') ?? string.Empty;
-        string path = relativePath?.TrimStart('/') ?? string.Empty;
-        return $"{baseUrl}/{path}";
-    }
-
-    private string ResolveBaseUrl()
-    {
-        string configuredUrl = useProduction ? productionUrl : localUrl;
-        if (!useProduction)
-        {
-            string overrideUrl = PlayerPrefs.GetString(ApiBaseUrlPlayerPrefsKey, string.Empty)?.Trim() ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(overrideUrl))
-            {
-                configuredUrl = overrideUrl;
-            }
-        }
-
-        return string.IsNullOrWhiteSpace(configuredUrl)
-            ? string.Empty
-            : configuredUrl.Trim().TrimEnd('/');
+        return ApiConfig.BuildUrl(relativePath);
     }
 
     private bool TryValidateVrAuthRequest(out string errorMessage)
@@ -378,7 +359,7 @@ public class ApiManager : MonoBehaviour
 
         if (Application.platform == RuntimePlatform.Android && isLoopbackHost)
         {
-            errorMessage = "Quest cannot reach localhost. Set ApiManager.localUrl to your PC LAN IP, for example http://172.16.33.125:3000.";
+            errorMessage = "Quest cannot reach localhost. Open Settings and update Backend Server URL to your PC LAN IP, for example http://192.168.1.10:3000.";
             return false;
         }
 
@@ -393,7 +374,7 @@ public class ApiManager : MonoBehaviour
         }
 
         webRequest.timeout = Mathf.Max(MinimumRequestTimeoutSeconds, requestTimeoutSeconds);
-        TrySetAuthHeader(webRequest);
+        ApplyAuthorizationHeader(webRequest);
     }
 
     private VRLoginCodeResponse CreateLoginCodeErrorResponse(string message)
@@ -439,7 +420,7 @@ public class ApiManager : MonoBehaviour
 
         if (LastResponseStatusCode == 0)
         {
-            return $"Cannot reach the backend at {BaseUrl}. On Quest, use your PC LAN IP such as http://172.16.33.125:3000 and keep both devices on the same Wi-Fi.";
+            return $"Cannot connect to backend at {BaseUrl}. Open Settings and update Backend Server URL, then test the connection again.";
         }
 
         if (LastResponseStatusCode >= 500)
@@ -448,6 +429,49 @@ public class ApiManager : MonoBehaviour
         }
 
         return fallbackMessage;
+    }
+
+    public async Task<ConnectionTestResult> TestConnectionAsync(string baseUrlOverride = null)
+    {
+        string baseUrlToTest = string.IsNullOrWhiteSpace(baseUrlOverride) ? BaseUrl : ApiConfig.NormalizeBaseUrl(baseUrlOverride);
+        if (!ApiConfig.TryNormalizeBaseUrl(baseUrlToTest, out string normalizedBaseUrl, out string errorMessage))
+        {
+            AppStateManager.Instance.SetBackendStatus(BackendConnectionState.Unreachable, errorMessage, baseUrlToTest);
+            return new ConnectionTestResult
+            {
+                success = false,
+                testedBaseUrl = baseUrlToTest,
+                testedUrl = baseUrlToTest,
+                message = errorMessage
+            };
+        }
+
+        ConnectionTestResult lastHttpResponse = null;
+        for (int i = 0; i < ConnectionTestEndpoints.Length; i++)
+        {
+            string endpoint = ConnectionTestEndpoints[i];
+            ConnectionTestResult probe = await ProbeConnectionEndpointAsync(normalizedBaseUrl, endpoint);
+            if (probe.success)
+            {
+                AppStateManager.Instance.SetBackendStatus(BackendConnectionState.Connected, probe.message, normalizedBaseUrl);
+                return probe;
+            }
+
+            if (probe.statusCode > 0)
+            {
+                lastHttpResponse = probe;
+            }
+        }
+
+        ConnectionTestResult failure = lastHttpResponse ?? new ConnectionTestResult
+        {
+            success = false,
+            testedBaseUrl = normalizedBaseUrl,
+            testedUrl = normalizedBaseUrl,
+            message = $"Cannot connect to server at {normalizedBaseUrl}."
+        };
+        AppStateManager.Instance.SetBackendStatus(BackendConnectionState.Unreachable, failure.message, normalizedBaseUrl);
+        return failure;
     }
 
     private void LoadAuthToken()
@@ -464,29 +488,29 @@ public class ApiManager : MonoBehaviour
         }
 
         string storedToken = string.Empty;
-        if (PlayerPrefs.HasKey(AccessTokenPlayerPrefsKey))
+        if (PlayerPrefs.HasKey(VRSessionKeys.AccessToken))
         {
-            storedToken = PlayerPrefs.GetString(AccessTokenPlayerPrefsKey)?.Trim() ?? string.Empty;
+            storedToken = PlayerPrefs.GetString(VRSessionKeys.AccessToken)?.Trim() ?? string.Empty;
         }
-        else if (PlayerPrefs.HasKey(LegacyJwtTokenPlayerPrefsKey))
+        else if (PlayerPrefs.HasKey(VRSessionKeys.LegacyJwtToken))
         {
-            storedToken = PlayerPrefs.GetString(LegacyJwtTokenPlayerPrefsKey)?.Trim() ?? string.Empty;
+            storedToken = PlayerPrefs.GetString(VRSessionKeys.LegacyJwtToken)?.Trim() ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(storedToken))
             {
-                PlayerPrefs.SetString(AccessTokenPlayerPrefsKey, storedToken);
+                PlayerPrefs.SetString(VRSessionKeys.AccessToken, storedToken);
             }
-            PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
+            PlayerPrefs.DeleteKey(VRSessionKeys.LegacyJwtToken);
             PlayerPrefs.Save();
         }
 
         if (!string.IsNullOrWhiteSpace(storedToken))
         {
             authToken = storedToken;
-            Debug.Log("[ApiManager] Loaded auth token from PlayerPrefs.");
+            LogVerbose("[ApiManager] Loaded auth token from PlayerPrefs.");
         }
     }
 
-    private void TrySetAuthHeader(UnityWebRequest webRequest)
+    public void ApplyAuthorizationHeader(UnityWebRequest webRequest)
     {
         if (webRequest == null || string.IsNullOrWhiteSpace(authToken))
         {
@@ -494,6 +518,48 @@ public class ApiManager : MonoBehaviour
         }
 
         webRequest.SetRequestHeader("Authorization", "Bearer " + authToken);
+    }
+
+    private async Task<ConnectionTestResult> ProbeConnectionEndpointAsync(string normalizedBaseUrl, string endpoint)
+    {
+        string url = ApiConfig.BuildUrl(endpoint, normalizedBaseUrl);
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+        {
+            webRequest.timeout = Mathf.Max(MinimumRequestTimeoutSeconds, requestTimeoutSeconds);
+
+            var operation = webRequest.SendWebRequest();
+            while (!operation.isDone) await Task.Yield();
+
+            long statusCode = webRequest.responseCode;
+            string endpointLabel = string.IsNullOrWhiteSpace(endpoint) ? "/" : "/" + endpoint.TrimStart('/');
+            bool hasHttpResponse = statusCode > 0;
+            bool reachable = hasHttpResponse && statusCode < 500;
+
+            if (webRequest.result == UnityWebRequest.Result.Success || reachable)
+            {
+                return new ConnectionTestResult
+                {
+                    success = true,
+                    testedBaseUrl = normalizedBaseUrl,
+                    testedEndpoint = endpointLabel,
+                    testedUrl = url,
+                    statusCode = statusCode,
+                    message = reachable && webRequest.result != UnityWebRequest.Result.Success
+                        ? $"Connected to {normalizedBaseUrl} (HTTP {statusCode} from {endpointLabel})."
+                        : $"Connected to {normalizedBaseUrl} using {endpointLabel}."
+                };
+            }
+
+            return new ConnectionTestResult
+            {
+                success = false,
+                testedBaseUrl = normalizedBaseUrl,
+                testedEndpoint = endpointLabel,
+                testedUrl = url,
+                statusCode = statusCode,
+                message = $"Cannot connect to backend at {normalizedBaseUrl}. Endpoint {endpointLabel} failed: {webRequest.error}"
+            };
+        }
     }
 
     private async Task<T> SendGetRequest<T>(string url)
@@ -511,8 +577,9 @@ public class ApiManager : MonoBehaviour
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
                 LastResponseStatusCode = webRequest.responseCode;
+                PublishBackendStatusForResponse(webRequest.responseCode, null, url);
                 string jsonResponse = webRequest.downloadHandler.text;
-                Debug.Log($"[ApiManager] Raw JSON: {jsonResponse}");
+                LogVerbose($"[ApiManager] Raw JSON: {jsonResponse}");
                 
                 try 
                 {
@@ -521,7 +588,7 @@ public class ApiManager : MonoBehaviour
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.LogWarning($"[ApiManager] JsonUtility fail. Checking if it's a raw array: {ex.Message}");
+                    LogVerbose($"[ApiManager] JsonUtility fail. Checking if it's a raw array: {ex.Message}");
                     
                     // Nếu là mảng JSON thuần túy (e.g. [{}, {}]), JsonUtility không parse được trực tiếp.
                     // Cần bọc lại để parse.
@@ -537,7 +604,9 @@ public class ApiManager : MonoBehaviour
             {
                 long statusCode = webRequest.responseCode;
                 LastResponseStatusCode = statusCode;
+                HandleUnauthorizedResponse(statusCode);
                 string responseBody = webRequest.downloadHandler?.text;
+                PublishBackendStatusForResponse(statusCode, webRequest.error, url);
                 Debug.LogError($"[ApiManager] Request failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
 
                 if (statusCode == 404)
@@ -564,14 +633,17 @@ public class ApiManager : MonoBehaviour
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
                 LastResponseStatusCode = webRequest.responseCode;
+                PublishBackendStatusForResponse(webRequest.responseCode, null, url);
                 string jsonResponse = webRequest.downloadHandler.text;
-                Debug.Log($"[ApiManager] Raw JSON: {jsonResponse}");
+                LogVerbose($"[ApiManager] Raw JSON: {jsonResponse}");
                 return jsonResponse;
             }
 
             long statusCode = webRequest.responseCode;
             LastResponseStatusCode = statusCode;
+            HandleUnauthorizedResponse(statusCode);
             string responseBody = webRequest.downloadHandler?.text;
+            PublishBackendStatusForResponse(statusCode, webRequest.error, url);
             Debug.LogError($"[ApiManager] Request failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
 
             if (statusCode == 404)
@@ -603,12 +675,15 @@ public class ApiManager : MonoBehaviour
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
                 LastResponseStatusCode = webRequest.responseCode;
+                PublishBackendStatusForResponse(webRequest.responseCode, null, url);
                 return PostStatus.Success;
             }
 
             long statusCode = webRequest.responseCode;
             LastResponseStatusCode = statusCode;
+            HandleUnauthorizedResponse(statusCode);
             string responseBody = webRequest.downloadHandler?.text;
+            PublishBackendStatusForResponse(statusCode, webRequest.error, url);
             Debug.LogWarning($"[ApiManager] POST failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
             return statusCode == 404 ? PostStatus.NotFound : PostStatus.Failed;
         }
@@ -631,6 +706,7 @@ public class ApiManager : MonoBehaviour
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
+                PublishBackendStatusForResponse(LastResponseStatusCode, null, url);
                 if (string.IsNullOrWhiteSpace(responseBody)) return default;
 
                 try
@@ -644,6 +720,8 @@ public class ApiManager : MonoBehaviour
                 }
             }
 
+            HandleUnauthorizedResponse(LastResponseStatusCode);
+            PublishBackendStatusForResponse(LastResponseStatusCode, webRequest.error, url);
             if (!string.IsNullOrWhiteSpace(responseBody))
             {
                 try
@@ -686,6 +764,7 @@ public class ApiManager : MonoBehaviour
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
                 LastResponseStatusCode = webRequest.responseCode;
+                PublishBackendStatusForResponse(webRequest.responseCode, null, url);
                 if (string.IsNullOrWhiteSpace(responseBody)) return default;
 
                 try
@@ -701,6 +780,8 @@ public class ApiManager : MonoBehaviour
 
             long statusCode = webRequest.responseCode;
             LastResponseStatusCode = statusCode;
+            HandleUnauthorizedResponse(statusCode);
+            PublishBackendStatusForResponse(statusCode, webRequest.error, url);
             if (!string.IsNullOrWhiteSpace(responseBody))
             {
                 try
@@ -720,7 +801,7 @@ public class ApiManager : MonoBehaviour
             bool isStreamResolve = url.IndexOf("/api/vr/stream/resolve", StringComparison.OrdinalIgnoreCase) >= 0;
             if (isStreamResolve)
             {
-                Debug.Log($"[ApiManager] Stream resolve endpoint returned HTTP {statusCode}. Backend resolver may be missing ytdl/yt-dlp. Body: {responseBody}");
+                LogVerbose($"[ApiManager] Stream resolve endpoint returned HTTP {statusCode}. Backend resolver may be missing ytdl/yt-dlp. Body: {responseBody}");
             }
             else
             {
@@ -1069,19 +1150,20 @@ public class ApiManager : MonoBehaviour
         // 1. CHUYỂN ĐỔI URL CLOUDINARY SANG JPG (Ép Cloudinary trả về JPG thay vì WebP)
         string processedUrl = ConvertCloudinaryUrlToJpg(url);
         
-        string fullUrl = processedUrl.StartsWith("http") ? processedUrl : $"{BaseUrl}{processedUrl}";
-        Debug.Log($"[ApiManager] Đang tải ảnh: {fullUrl}");
+        string fullUrl = ApiConfig.IsAbsoluteUrl(processedUrl) ? processedUrl : ApiConfig.BuildUrl(processedUrl);
+        LogVerbose($"[ApiManager] Loading image: {fullUrl}");
 
         // 2. Sử dụng UnityWebRequest thường để lấy mảng byte
         using (UnityWebRequest webRequest = UnityWebRequest.Get(fullUrl))
         {
-            TrySetAuthHeader(webRequest);
+            ApplyRequestDefaults(webRequest);
 
             var operation = webRequest.SendWebRequest();
             while (!operation.isDone) await Task.Yield();
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
+                PublishBackendStatusForResponse(webRequest.responseCode, null, fullUrl);
                 byte[] results = webRequest.downloadHandler.data;
 
                 // 3. Sử dụng LoadImage để giải mã dữ liệu ảnh (Xử lý được hầu hết định dạng JPG/PNG)
@@ -1098,10 +1180,65 @@ public class ApiManager : MonoBehaviour
             }
             else
             {
+                HandleUnauthorizedResponse(webRequest.responseCode);
+                PublishBackendStatusForResponse(webRequest.responseCode, webRequest.error, fullUrl);
                 Debug.LogError($"[ApiManager] Lỗi tải dữ liệu ảnh: {webRequest.error} | URL: {fullUrl}");
                 return null;
             }
         }
+    }
+
+    private void HandleUnauthorizedResponse(long statusCode)
+    {
+        if (statusCode != 401 || string.IsNullOrWhiteSpace(authToken))
+        {
+            return;
+        }
+
+        ClearAuthToken();
+        AppStateManager.Instance.SetBackendStatus(BackendConnectionState.Unauthorized, "Backend authorization failed.", BaseUrl);
+
+        VRAuthManager authManager = FindAnyObjectByType<VRAuthManager>();
+        if (authManager != null)
+        {
+            authManager.HandleUnauthorizedSession();
+        }
+    }
+
+    private void LogVerbose(string message)
+    {
+        if ((!enableVerboseLogs && !AppStateManager.IsVerboseLoggingEnabled) || string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        Debug.Log(message);
+    }
+
+    private void PublishBackendStatusForResponse(long statusCode, string requestError, string url)
+    {
+        BackendConnectionState state = BackendConnectionState.Unknown;
+        string message = string.Empty;
+
+        if (statusCode == 401)
+        {
+            state = BackendConnectionState.Unauthorized;
+            message = "Backend authorization failed.";
+        }
+        else if (statusCode == 0)
+        {
+            state = BackendConnectionState.Unreachable;
+            message = string.IsNullOrWhiteSpace(requestError)
+                ? $"Cannot connect to backend at {BaseUrl}."
+                : $"Cannot connect to backend at {BaseUrl}. {requestError}";
+        }
+        else
+        {
+            state = BackendConnectionState.Connected;
+            message = $"Backend reachable via {url}";
+        }
+
+        AppStateManager.Instance.SetBackendStatus(state, message, BaseUrl);
     }
 
     /// <summary>

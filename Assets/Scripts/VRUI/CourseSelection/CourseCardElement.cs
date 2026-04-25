@@ -15,9 +15,13 @@ public partial class CourseCardElement : VisualElement
     private readonly Label progressLabel;
     private readonly VisualElement progressFill;
     private readonly Button openButton;
+    private readonly Button favoriteButton;
+    private readonly Button bookmarkButton;
 
     private CourseData boundCourse;
     private Action openHandler;
+    private Action<CourseData> favoriteToggleHandler;
+    private Action<CourseData> bookmarkHandler;
 
     public CourseCardElement()
     {
@@ -58,12 +62,19 @@ public partial class CourseCardElement : VisualElement
         openButton.AddToClassList("course-card__open-button");
         openButton.clicked += HandleOpenClicked;
 
+        favoriteButton = new Button();
+        favoriteButton.AddToClassList("course-card__mini-button");
+        favoriteButton.clicked += HandleFavoriteClicked;
+
+        bookmarkButton = new Button();
+        bookmarkButton.AddToClassList("course-card__mini-button");
+        bookmarkButton.clicked += HandleBookmarkClicked;
+
         progressRow.Add(progressLabel);
         progressRow.Add(progressTrack);
 
         content.Add(topicLabel);
         content.Add(titleLabel);
-        content.Add(descriptionLabel);
         content.Add(lessonCountLabel);
         content.Add(progressRow);
 
@@ -74,9 +85,11 @@ public partial class CourseCardElement : VisualElement
         Add(thumbnail);
         Add(content);
         Add(actionArea);
+
+        RegisterCallback<ClickEvent>(HandleCardClicked);
     }
 
-    public void Bind(CourseData course, Action<CourseData> onOpen)
+    public void Bind(CourseData course, Action<CourseData> onOpen, bool isFavorite, Action<CourseData> onFavoriteToggle, Action<CourseData> onBookmark)
     {
         BindVersion++;
         boundCourse = course;
@@ -103,6 +116,10 @@ public partial class CourseCardElement : VisualElement
         thumbnail.style.backgroundImage = StyleKeyword.None;
 
         openHandler = () => onOpen?.Invoke(boundCourse);
+        favoriteToggleHandler = onFavoriteToggle;
+        bookmarkHandler = onBookmark;
+        favoriteButton.text = isFavorite ? "★" : "☆";
+        bookmarkButton.text = "Save";
     }
 
     public void SetThumbnail(Texture2D texture, int expectedBindVersion)
@@ -138,6 +155,28 @@ public partial class CourseCardElement : VisualElement
 
     private void HandleOpenClicked()
     {
+        openHandler?.Invoke();
+    }
+
+    private void HandleFavoriteClicked()
+    {
+        favoriteToggleHandler?.Invoke(boundCourse);
+    }
+
+    private void HandleBookmarkClicked()
+    {
+        bookmarkHandler?.Invoke(boundCourse);
+    }
+
+    private void HandleCardClicked(ClickEvent evt)
+    {
+        VisualElement target = evt.target as VisualElement;
+        if (target != null
+            && openButton.Contains(target))
+        {
+            return;
+        }
+
         openHandler?.Invoke();
     }
 }

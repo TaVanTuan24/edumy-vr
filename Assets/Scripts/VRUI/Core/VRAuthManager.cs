@@ -5,11 +5,6 @@ using UnityEngine;
 
 public class VRAuthManager : MonoBehaviour
 {
-    private const string DeviceIdPlayerPrefsKey = "VR_DEVICE_ID";
-    private const string AccessTokenPlayerPrefsKey = "VR_ACCESS_TOKEN";
-    private const string LegacyJwtTokenPlayerPrefsKey = "JWT_TOKEN";
-    private const string UserIdPlayerPrefsKey = "VR_USER_ID";
-    private const string UsernamePlayerPrefsKey = "VR_USERNAME";
     private const int DefaultCodeExpirySeconds = 120;
     private const int PollIntervalMilliseconds = 2000;
 
@@ -100,9 +95,9 @@ public class VRAuthManager : MonoBehaviour
     {
         EnsureDeviceId();
 
-        string storedToken = PlayerPrefs.GetString(AccessTokenPlayerPrefsKey, string.Empty)?.Trim() ?? string.Empty;
-        string storedUserId = PlayerPrefs.GetString(UserIdPlayerPrefsKey, string.Empty)?.Trim() ?? string.Empty;
-        string storedUsername = PlayerPrefs.GetString(UsernamePlayerPrefsKey, string.Empty)?.Trim() ?? string.Empty;
+        string storedToken = LoadStoredAccessToken();
+        string storedUserId = PlayerPrefs.GetString(VRSessionKeys.UserId, string.Empty)?.Trim() ?? string.Empty;
+        string storedUsername = PlayerPrefs.GetString(VRSessionKeys.Username, string.Empty)?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(storedToken))
         {
@@ -118,6 +113,7 @@ public class VRAuthManager : MonoBehaviour
                 ApiManager.Instance.ClearAuthToken();
             }
 
+            AppStateManager.Instance.SetAuthState(AppAuthState.SignedOut);
             NotifyStateUpdated();
             return;
         }
@@ -136,6 +132,7 @@ public class VRAuthManager : MonoBehaviour
             ApiManager.Instance.SetAuthToken(accessToken);
         }
 
+        AppStateManager.Instance.SetAuthState(AppAuthState.SignedIn, userId, username);
         NotifyStateUpdated();
     }
 
@@ -169,7 +166,9 @@ public class VRAuthManager : MonoBehaviour
 
         statusMessage = "Requesting login code...";
         isRequestInFlight = true;
+        AppStateManager.Instance.SetAuthState(AppAuthState.Pairing, userId, username);
         NotifyStateUpdated();
+        ToastManager.ShowLoading("Requesting login code...");
 
         VRLoginCodeResponse response = null;
         try
@@ -188,6 +187,7 @@ public class VRAuthManager : MonoBehaviour
         finally
         {
             isRequestInFlight = false;
+            ToastManager.HideLoading();
         }
 
         if (response == null || !response.success || string.IsNullOrWhiteSpace(response.code))
@@ -195,7 +195,9 @@ public class VRAuthManager : MonoBehaviour
             statusMessage = response != null && !string.IsNullOrWhiteSpace(response.message)
                 ? response.message
                 : "Unable to request a login code.";
+            AppStateManager.Instance.SetAuthState(AppAuthState.SignedOut);
             NotifyStateUpdated();
+            ToastManager.ShowError(statusMessage);
             return;
         }
 
@@ -204,6 +206,7 @@ public class VRAuthManager : MonoBehaviour
         statusMessage = "Waiting for approval...";
         lastBroadcastRemainingSeconds = -1;
         NotifyStateUpdated();
+        ToastManager.ShowInfo($"Login code ready: {currentCode}", 3.4f);
         StartPolling();
     }
 
@@ -227,10 +230,10 @@ public class VRAuthManager : MonoBehaviour
         username = string.Empty;
         statusMessage = string.IsNullOrWhiteSpace(message) ? "You have been logged out." : message;
 
-        PlayerPrefs.DeleteKey(AccessTokenPlayerPrefsKey);
-        PlayerPrefs.DeleteKey(LegacyJwtTokenPlayerPrefsKey);
-        PlayerPrefs.DeleteKey(UserIdPlayerPrefsKey);
-        PlayerPrefs.DeleteKey(UsernamePlayerPrefsKey);
+        PlayerPrefs.DeleteKey(VRSessionKeys.AccessToken);
+        PlayerPrefs.DeleteKey(VRSessionKeys.LegacyJwtToken);
+        PlayerPrefs.DeleteKey(VRSessionKeys.UserId);
+        PlayerPrefs.DeleteKey(VRSessionKeys.Username);
         PlayerPrefs.Save();
 
         if (ApiManager.Instance != null)
@@ -238,7 +241,12 @@ public class VRAuthManager : MonoBehaviour
             ApiManager.Instance.ClearAuthToken();
         }
 
+        AppStateManager.Instance.SetAuthState(AppAuthState.SignedOut);
         NotifyStateUpdated();
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            ToastManager.ShowInfo(message);
+        }
     }
 
     private void EnsureDeviceId()
@@ -248,7 +256,7 @@ public class VRAuthManager : MonoBehaviour
             return;
         }
 
-        string stored = PlayerPrefs.GetString(DeviceIdPlayerPrefsKey, string.Empty)?.Trim() ?? string.Empty;
+        string stored = PlayerPrefs.GetString(VRSessionKeys.DeviceId, string.Empty)?.Trim() ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(stored))
         {
             deviceId = stored;
@@ -256,7 +264,7 @@ public class VRAuthManager : MonoBehaviour
         }
 
         deviceId = Guid.NewGuid().ToString("N");
-        PlayerPrefs.SetString(DeviceIdPlayerPrefsKey, deviceId);
+        PlayerPrefs.SetString(VRSessionKeys.DeviceId, deviceId);
         PlayerPrefs.Save();
     }
 
@@ -367,9 +375,10 @@ public class VRAuthManager : MonoBehaviour
             ? "VR login complete."
             : $"Logged in as {username}.";
 
-        PlayerPrefs.SetString(AccessTokenPlayerPrefsKey, accessToken);
-        PlayerPrefs.SetString(UserIdPlayerPrefsKey, userId);
-        PlayerPrefs.SetString(UsernamePlayerPrefsKey, username);
+        PlayerPrefs.SetString(VRSessionKeys.AccessToken, accessToken);
+        PlayerPrefs.DeleteKey(VRSessionKeys.LegacyJwtToken);
+        PlayerPrefs.SetString(VRSessionKeys.UserId, userId);
+        PlayerPrefs.SetString(VRSessionKeys.Username, username);
         PlayerPrefs.Save();
 
         if (ApiManager.Instance != null)
@@ -377,7 +386,9 @@ public class VRAuthManager : MonoBehaviour
             ApiManager.Instance.SetAuthToken(accessToken);
         }
 
+        AppStateManager.Instance.SetAuthState(AppAuthState.SignedIn, userId, username);
         NotifyStateUpdated();
+        ToastManager.ShowSuccess(string.IsNullOrWhiteSpace(username) ? "Login successful." : $"Logged in as {username}.", 3f);
     }
 
     private void HandleExpiredCode(string message)
@@ -387,7 +398,9 @@ public class VRAuthManager : MonoBehaviour
         statusMessage = string.IsNullOrWhiteSpace(message)
             ? "Login code expired. Request a new one."
             : message;
+        AppStateManager.Instance.SetAuthState(AppAuthState.SignedOut);
         NotifyStateUpdated();
+        ToastManager.ShowWarning(statusMessage, 3.4f);
     }
 
     private void ResetPairingCode()
@@ -395,6 +408,26 @@ public class VRAuthManager : MonoBehaviour
         currentCode = string.Empty;
         codeExpiresAtUtc = DateTime.MinValue;
         lastBroadcastRemainingSeconds = -1;
+    }
+
+    private static string LoadStoredAccessToken()
+    {
+        string storedToken = PlayerPrefs.GetString(VRSessionKeys.AccessToken, string.Empty)?.Trim() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(storedToken))
+        {
+            return storedToken;
+        }
+
+        string legacyToken = PlayerPrefs.GetString(VRSessionKeys.LegacyJwtToken, string.Empty)?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(legacyToken))
+        {
+            return string.Empty;
+        }
+
+        PlayerPrefs.SetString(VRSessionKeys.AccessToken, legacyToken);
+        PlayerPrefs.DeleteKey(VRSessionKeys.LegacyJwtToken);
+        PlayerPrefs.Save();
+        return legacyToken;
     }
 
     private void NotifyStateUpdated()

@@ -1,9 +1,9 @@
 .root {
     flex-grow: 1;
-    padding-left: 32px;
-    padding-right: 32px;
-    padding-top: 28px;
-    padding-bottom: 28px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 20px;
+    padding-bottom: 20px;
     background-color: rgb(240, 245, 252);
 }
 
@@ -182,12 +182,16 @@
     border-bottom-right-radius: 18px;
 }
 
+.course-list {
+    overflow: hidden;
+}
+
 .course-list .unity-scroll-view__content-container,
 .sections-scroll .unity-scroll-view__content-container {
-    padding-left: 18px;
-    padding-right: 18px;
-    padding-top: 18px;
-    padding-bottom: 18px;
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 14px;
+    padding-bottom: 14px;
 }
 
 /* ──────────────────────────────────────────────
@@ -195,11 +199,11 @@
    ────────────────────────────────────────────── */
 
 .course-card {
-    height: 280px;
-    min-height: 220px;
+    height: 220px;
+    min-height: 190px;
     flex-direction: row;
     align-items: stretch;
-    margin-bottom: 18px;
+    margin-bottom: 14px;
     border-top-left-radius: 18px;
     border-top-right-radius: 18px;
     border-bottom-left-radius: 18px;
@@ -216,17 +220,10 @@
     overflow: hidden;
 }
 
-.course-card:hover {
-    border-top-color: rgb(133, 169, 236);
-    border-right-color: rgb(133, 169, 236);
-    border-bottom-color: rgb(133, 169, 236);
-    border-left-color: rgb(133, 169, 236);
-}
-
 .course-card__thumb {
-    width: 34%;
-    min-width: 200px;
-    max-width: 420px;
+    width: 30%;
+    min-width: 170px;
+    max-width: 320px;
     flex-shrink: 0;
     background-color: rgb(224, 232, 245);
     background-size: cover;
@@ -238,22 +235,38 @@
 .course-card__content {
     flex-grow: 1;
     flex-shrink: 1;
-    padding-left: 22px;
-    padding-right: 14px;
-    padding-top: 18px;
-    padding-bottom: 18px;
+    min-width: 0;
+    padding-left: 18px;
+    padding-right: 12px;
+    padding-top: 14px;
+    padding-bottom: 14px;
     overflow: hidden;
     justify-content: center;
 }
 
 .course-card__action {
     flex-shrink: 0;
-    width: 180px;
-    min-width: 160px;
+    width: 132px;
+    min-width: 120px;
     align-items: center;
     justify-content: center;
-    padding-right: 22px;
+    flex-direction: column;
+    padding-right: 14px;
     padding-left: 8px;
+}
+
+.course-card__mini-button {
+    min-width: 120px;
+    height: 38px;
+    margin-bottom: 8px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    background-color: rgb(233, 242, 255);
+    color: rgb(26, 74, 138);
+    font-size: 16px;
+    -unity-font-style: bold;
 }
 
 .course-card__topic {
@@ -274,8 +287,8 @@
 }
 
 .course-card__title {
-    margin-top: 10px;
-    font-size: 28px;
+    margin-top: 8px;
+    font-size: 24px;
     color: rgb(19, 30, 50);
     -unity-font-style: bold;
     overflow: hidden;
@@ -293,13 +306,13 @@
 }
 
 .course-card__meta {
-    margin-top: 10px;
-    font-size: 16px;
+    margin-top: 8px;
+    font-size: 15px;
     color: rgb(94, 109, 133);
 }
 
 .course-card__progress-row {
-    margin-top: 12px;
+    margin-top: 10px;
     align-items: center;
     flex-direction: row;
     flex-shrink: 0;
@@ -314,7 +327,7 @@
 
 .course-card__progress-track {
     flex-grow: 1;
-    height: 12px;
+    height: 10px;
     background-color: rgb(224, 232, 241);
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
@@ -330,8 +343,8 @@
 }
 
 .course-card__open-button {
-    min-width: 140px;
-    height: 72px;
+    min-width: 112px;
+    height: 58px;
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;
     border-bottom-left-radius: 16px;
@@ -342,7 +355,7 @@
     border-left-width: 0;
     background-color: rgb(32, 112, 232);
     color: rgb(255, 255, 255);
-    font-size: 22px;
+    font-size: 20px;
     -unity-font-style: bold;
     padding-left: 20px;
     padding-right: 20px;
@@ -1004,24 +1017,29 @@ Button,
 .lesson-item,
 .answer-card,
 .section-item__foldout {
-    transition-property: scale, border-color, border-width, background-color;
+    transition-property: border-color, border-width, background-color, color, opacity;
     transition-duration: 0.15s;
     transition-timing-function: ease-in-out;
 }
 
-Button:hover,
-.course-card:hover,
-.lesson-item:hover,
-.answer-card:hover,
-.section-item__foldout:hover {
-    scale: 1.02 !important;
+Button:hover {
     border-top-color: rgb(82, 172, 255) !important;
     border-right-color: rgb(82, 172, 255) !important;
     border-bottom-color: rgb(82, 172, 255) !important;
     border-left-color: rgb(82, 172, 255) !important;
 }
 
+.course-card:hover,
+.lesson-item:hover,
+.answer-card:hover,
+.section-item__foldout:hover {
+    border-top-color: rgb(82, 172, 255) !important;
+    border-right-color: rgb(82, 172, 255) !important;
+    border-bottom-color: rgb(82, 172, 255) !important;
+    border-left-color: rgb(82, 172, 255) !important;
+    background-color: rgba(237, 246, 255, 0.98) !important;
+}
+
 Button:active {
-    scale: 0.97 !important;
     background-color: rgba(32, 112, 232, 0.85) !important;
 }
