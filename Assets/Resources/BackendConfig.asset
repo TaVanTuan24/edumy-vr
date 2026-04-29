@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f2864bdb27a410c92fd27419b2e7d84, type: 3}
   m_Name: BackendConfig
   m_EditorClassIdentifier: 
-  apiBaseUrl: http://localhost:3000
+  apiBaseUrl: https://edumy.onrender.com

@@ -18,7 +18,7 @@ public class ApiManager : MonoBehaviour
     [SerializeField] private bool enableVerboseLogs;
 
     [Header("Authentication")]
-    [Tooltip("JWT Token dùng để xác thực. Token này sẽ được gửi tự động trong header Authorization.")]
+    [Tooltip("JWT token used for authentication. This token is sent automatically in the Authorization header.")]
     [SerializeField] private string authToken = string.Empty;
     [SerializeField] private bool loadTokenFromPlayerPrefs;
     [SerializeField] private bool persistTokenInPlayerPrefs;
@@ -124,7 +124,7 @@ public class ApiManager : MonoBehaviour
 
     public async Task<List<CourseData>> GetCoursesAsync()
     {
-        // Đồng bộ endpoint theo cùng pattern với lessons
+        // Keep the endpoint aligned with the lessons API pattern.
         string url = BuildUrl("api/vr/courses");
         LogVerbose($"[ApiManager] Fetching courses from: {url}");
         var response = await SendGetRequest<ApiResponse<CourseData>>(url);
@@ -359,7 +359,7 @@ public class ApiManager : MonoBehaviour
 
         if (Application.platform == RuntimePlatform.Android && isLoopbackHost)
         {
-            errorMessage = "Quest cannot reach localhost. Open Settings and update Backend Server URL to your PC LAN IP, for example http://192.168.1.10:3000.";
+            errorMessage = "The saved backend URL points to this device. Clear the override in Settings to use the production Edumy backend.";
             return false;
         }
 
@@ -607,7 +607,7 @@ public class ApiManager : MonoBehaviour
                 HandleUnauthorizedResponse(statusCode);
                 string responseBody = webRequest.downloadHandler?.text;
                 PublishBackendStatusForResponse(statusCode, webRequest.error, url);
-                Debug.LogError($"[ApiManager] Request failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
+                LogRequestFailure(webRequest.error, statusCode, url, responseBody);
 
                 if (statusCode == 404)
                 {
@@ -644,7 +644,7 @@ public class ApiManager : MonoBehaviour
             HandleUnauthorizedResponse(statusCode);
             string responseBody = webRequest.downloadHandler?.text;
             PublishBackendStatusForResponse(statusCode, webRequest.error, url);
-            Debug.LogError($"[ApiManager] Request failed: {webRequest.error} | Status: {statusCode} | URL: {url} | Body: {responseBody}");
+            LogRequestFailure(webRequest.error, statusCode, url, responseBody);
 
             if (statusCode == 404)
             {
@@ -653,6 +653,18 @@ public class ApiManager : MonoBehaviour
 
             return null;
         }
+    }
+
+    private void LogRequestFailure(string requestError, long statusCode, string url, string responseBody)
+    {
+        string message = $"[ApiManager] Request failed: {requestError} | Status: {statusCode} | URL: {url} | Body: {responseBody}";
+        if (statusCode == 401)
+        {
+            Debug.LogWarning(message);
+            return;
+        }
+
+        Debug.LogError(message);
     }
 
     private async Task<PostStatus> SendPostJsonRequest(string url, string jsonBody)
@@ -1140,20 +1152,28 @@ public class ApiManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Tải ảnh mượt mà hơn bằng cách sử dụng Raw Bytes + LoadImage (Hỗ trợ tốt nhất cho JPG/PNG)
-    /// </summary>
     public async Task<Texture2D> DownloadImageAsync(string url)
     {
         if (string.IsNullOrEmpty(url)) return null;
 
-        // 1. CHUYỂN ĐỔI URL CLOUDINARY SANG JPG (Ép Cloudinary trả về JPG thay vì WebP)
-        string processedUrl = ConvertCloudinaryUrlToJpg(url);
-        
-        string fullUrl = ApiConfig.IsAbsoluteUrl(processedUrl) ? processedUrl : ApiConfig.BuildUrl(processedUrl);
+        foreach (string candidateUrl in BuildUnityImageUrlCandidates(url))
+        {
+            Texture2D texture = await TryDownloadImageCandidateAsync(candidateUrl);
+            if (texture != null)
+            {
+                return texture;
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<Texture2D> TryDownloadImageCandidateAsync(string fullUrl)
+    {
+        if (string.IsNullOrWhiteSpace(fullUrl)) return null;
+
         LogVerbose($"[ApiManager] Loading image: {fullUrl}");
 
-        // 2. Sử dụng UnityWebRequest thường để lấy mảng byte
         using (UnityWebRequest webRequest = UnityWebRequest.Get(fullUrl))
         {
             ApplyRequestDefaults(webRequest);
@@ -1165,8 +1185,8 @@ public class ApiManager : MonoBehaviour
             {
                 PublishBackendStatusForResponse(webRequest.responseCode, null, fullUrl);
                 byte[] results = webRequest.downloadHandler.data;
+                string contentType = webRequest.GetResponseHeader("Content-Type") ?? string.Empty;
 
-                // 3. Sử dụng LoadImage để giải mã dữ liệu ảnh (Xử lý được hầu hết định dạng JPG/PNG)
                 Texture2D texture = new Texture2D(2, 2);
                 if (texture.LoadImage(results)) 
                 {
@@ -1174,7 +1194,7 @@ public class ApiManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError($"[ApiManager] LoadImage thất bại cho URL: {fullUrl}");
+                    Debug.LogWarning($"[ApiManager] LoadImage could not decode image bytes. URL: {fullUrl} | Content-Type: {contentType}");
                     return null;
                 }
             }
@@ -1182,7 +1202,7 @@ public class ApiManager : MonoBehaviour
             {
                 HandleUnauthorizedResponse(webRequest.responseCode);
                 PublishBackendStatusForResponse(webRequest.responseCode, webRequest.error, fullUrl);
-                Debug.LogError($"[ApiManager] Lỗi tải dữ liệu ảnh: {webRequest.error} | URL: {fullUrl}");
+                Debug.LogWarning($"[ApiManager] Image download failed: {webRequest.error} | Status: {webRequest.responseCode} | URL: {fullUrl}");
                 return null;
             }
         }
@@ -1241,23 +1261,75 @@ public class ApiManager : MonoBehaviour
         AppStateManager.Instance.SetBackendStatus(state, message, BaseUrl);
     }
 
-    /// <summary>
-    /// Helper: Ép buộc Cloudinary trả về định dạng JPG để Unity dễ xử lý
-    /// </summary>
+    private IEnumerable<string> BuildUnityImageUrlCandidates(string url)
+    {
+        string fullOriginalUrl = ApiConfig.IsAbsoluteUrl(url) ? url : ApiConfig.BuildUrl(url);
+        string unitySafeUrl = ConvertImageUrlToUnityDecodableFormat(fullOriginalUrl);
+        string cloudinaryJpgUrl = ConvertCloudinaryUrlToJpg(unitySafeUrl);
+
+        List<string> candidates = new List<string>();
+        AddImageCandidate(candidates, cloudinaryJpgUrl);
+        AddImageCandidate(candidates, unitySafeUrl);
+        AddImageCandidate(candidates, fullOriginalUrl);
+        return candidates;
+    }
+
+    private static void AddImageCandidate(List<string> candidates, string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+        string normalized = value.Trim();
+        if (!candidates.Contains(normalized))
+        {
+            candidates.Add(normalized);
+        }
+    }
+
+    private string ConvertImageUrlToUnityDecodableFormat(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return url;
+
+        string converted = url;
+
+        // Unity Texture2D.LoadImage reliably supports JPG/PNG, but not WebP on all targets.
+        converted = ReplaceOrdinalIgnoreCase(converted, "format(webp)", "format(jpeg)");
+
+        int queryStart = converted.IndexOf('?');
+        string pathPart = queryStart >= 0 ? converted.Substring(0, queryStart) : converted;
+        if (pathPart.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+        {
+            converted = pathPart.Substring(0, pathPart.Length - ".webp".Length) + ".jpg"
+                + (queryStart >= 0 ? converted.Substring(queryStart) : string.Empty);
+        }
+
+        return converted;
+    }
+
+    private static string ReplaceOrdinalIgnoreCase(string source, string oldValue, string newValue)
+    {
+        if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(oldValue)) return source;
+
+        int index = source.IndexOf(oldValue, StringComparison.OrdinalIgnoreCase);
+        if (index < 0) return source;
+
+        return source.Substring(0, index)
+            + newValue
+            + source.Substring(index + oldValue.Length);
+    }
+
     private string ConvertCloudinaryUrlToJpg(string url)
     {
         if (string.IsNullOrEmpty(url) || !url.Contains("cloudinary.com")) return url;
 
         string newUrl = url;
 
-        // Xử lý đổi đuôi file sang .jpg nếu đang là .webp hoặc .jpeg
+        // Rewrite WebP/JPEG extensions to JPG so Unity can decode the downloaded bytes reliably.
         if (newUrl.ToLower().EndsWith(".webp") || newUrl.ToLower().EndsWith(".jpeg"))
         {
             int lastDot = newUrl.LastIndexOf('.');
             newUrl = newUrl.Substring(0, lastDot) + ".jpg";
         }
 
-        // Chèn tham số f_jpg vào sau /upload/ để Cloudinary thực hiện convert
+        // Insert f_jpg after /upload/ so Cloudinary returns a Unity-decodable image.
         string searchTag = "/upload/";
         int index = newUrl.IndexOf(searchTag);
         if (index != -1)

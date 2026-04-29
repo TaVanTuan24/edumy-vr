@@ -4,5 +4,5 @@ using UnityEngine;
 public class BackendConfig : ScriptableObject
 {
     [Tooltip("Default backend API base URL used when no PlayerPrefs override is set.")]
-    public string apiBaseUrl = "http://localhost:3000";
+    public string apiBaseUrl = "https://edumy.onrender.com";
 }

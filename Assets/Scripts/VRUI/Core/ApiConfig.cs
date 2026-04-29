@@ -4,7 +4,8 @@ using UnityEngine;
 public static class ApiConfig
 {
     private const string ResourcesAssetName = "BackendConfig";
-    private const string FallbackBaseUrl = "http://localhost:3000";
+    private const string ProductionBaseUrl = "https://edumy.onrender.com";
+    private const string FallbackBaseUrl = ProductionBaseUrl;
 
     private static BackendConfig cachedConfig;
     private static bool missingConfigLogged;
@@ -40,7 +41,15 @@ public static class ApiConfig
     public static string GetOverrideBaseUrl()
     {
         MigrateLegacyOverrideIfNeeded();
-        return NormalizeBaseUrl(PlayerPrefs.GetString(VRSessionKeys.BackendBaseUrlOverride, string.Empty));
+        string overrideBaseUrl = NormalizeBaseUrl(PlayerPrefs.GetString(VRSessionKeys.BackendBaseUrlOverride, string.Empty));
+        if (IsLocalDevelopmentBaseUrl(overrideBaseUrl))
+        {
+            Debug.LogWarning($"[ApiConfig] Ignoring saved local backend URL '{overrideBaseUrl}'. Using production backend '{ProductionBaseUrl}'.");
+            ClearOverrideBaseUrl();
+            return string.Empty;
+        }
+
+        return overrideBaseUrl;
     }
 
     public static void SetOverrideBaseUrl(string baseUrl)
@@ -158,10 +167,44 @@ public static class ApiConfig
         if (cachedConfig == null && !missingConfigLogged)
         {
             missingConfigLogged = true;
-            Debug.LogWarning("[ApiConfig] Resources/BackendConfig.asset was not found. Falling back to http://localhost:3000.");
+            Debug.LogWarning($"[ApiConfig] Resources/BackendConfig.asset was not found. Falling back to {FallbackBaseUrl}.");
         }
 
         return cachedConfig;
+    }
+
+    private static bool IsLocalDevelopmentBaseUrl(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        if (!Uri.TryCreate(value, UriKind.Absolute, out Uri uri))
+        {
+            return false;
+        }
+
+        string host = uri.Host ?? string.Empty;
+        if (host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            || host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase)
+            || host.Equals("0.0.0.0", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (System.Net.IPAddress.TryParse(host, out System.Net.IPAddress address))
+        {
+            byte[] bytes = address.GetAddressBytes();
+            if (bytes.Length == 4)
+            {
+                return bytes[0] == 10
+                    || (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+                    || (bytes[0] == 192 && bytes[1] == 168);
+            }
+        }
+
+        return false;
     }
 
     private static void MigrateLegacyOverrideIfNeeded()
