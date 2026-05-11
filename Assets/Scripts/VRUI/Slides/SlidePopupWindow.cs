@@ -23,7 +23,7 @@ public class SlidePopupWindow : MonoBehaviour
     [SerializeField] private bool autoCreateWindowInEditor = true;
     [SerializeField] private bool showPreviewInEditor = true;
     [SerializeField] private bool autoPlaceInFrontWhenPlaying = false;
-    [SerializeField] private bool followViewerWhileVisible = true;
+
     [SerializeField] private float horizontalOffset = -0.35f;
     [SerializeField] private float additionalHeightOffset = -0.35f;
     [SerializeField] private bool flipForwardToFaceViewer = true;
@@ -38,8 +38,12 @@ public class SlidePopupWindow : MonoBehaviour
     private RectTransform slideSurfaceRect;
     private Image slideSurfaceBackground;
     private Button closeButton;
+    private Button firstButton;
     private Button prevButton;
     private Button nextButton;
+    private Button lastButton;
+    private Button resetViewButton;
+    private Button bookmarkButton;
     private Button pinButton;
 
     private readonly List<SlidePageData> activeSlides = new List<SlidePageData>();
@@ -168,7 +172,10 @@ public class SlidePopupWindow : MonoBehaviour
     public void PlaceInFrontOf(Transform viewer, float distance, float heightOffset)
     {
         EnsureWindowExists(false);
-        Debug.Log($"[SlidePopupWindow] PlaceInFrontOf invoked viewerNull={viewer == null} distance={distance} heightOffset={heightOffset}");
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[SlidePopupWindow] PlaceInFrontOf invoked viewerNull={viewer == null} distance={distance} heightOffset={heightOffset}");
+        }
         if (windowTransform == null || viewer == null) return;
         EnsureSpatialWindow();
         if (spatialWindow != null)
@@ -202,7 +209,10 @@ public class SlidePopupWindow : MonoBehaviour
     {
         if (lesson == null) return false;
 
-        Debug.Log($"[SlidePopupWindow] Show invoked id={lesson.id} title='{lesson.title}' type='{lesson.type}'");
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[SlidePopupWindow] Show invoked id={lesson.id} title='{lesson.title}' type='{lesson.type}'");
+        }
 
         if (enableDebugLogs)
         {
@@ -287,6 +297,10 @@ public class SlidePopupWindow : MonoBehaviour
         }
 
         activeViewer = null;
+        if (AppStateManager.IsAvailable && AppStateManager.Instance.ActiveWindow == ActiveContentWindowType.Slide)
+        {
+            AppStateManager.Instance.SetActiveWindow(ActiveContentWindowType.None);
+        }
     }
 
     private void EnsureWindowExists(bool forceEditorCreation)
@@ -409,68 +423,39 @@ public class SlidePopupWindow : MonoBehaviour
 
         RectTransform panelRect = panel.GetComponent<RectTransform>();
 
-        titleText = FindOrCreateText(panel, "Title", new Vector2(0.05f, 0.88f), new Vector2(0.77f, 0.97f), 38, FontStyles.Bold);
+        // VR-sized text: larger fonts for readability in-headset
+        titleText = FindOrCreateText(panel, "Title", new Vector2(0.05f, 0.88f), new Vector2(0.64f, 0.97f), 42, FontStyles.Bold);
         titleText.color = TitleTextColor;
-        indicatorText = FindOrCreateText(panel, "Indicator", new Vector2(0.05f, 0.815f), new Vector2(0.47f, 0.875f), 23, FontStyles.Normal);
-        contentText = FindOrCreateText(panel, "Content", new Vector2(0.05f, 0.15f), new Vector2(0.95f, 0.78f), 28, FontStyles.Normal);
+        indicatorText = FindOrCreateText(panel, "Indicator", new Vector2(0.05f, 0.81f), new Vector2(0.47f, 0.875f), 27, FontStyles.Normal);
+        contentText = FindOrCreateText(panel, "Content", new Vector2(0.05f, 0.15f), new Vector2(0.95f, 0.78f), 30, FontStyles.Normal);
         contentText.textWrappingMode = TextWrappingModes.Normal;
         contentText.alignment = TextAlignmentOptions.TopLeft;
         contentText.color = new Color(0.15f, 0.24f, 0.38f, 1f);
         indicatorText.color = new Color(0.27f, 0.39f, 0.56f, 1f);
+        // VR-sized buttons: taller hit targets for XR ray interaction
+        closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.78f, 0.89f), new Vector2(0.95f, 0.97f));
+        pinButton = FindOrCreateButton(panelRect, "PinButton", "Pin", new Vector2(0.65f, 0.89f), new Vector2(0.77f, 0.97f));
+        firstButton = FindOrCreateButton(panelRect, "FirstButton", "|<", new Vector2(0.05f, 0.025f), new Vector2(0.14f, 0.11f));
+        prevButton = FindOrCreateButton(panelRect, "PrevButton", "Prev", new Vector2(0.16f, 0.025f), new Vector2(0.31f, 0.11f));
+        resetViewButton = FindOrCreateButton(panelRect, "ResetViewButton", "Reset", new Vector2(0.33f, 0.025f), new Vector2(0.48f, 0.11f));
+        bookmarkButton = FindOrCreateButton(panelRect, "BookmarkButton", "Save", new Vector2(0.50f, 0.025f), new Vector2(0.65f, 0.11f));
+        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.67f, 0.025f), new Vector2(0.82f, 0.11f));
+        lastButton = FindOrCreateButton(panelRect, "LastButton", ">|", new Vector2(0.84f, 0.025f), new Vector2(0.95f, 0.11f));
+        SetButtonBaseColor(closeButton, SecondaryButtonColor);
+        SetButtonBaseColor(pinButton, SecondaryButtonColor);
+        SetButtonBaseColor(firstButton, SecondaryButtonColor);
+        SetButtonBaseColor(prevButton, SecondaryButtonColor);
+        SetButtonBaseColor(resetViewButton, SecondaryButtonColor);
+        SetButtonBaseColor(bookmarkButton, SecondaryButtonColor);
+        SetButtonBaseColor(nextButton, PrimaryButtonColor);
+        SetButtonBaseColor(lastButton, SecondaryButtonColor);
+
         EnsureSlideViewport(panelRect);
-
-        closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.79f, 0.885f), new Vector2(0.95f, 0.97f));
-        pinButton = FindOrCreateButton(panelRect, "PinButton", "[Pin]", new Vector2(0.69f, 0.885f), new Vector2(0.78f, 0.97f));
-        prevButton = FindOrCreateButton(panelRect, "PrevButton", "Prev", new Vector2(0.05f, 0.03f), new Vector2(0.25f, 0.11f));
-        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.27f, 0.03f), new Vector2(0.47f, 0.11f));
-        SetButtonColor(closeButton, SecondaryButtonColor);
-        SetButtonColor(pinButton, SecondaryButtonColor);
-        SetButtonColor(prevButton, SecondaryButtonColor);
-        SetButtonColor(nextButton, PrimaryButtonColor);
+        currentSlideIndex = Mathf.Clamp(currentSlideIndex, 0, Mathf.Max(0, activeSlides.Count - 1));
+        Render();
     }
 
-    private void BindEventsOnce()
-    {
-        if (bindingsAdded) return;
-
-        if (closeButton != null) closeButton.onClick.AddListener(HideWindow);
-        if (pinButton != null) pinButton.onClick.AddListener(TogglePinnedState);
-        if (prevButton != null) prevButton.onClick.AddListener(Prev);
-        if (nextButton != null) nextButton.onClick.AddListener(Next);
-
-        bindingsAdded = true;
-        UpdatePinButtonState();
-    }
-
-    private void TogglePinnedState()
-    {
-        EnsureSpatialWindow();
-        if (spatialWindow == null)
-        {
-            return;
-        }
-
-        spatialWindow.TogglePinned();
-        UpdatePinButtonState();
-    }
-
-    private void UpdatePinButtonState()
-    {
-        if (pinButton == null || spatialWindow == null)
-        {
-            return;
-        }
-
-        TextMeshProUGUI label = pinButton.GetComponentInChildren<TextMeshProUGUI>(true);
-        if (label != null)
-        {
-            label.text = spatialWindow.IsPinned ? "[Pin]" : "Pin";
-        }
-
-        SetButtonColor(pinButton, spatialWindow.IsPinned ? PrimaryButtonColor : SecondaryButtonColor);
-    }
-
-    private void Prev()
+    private void Previous()
     {
         if (activeSlides.Count == 0) return;
         currentSlideIndex = Mathf.Max(0, currentSlideIndex - 1);
@@ -482,6 +467,125 @@ public class SlidePopupWindow : MonoBehaviour
         if (activeSlides.Count == 0) return;
         currentSlideIndex = Mathf.Min(activeSlides.Count - 1, currentSlideIndex + 1);
         Render();
+    }
+
+    private void JumpToFirst()
+    {
+        if (activeSlides.Count == 0) return;
+        currentSlideIndex = 0;
+        Render();
+    }
+
+    private void JumpToLast()
+    {
+        if (activeSlides.Count == 0) return;
+        currentSlideIndex = Mathf.Max(0, activeSlides.Count - 1);
+        Render();
+    }
+
+    private void ResetView()
+    {
+        slideRenderVersion++;
+        Render();
+        ToastManager.ShowInfo("Slide view reset.", 2f);
+    }
+
+    public void TrySetSlideIndex(int slideIndex)
+    {
+        if (activeSlides.Count == 0)
+        {
+            return;
+        }
+
+        currentSlideIndex = Mathf.Clamp(slideIndex, 0, activeSlides.Count - 1);
+        Render();
+    }
+
+    private void BindEventsOnce()
+    {
+        if (bindingsAdded) return;
+
+        if (closeButton != null) closeButton.onClick.AddListener(HideWindow);
+        if (pinButton != null) pinButton.onClick.AddListener(TogglePinnedState);
+        if (firstButton != null) firstButton.onClick.AddListener(JumpToFirst);
+        if (prevButton != null) prevButton.onClick.AddListener(Previous);
+        if (resetViewButton != null) resetViewButton.onClick.AddListener(ResetView);
+        if (bookmarkButton != null) bookmarkButton.onClick.AddListener(SaveCurrentSlideBookmark);
+        if (nextButton != null) nextButton.onClick.AddListener(Next);
+        if (lastButton != null) lastButton.onClick.AddListener(JumpToLast);
+
+        bindingsAdded = true;
+        UpdatePinButtonState();
+    }
+
+    private void TogglePinnedState()
+    {
+        EnsureSpatialWindow();
+        if (spatialWindow == null) return;
+        spatialWindow.TogglePinned();
+        UpdatePinButtonState();
+    }
+
+    private void UpdatePinButtonState()
+    {
+        if (pinButton == null || spatialWindow == null) return;
+
+        TextMeshProUGUI label = pinButton.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (label != null)
+        {
+            label.text = spatialWindow.IsPinned ? "[Pin]" : "Pin";
+        }
+
+        SetButtonBaseColor(pinButton, spatialWindow.IsPinned ? PrimaryButtonColor : SecondaryButtonColor);
+    }
+
+    private void SaveCurrentSlideBookmark()
+    {
+        if (!AppStateManager.IsAvailable)
+        {
+            return;
+        }
+
+        CourseStateSnapshot courseState = AppStateManager.Instance.CurrentCourse;
+        LessonStateSnapshot lessonState = AppStateManager.Instance.CurrentLesson;
+        if (string.IsNullOrWhiteSpace(courseState.courseId) || string.IsNullOrWhiteSpace(lessonState.lessonId))
+        {
+            return;
+        }
+
+        CourseData course = new CourseData { id = courseState.courseId, title = courseState.courseTitle };
+        LessonData lesson = new LessonData { id = lessonState.lessonId, title = lessonState.lessonTitle };
+        StudyBookmarkData bookmark = LocalStudyStateManager.BuildBookmark(
+            AppStateManager.Instance.CurrentUserId,
+            course,
+            lesson,
+            "slide",
+            "Slides",
+            lessonState.sectionIndex,
+            lessonState.lessonIndex,
+            slideIndex: currentSlideIndex);
+
+        bool saved = LocalStudyStateManager.ToggleBookmark(AppStateManager.Instance.CurrentUserId, bookmark);
+        ToastManager.ShowInfo(saved ? $"Bookmarked slide {currentSlideIndex + 1}." : $"Removed bookmark for slide {currentSlideIndex + 1}.", 2.6f);
+    }
+
+    private static void SetButtonBaseColor(Button button, Color color)
+    {
+        if (button == null) return;
+        Image image = button.GetComponent<Image>();
+        if (image != null)
+        {
+            image.color = color;
+        }
+
+        ColorBlock colors = button.colors;
+        colors.normalColor = color;
+        colors.highlightedColor = Color.Lerp(color, Color.white, 0.22f);
+        colors.selectedColor = colors.highlightedColor;
+        colors.pressedColor = Color.Lerp(color, Color.black, 0.16f);
+        colors.disabledColor = new Color(color.r, color.g, color.b, color.a * 0.55f);
+        colors.fadeDuration = 0.08f;
+        button.colors = colors;
     }
 
     private void Render()
@@ -511,6 +615,8 @@ public class SlidePopupWindow : MonoBehaviour
 
         if (prevButton != null) prevButton.interactable = currentSlideIndex > 0;
         if (nextButton != null) nextButton.interactable = currentSlideIndex < total - 1;
+        if (firstButton != null) firstButton.interactable = currentSlideIndex > 0;
+        if (lastButton != null) lastButton.interactable = currentSlideIndex < total - 1;
     }
 
     private List<SlidePageData> BuildSlidesForLesson(LessonData lesson)
@@ -773,7 +879,7 @@ public class SlidePopupWindow : MonoBehaviour
 
         TextMeshProUGUI text = go.AddComponent<TextMeshProUGUI>();
         text.text = string.IsNullOrWhiteSpace(element.text) ? string.Empty : element.text;
-        text.enableWordWrapping = true;
+        text.textWrappingMode = TextWrappingModes.Normal;
         text.fontSize = Mathf.Max(12f, element.fontSize * scale);
         text.color = TryParseColor(element.color, out Color parsedColor) ? parsedColor : new Color(0.11f, 0.12f, 0.15f, 1f);
         text.fontStyle = element.bold ? FontStyles.Bold : FontStyles.Normal;

@@ -105,7 +105,8 @@ public partial class LessonItemElement : VisualElement
 
     private void OnClicked(ClickEvent evt)
     {
-        if (evt.target == completeToggle) return;
+        VisualElement target = evt.target as VisualElement;
+        if (target != null && completeToggle.Contains(target)) return;
         Clicked?.Invoke();
     }
 }

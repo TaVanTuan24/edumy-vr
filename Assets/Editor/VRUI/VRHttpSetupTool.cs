@@ -16,10 +16,10 @@ public static class VRHttpSetupTool
 
             if (prop == null)
             {
-                Debug.LogWarning("[VRHttpSetupTool] Khong tim thay PlayerSettings.insecureHttpOption. Hay bat tay trong Player Settings > Other Settings > Allow downloads over HTTP.");
+                Debug.LogWarning("[VRHttpSetupTool] PlayerSettings.insecureHttpOption was not found. Enable it manually in Player Settings > Other Settings > Allow downloads over HTTP.");
                 EditorUtility.DisplayDialog(
                     "HTTP Setup",
-                    "Khong tim thay insecureHttpOption API. Vui long bat tay trong Player Settings > Other Settings > Allow downloads over HTTP = Always allowed.",
+                    "The insecureHttpOption API was not found. Enable it manually in Player Settings > Other Settings > Allow downloads over HTTP = Always allowed.",
                     "OK");
                 return;
             }
@@ -29,18 +29,18 @@ public static class VRHttpSetupTool
             prop.SetValue(null, alwaysAllowed);
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[VRHttpSetupTool] Da bat Allow downloads over HTTP = AlwaysAllowed.");
+            Debug.Log("[VRHttpSetupTool] Enabled Allow downloads over HTTP = AlwaysAllowed.");
             EditorUtility.DisplayDialog(
                 "HTTP Setup",
-                "Da bat Allow downloads over HTTP = AlwaysAllowed.",
+                "Enabled Allow downloads over HTTP = AlwaysAllowed.",
                 "OK");
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[VRHttpSetupTool] Loi khi bat HTTP downloads: {ex.Message}");
+            Debug.LogError($"[VRHttpSetupTool] Failed to enable HTTP downloads: {ex.Message}");
             EditorUtility.DisplayDialog(
                 "HTTP Setup",
-                "Khong the set tu dong. Hay vao Player Settings > Other Settings > Allow downloads over HTTP va chon Always allowed.",
+                "Could not set this automatically. Open Player Settings > Other Settings > Allow downloads over HTTP and choose Always allowed.",
                 "OK");
         }
     }

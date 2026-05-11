@@ -622,8 +622,6 @@ GameObject:
   - component: {fileID: 6249921234525899284}
   - component: {fileID: 4851574624834900483}
   - component: {fileID: 1544556246181995499}
-  - component: {fileID: 1474844463006936830}
-  - component: {fileID: 8293346092619858278}
   m_Layer: 0
   m_Name: LessonListPanel
   m_TagString: Untagged
@@ -718,43 +716,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &1474844463006936830
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8590024225705668652}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f722f8baeda6734081f40db1c792717, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LessonListPanel
-  lessonCardPrefab: {fileID: 1258354667582672582, guid: 15c223bf05b135244b630f30ff95ad9c, type: 3}
-  contentContainer: {fileID: 5354855513703547805}
-  titleText: {fileID: 8421412037099472163}
-  backButton: {fileID: 8857767334462465779}
-  loadingSpinner: {fileID: 448252586337724683}
-  courseSelectionPanel: {fileID: 0}
-  distanceFromUser: 2.2
-  tiltAngle: -20
-  smoothFollowSpeed: 2
---- !u!114 &8293346092619858278
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8590024225705668652}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c46c4538f4a34834ba259dc2b9703dfd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SmoothFollow
-  target: {fileID: 0}
-  distance: 1.8
-  smoothSpeed: 2
-  offsetAngle: {x: 15, y: 0, z: 0}
 --- !u!1 &9178373680048661700
 GameObject:
   m_ObjectHideFlags: 0

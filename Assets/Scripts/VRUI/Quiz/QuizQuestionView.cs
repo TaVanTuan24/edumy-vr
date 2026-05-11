@@ -301,9 +301,18 @@ public class QuizQuestionView
                 }
             }
 
-            if (q.correctIndex <= 0 && q.correctAnswer > 0)
+            if (q.correctIndex >= 0 && q.correctIndex < q.options.Count)
+            {
+                continue;
+            }
+
+            if (q.correctAnswer > 0 && q.correctAnswer <= q.options.Count)
             {
                 q.correctIndex = q.correctAnswer - 1;
+            }
+            else if (q.correctAnswer >= 0 && q.correctAnswer < q.options.Count)
+            {
+                q.correctIndex = q.correctAnswer;
             }
 
             q.correctIndex = Mathf.Clamp(q.correctIndex, 0, q.options.Count - 1);

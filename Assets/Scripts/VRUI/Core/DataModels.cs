@@ -1,6 +1,17 @@
 using System;
 using System.Collections.Generic;
 
+public static class VRSessionKeys
+{
+    public const string DeviceId = "VR_DEVICE_ID";
+    public const string AccessToken = "VR_ACCESS_TOKEN";
+    public const string LegacyJwtToken = "JWT_TOKEN";
+    public const string UserId = "VR_USER_ID";
+    public const string Username = "VR_USERNAME";
+    public const string BackendBaseUrlOverride = "EDUMY_API_BASE_URL";
+    public const string LegacyApiBaseUrl = "VR_API_BASE_URL";
+}
+
 [Serializable]
 public class CourseData
 {

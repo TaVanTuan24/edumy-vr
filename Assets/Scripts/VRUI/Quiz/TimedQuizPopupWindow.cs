@@ -16,8 +16,8 @@ public class TimedQuizPopupWindow : MonoBehaviour
     private static readonly Color BodyTextColor = new Color(0.18f, 0.24f, 0.33f, 1f);
     private static readonly Color MutedTextColor = new Color(0.34f, 0.43f, 0.56f, 1f);
     private static readonly Color OptionDefaultColor = new Color(0.9f, 0.95f, 1f, 0.98f);
-    private static readonly Color OptionCorrectColor = new Color(0.85f, 0.97f, 0.89f, 0.99f);
-    private static readonly Color OptionWrongColor = new Color(1f, 0.89f, 0.89f, 0.99f);
+    private static readonly Color OptionCorrectColor = new Color(0.11f, 0.64f, 0.31f, 0.99f);
+    private static readonly Color OptionWrongColor = new Color(0.84f, 0.18f, 0.18f, 0.99f);
     private static readonly Color ContinueButtonColor = new Color(0.2f, 0.57f, 0.94f, 0.98f);
 
     [SerializeField] private Transform windowTransform;
@@ -105,6 +105,16 @@ public class TimedQuizPopupWindow : MonoBehaviour
         if (!Application.isPlaying) return;
         if (spatialWindow == null) return;
         spatialWindow.SetViewer(activeViewer);
+    }
+
+    private void OnDisable()
+    {
+        StopAutoClose();
+    }
+
+    private void OnDestroy()
+    {
+        StopAutoClose();
     }
 
     public bool Show(TimedQuizData quiz, Transform viewer, float distance, float heightOffset)
@@ -430,18 +440,22 @@ public class TimedQuizPopupWindow : MonoBehaviour
                 if (!answered)
                 {
                     image.color = OptionDefaultColor;
+                    if (label != null) label.color = TitleColor;
                 }
                 else if (i == correctIndex)
                 {
                     image.color = OptionCorrectColor;
+                    if (label != null) label.color = Color.white;
                 }
                 else if (i == selectedIndex && selectedIndex != correctIndex)
                 {
                     image.color = OptionWrongColor;
+                    if (label != null) label.color = Color.white;
                 }
                 else
                 {
                     image.color = OptionDefaultColor;
+                    if (label != null) label.color = TitleColor;
                 }
             }
 
@@ -457,12 +471,15 @@ public class TimedQuizPopupWindow : MonoBehaviour
             }
             else if (selectedIndex == correctIndex)
             {
-                feedbackText.color = new Color(0.18f, 0.54f, 0.31f, 1f);
-                feedbackText.text = "Correct! Press Continue to resume the video.";
+                string explanation = GetExplanationText(activeQuiz);
+                feedbackText.color = OptionCorrectColor;
+                feedbackText.text = string.IsNullOrWhiteSpace(explanation)
+                    ? "Correct! The video will resume automatically."
+                    : $"Correct!\nExplanation: {explanation}";
             }
             else
             {
-                feedbackText.color = new Color(0.67f, 0.22f, 0.22f, 1f);
+                feedbackText.color = OptionWrongColor;
                 string correctText = (options != null && correctIndex >= 0 && correctIndex < options.Count)
                     ? options[correctIndex]
                     : "(unknown)";
@@ -483,11 +500,6 @@ public class TimedQuizPopupWindow : MonoBehaviour
             closeButton.interactable = answered || options == null || options.Count == 0;
         }
 
-        if (answered && selectedIndex == correctIndex && feedbackText != null)
-        {
-            feedbackText.color = new Color(0.18f, 0.54f, 0.31f, 1f);
-            feedbackText.text = $"Chinh xac!";
-        }
     }
 
     private static string GetExplanationText(TimedQuizData quiz)
@@ -540,13 +552,22 @@ public class TimedQuizPopupWindow : MonoBehaviour
     {
         if (quiz == null || optionCount <= 0) return 0;
 
-        int rawIndex = quiz.correctIndex;
-        if (rawIndex <= 0 && quiz.correctAnswer > 0)
+        if (quiz.correctIndex >= 0 && quiz.correctIndex < optionCount)
         {
-            rawIndex = quiz.correctAnswer - 1;
+            return quiz.correctIndex;
         }
 
-        return Mathf.Clamp(rawIndex, 0, Mathf.Max(0, optionCount - 1));
+        if (quiz.correctAnswer > 0 && quiz.correctAnswer <= optionCount)
+        {
+            return quiz.correctAnswer - 1;
+        }
+
+        if (quiz.correctAnswer >= 0 && quiz.correctAnswer < optionCount)
+        {
+            return quiz.correctAnswer;
+        }
+
+        return Mathf.Clamp(quiz.correctIndex, 0, Mathf.Max(0, optionCount - 1));
     }
 
     public static float GetTriggerSeconds(TimedQuizData quiz)
@@ -782,6 +803,15 @@ public class TimedQuizPopupWindow : MonoBehaviour
         {
             text.color = textColor;
         }
+
+        ColorBlock colors = button.colors;
+        colors.normalColor = background;
+        colors.highlightedColor = Color.Lerp(background, Color.white, 0.22f);
+        colors.selectedColor = colors.highlightedColor;
+        colors.pressedColor = Color.Lerp(background, Color.black, 0.16f);
+        colors.disabledColor = new Color(background.r, background.g, background.b, background.a * 0.55f);
+        colors.fadeDuration = 0.08f;
+        button.colors = colors;
     }
 
     private static Transform EnsureRectTransformRoot(Transform root)

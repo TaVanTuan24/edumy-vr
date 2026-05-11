@@ -43,7 +43,7 @@
     <UnityVersion>6000.4.0f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Analyzer Include="C:\Users\tavan\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="C:\Users\tavan\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.2\Analyzers\Microsoft.Unity.Analyzers.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="D:\Unity\Hub\Editor\6000.4.0f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -66,10 +66,12 @@
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\LessonItemElement.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\MainScreenController.cs" />
     <Compile Include="Assets\Scripts\VRUI\Slides\SlidePopupPanel.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Core\AppStateManager.cs" />
     <Compile Include="Assets\Scripts\VRUI\Quiz\AnswerCard.cs" />
     <Compile Include="Assets\Scripts\VRUI\Video\VideoWindowModeController.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\XRPokeFollowAffordanceFill.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\SectionItemElement.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Core\ResumeLearningManager.cs" />
     <Compile Include="Assets\Scripts\VRUI\Slides\SlideController.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\CourseSelectionUI.cs" />
     <Compile Include="Assets\Scripts\VRUI\Quiz\TimedQuizPopupWindow.cs" />
@@ -84,16 +86,22 @@
     <Compile Include="Assets\Scripts\VRUI\Quiz\QuizController.cs" />
     <Compile Include="Assets\Scripts\VRUI\Quiz\VideoQuizScheduler.cs" />
     <Compile Include="Assets\Scripts\VRUI\Slides\SlidePopupWindow.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Core\BackendConfig.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\DestroyObject.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\VideoTimeScrubControl.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\CourseToggleController.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Core\AppRuntimeBootstrapper.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Core\ToastManager.cs" />
     <Compile Include="Assets\Scripts\VRUI\Quiz\QuizPopupWindow.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\Callout.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\LessonSelectionController.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\CalloutGazeController.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Core\ApiConfig.cs" />
     <Compile Include="Assets\Scripts\VRUI\VR\VRPanelAnchorManager.cs" />
     <Compile Include="Assets\Scripts\VRUI\VR\VRSimulatorBootstrap.cs" />
     <Compile Include="Assets\Scripts\VRUI\Video\VideoController.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Core\OnboardingManager.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Core\LocalStudyStateManager.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\CourseCardElement.cs" />
     <Compile Include="Assets\Scripts\VRUI\Spatial\SpatialWindow.cs" />
     <Compile Include="Assets\Scripts\VRUI\Core\DataModels.cs" />

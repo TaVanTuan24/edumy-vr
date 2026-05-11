@@ -64,6 +64,8 @@ public class CourseToggleController : MonoBehaviour
     public float PanelDistance => panelDistance;
     public float PanelHeightOffset => panelHeightOffset;
     public float PanelRightOffset => panelRightOffset;
+    public bool IsOpen => isOpen;
+    public Transform FloatingButtonTransform => floatingButtonRoot;
 
     private void Awake()
     {
@@ -376,6 +378,11 @@ public class CourseToggleController : MonoBehaviour
     public void SetOpen(bool open)
     {
         isOpen = open;
+        AppStateManager.Instance.SetMenuOpen(open);
+        if (open)
+        {
+            AppStateManager.Instance.NotifyOnboardingAction(OnboardingActionType.MenuOpened);
+        }
         UpdateToggleVisualState();
 
         if (positionRightOfViewerOnOpen && open)
@@ -798,15 +805,9 @@ public class CourseToggleController : MonoBehaviour
 
     private bool RequiresCoursePanelFacingFlip()
     {
-        UIDocument document = courseSelectionDocument;
-        if (document == null && courseSelectionUI != null)
-        {
-            document = courseSelectionUI.GetComponent<UIDocument>();
-        }
-
-        return document != null
-            && document.panelSettings != null
-            && document.panelSettings.targetTexture == null;
+        // World-space UIDocuments face away from the camera by default.
+        // Always flip 180° so the panel faces the viewer.
+        return true;
     }
 
 #if UNITY_EDITOR

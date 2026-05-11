@@ -1,10 +1,17 @@
+using System;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEngine.XR.Interaction.Toolkit.UI;
 
 /// <summary>
-/// Manages VR panel anchoring, smooth transitions, and diagnostic setup for world-space UI Toolkit.
-/// Supports two modes: Browsing (side) and Video (front).
+/// Manages VR panel anchoring, smooth transitions, and XR interaction setup
+/// for world-space UI Toolkit panels.
+/// Supports two placement modes: Browsing (side) and Video (front).
+///
+/// Architecture:
+///   - The UIDocument's PanelSettings must have renderMode = WorldSpace.
+///   - A BoxCollider on this GameObject enables XR ray hit detection.
+///   - The EventSystem + XRUIInputModule handle all event routing automatically.
+///   - No RenderTexture intermediary is used.
 /// </summary>
 public class VRPanelAnchorManager : MonoBehaviour
 {
@@ -40,25 +47,11 @@ public class VRPanelAnchorManager : MonoBehaviour
     [SerializeField, Range(15f, 85f)] private float maxHorizontalFovAngle = 42f;
     [SerializeField, Min(0.2f)] private float minDistanceFromCamera = 0.75f;
 
-    [Header("UI Surface (Optional RenderTexture)")]
-    [SerializeField] private bool useRenderTextureSurface = true;
-    [SerializeField] private Vector2Int rtResolution = new Vector2Int(1920, 1080);
-    [SerializeField] private Transform uiSurfaceTransform;
-    [SerializeField, Min(0.2f)] private float surfaceHeightMeters = 0.5f;
-    [SerializeField, Range(1.0f, 2.2f)] private float surfaceAspect = 1.25f;
-    [SerializeField] private bool forceSurfaceLocalOrientation = true;
-        [SerializeField] private bool rotateSurface180Y = false;
-        [SerializeField] private bool flipTextureHorizontally = false;
-    [SerializeField] private bool flipTextureVertically = true;
-    [SerializeField] private bool liveApplySurfaceSettings = true;
-
     private PanelMode currentMode = PanelMode.Browsing;
     private Vector3 initialLocalScale;
     private Vector3 targetPosition;
     private Quaternion targetRotation;
     private Vector3 targetScale;
-    private RenderTexture uiRenderTexture;
-    private Material surfaceMaterial;
     private SpatialWindow spatialWindow;
 
     private void Awake()
@@ -72,7 +65,16 @@ public class VRPanelAnchorManager : MonoBehaviour
 
     private void Start()
     {
-        SetupWorldSpaceUISurface();
+        try
+        {
+            DestroyLegacyUISurface();
+            EnsureWorldSpaceInteraction();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[VRPanelAnchor] Failed to initialize world-space UI interaction.\n{ex}");
+        }
+
         SetMode(PanelMode.Browsing, true);
     }
 
@@ -91,18 +93,15 @@ public class VRPanelAnchorManager : MonoBehaviour
         {
             ApplyScaleOnlyTransition();
         }
-
-        if (liveApplySurfaceSettings && useRenderTextureSurface)
-        {
-            ApplySurfaceVisualSettings();
-        }
     }
 
     /// <summary>
-    /// Configures the panel to be rendered into a RenderTexture and displayed on a world surface (quad).
+    /// Configures native World Space UI Toolkit interaction for XR.
+    /// Ensures the UIDocument has a BoxCollider for ray detection and
+    /// that the EventSystem has XRUIInputModule for tracked device support.
     /// </summary>
-    [ContextMenu("Setup World Space UI Surface")]
-    public void SetupWorldSpaceUISurface()
+    [ContextMenu("Ensure World Space Interaction")]
+    public void EnsureWorldSpaceInteraction()
     {
         UIDocument uiDoc = GetComponent<UIDocument>();
         if (uiDoc == null || uiDoc.panelSettings == null)
@@ -111,147 +110,61 @@ public class VRPanelAnchorManager : MonoBehaviour
             return;
         }
 
-        if (!useRenderTextureSurface)
-        {
-            uiDoc.panelSettings.targetTexture = null;
-            uiDoc.panelSettings.clearColor = false;
+        // Ensure no stale targetTexture overrides the native World Space render mode.
+        uiDoc.panelSettings.targetTexture = null;
+        uiDoc.panelSettings.clearColor = false;
 
-            if (uiSurfaceTransform != null)
-            {
-                uiSurfaceTransform.gameObject.SetActive(false);
-            }
-
-            return;
-        }
-
-        // 1. Ensure RenderTexture
-        if (uiRenderTexture == null)
-        {
-            uiRenderTexture = new RenderTexture(rtResolution.x, rtResolution.y, 24, RenderTextureFormat.ARGB32)
-            {
-                name = "VRCoursePanel_RT",
-                antiAliasing = 4,
-                useMipMap = false
-            };
-            uiRenderTexture.Create();
-        }
-
-        // 2. Assign to PanelSettings
-        uiDoc.panelSettings.targetTexture = uiRenderTexture;
-        uiDoc.panelSettings.clearColor = true;
-
-        // 3. Setup Surface Material
-        if (uiSurfaceTransform == null)
-        {
-            // Find or create a child quad for display
-            Transform existing = transform.Find("UISurface");
-            if (existing == null)
-            {
-                GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                quad.name = "UISurface";
-                quad.transform.SetParent(transform);
-                quad.transform.localPosition = Vector3.zero;
-                quad.transform.localRotation = Quaternion.identity;
-                uiSurfaceTransform = quad.transform;
-
-                // Remove MeshCollider from primitive, we want our specific BoxCollider
-                MeshCollider meshCollider = quad.GetComponent<MeshCollider>();
-                if (meshCollider != null)
-                {
-                    if (Application.isPlaying)
-                    {
-                        Destroy(meshCollider);
-                    }
-                    else
-                    {
-                        DestroyImmediate(meshCollider);
-                    }
-                }
-            }
-            else
-            {
-                uiSurfaceTransform = existing;
-            }
-        }
-
-        uiSurfaceTransform.gameObject.SetActive(true);
-
-        if (forceSurfaceLocalOrientation)
-        {
-            uiSurfaceTransform.localPosition = Vector3.zero;
-            uiSurfaceTransform.localRotation = rotateSurface180Y
-                ? Quaternion.Euler(0f, 180f, 0f)
-                : Quaternion.identity;
-        }
-
-        // Make panel compact and remove excessive empty area in world-space.
-        float clampedAspect = Mathf.Clamp(surfaceAspect, 1.0f, 2.2f);
-        float clampedHeight = Mathf.Max(0.2f, surfaceHeightMeters);
-        uiSurfaceTransform.localScale = new Vector3(clampedAspect * clampedHeight, clampedHeight, 1f);
-
-        MeshRenderer renderer = uiSurfaceTransform.GetComponent<MeshRenderer>();
-        if (renderer != null)
-        {
-            Material mat = surfaceMaterial != null ? surfaceMaterial : renderer.sharedMaterial;
-            if (mat == null || mat.shader == null || mat.shader.name != "Unlit/Texture")
-            {
-                mat = new Material(Shader.Find("Unlit/Texture"));
-            }
-
-            mat.mainTexture = uiRenderTexture;
-            surfaceMaterial = mat;
-            ApplyTextureFlipToMaterial(mat);
-            renderer.sharedMaterial = mat;
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            renderer.receiveShadows = false;
-        }
-
-        // 4. Interaction routing
-        if (uiSurfaceTransform.GetComponent<PanelRaycaster>() == null)
-            uiSurfaceTransform.gameObject.AddComponent<PanelRaycaster>();
-
-        BoxCollider col = uiSurfaceTransform.GetComponent<BoxCollider>();
+        // Ensure a BoxCollider on this GameObject so XR rays can hit the UI panel.
+        // Unity 6 World Space UI Toolkit uses this collider for interaction.
+        // PanelSettings with ColliderUpdateMode=Auto will auto-resize it to match the panel.
+        BoxCollider col = GetComponent<BoxCollider>();
         if (col == null)
-            col = uiSurfaceTransform.gameObject.AddComponent<BoxCollider>();
-
-        // Matches quad size
-        col.center = Vector3.zero;
-        col.size = new Vector3(1f, 1f, 0.02f);
-
-        Debug.Log("[VRPanelAnchor] World-space UI surface initialized via RenderTexture.");
-    }
-
-    private void ApplySurfaceVisualSettings()
-    {
-        if (uiSurfaceTransform == null) return;
-
-        if (forceSurfaceLocalOrientation)
         {
-            uiSurfaceTransform.localPosition = Vector3.zero;
-            uiSurfaceTransform.localRotation = rotateSurface180Y
-                ? Quaternion.Euler(0f, 180f, 0f)
-                : Quaternion.identity;
+            col = gameObject.AddComponent<BoxCollider>();
+        }
+        col.isTrigger = true;
+
+        // Set a reasonable default size in case auto-sizing hasn't run yet.
+        if (col.size.sqrMagnitude < 0.001f)
+        {
+            col.size = new Vector3(1f, 1f, 0.01f);
+            col.center = Vector3.zero;
         }
 
-        float clampedAspect = Mathf.Clamp(surfaceAspect, 1.0f, 2.2f);
-        float clampedHeight = Mathf.Max(0.2f, surfaceHeightMeters);
-        uiSurfaceTransform.localScale = new Vector3(clampedAspect * clampedHeight, clampedHeight, 1f);
+        // Add PanelEventHandler (required for some versions of XRI to route events to UI Toolkit)
+        const string PanelEventHandlerType = "UnityEngine.UIElements.PanelEventHandler, UnityEngine.UIElementsModule";
+        XRRuntimeUiHelper.TryAddComponentByTypeName(gameObject, PanelEventHandlerType);
 
-        MeshRenderer renderer = uiSurfaceTransform.GetComponent<MeshRenderer>();
-        if (renderer != null && renderer.sharedMaterial != null)
-        {
-            ApplyTextureFlipToMaterial(renderer.sharedMaterial);
-        }
+        // Ensure the EventSystem has XRUIInputModule for tracked device ray support.
+        XRRuntimeUiHelper.EnsureEventSystemSupportsXR();
+
+        Debug.Log($"[VRPanelAnchor] World Space UI interaction active. " +
+            $"UIDocument='{gameObject.name}' " +
+            $"Collider={col != null} " +
+            $"ColliderSize={col.size} " +
+            $"PanelRenderMode={uiDoc.panelSettings.renderMode}");
     }
 
-    private void ApplyTextureFlipToMaterial(Material mat)
+    /// <summary>
+    /// Destroys any leftover "UISurface" child quad from the old RenderTexture pipeline.
+    /// These quads have colliders that intercept XR rays, blocking native UI interaction.
+    /// </summary>
+    private void DestroyLegacyUISurface()
     {
-        if (mat == null) return;
+        Transform uiSurface = transform.Find("UISurface");
+        if (uiSurface == null) return;
 
-        float scaleX = flipTextureHorizontally ? -1f : 1f;
-        float scaleY = flipTextureVertically ? -1f : 1f;
-        mat.mainTextureScale = new Vector2(scaleX, scaleY);
-        mat.mainTextureOffset = new Vector2(flipTextureHorizontally ? 1f : 0f, flipTextureVertically ? 1f : 0f);
+        Debug.Log($"[VRPanelAnchor] Destroying legacy UISurface quad on '{gameObject.name}'. " +
+            "This object was part of the old RenderTexture pipeline and would block XR interaction.");
+
+        if (Application.isPlaying)
+        {
+            Destroy(uiSurface.gameObject);
+        }
+        else
+        {
+            DestroyImmediate(uiSurface.gameObject);
+        }
     }
 
     public void SetMode(PanelMode mode, bool immediate = false)
@@ -315,13 +228,9 @@ public class VRPanelAnchorManager : MonoBehaviour
         {
             Quaternion look = Quaternion.LookRotation(directionToUser, Vector3.up);
             Vector3 euler = look.eulerAngles;
-            float yaw = euler.y;
-            if (!useRenderTextureSurface)
-            {
-                // World-space UIDocument (no quad/RT) faces opposite compared to RT surface setup.
-                yaw += 180f;
-            }
-
+            // World-space UIDocument faces away from the camera by default,
+            // so add 180° to face toward the viewer.
+            float yaw = euler.y + 180f;
             targetRotation = Quaternion.Euler(0f, yaw, 0f);
         }
     }
@@ -393,27 +302,14 @@ public class VRPanelAnchorManager : MonoBehaviour
         transform.localScale = Vector3.Lerp(transform.localScale, targetScale, scaleLerpSpeed * dt);
     }
 
-    private void OnDestroy()
-    {
-        if (uiRenderTexture != null)
-        {
-            uiRenderTexture.Release();
-            Destroy(uiRenderTexture);
-        }
-
-        if (surfaceMaterial != null)
-        {
-            Destroy(surfaceMaterial);
-            surfaceMaterial = null;
-        }
-    }
-
     [ContextMenu("Validate Setup")]
     public void ValidateSetup()
     {
         if (Camera.main == null) Debug.LogError("No MainCamera found.");
         if (GetComponent<UIDocument>() == null) Debug.LogError("UIDocument missing on this object.");
         if (rightHandAnchor == null) Debug.LogWarning("Right hand anchor missing (will fallback to HMD).");
+        BoxCollider col = GetComponent<BoxCollider>();
+        if (col == null) Debug.LogError("BoxCollider missing. XR interaction will not work.");
         Debug.Log("Validation complete.");
     }
 
