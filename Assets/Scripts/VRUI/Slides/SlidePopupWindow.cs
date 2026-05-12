@@ -43,7 +43,6 @@ public class SlidePopupWindow : MonoBehaviour
     private Button nextButton;
     private Button lastButton;
     private Button resetViewButton;
-    private Button bookmarkButton;
     private Button pinButton;
 
     private readonly List<SlidePageData> activeSlides = new List<SlidePageData>();
@@ -438,15 +437,13 @@ public class SlidePopupWindow : MonoBehaviour
         firstButton = FindOrCreateButton(panelRect, "FirstButton", "|<", new Vector2(0.05f, 0.025f), new Vector2(0.14f, 0.11f));
         prevButton = FindOrCreateButton(panelRect, "PrevButton", "Prev", new Vector2(0.16f, 0.025f), new Vector2(0.31f, 0.11f));
         resetViewButton = FindOrCreateButton(panelRect, "ResetViewButton", "Reset", new Vector2(0.33f, 0.025f), new Vector2(0.48f, 0.11f));
-        bookmarkButton = FindOrCreateButton(panelRect, "BookmarkButton", "Save", new Vector2(0.50f, 0.025f), new Vector2(0.65f, 0.11f));
-        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.67f, 0.025f), new Vector2(0.82f, 0.11f));
-        lastButton = FindOrCreateButton(panelRect, "LastButton", ">|", new Vector2(0.84f, 0.025f), new Vector2(0.95f, 0.11f));
+        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.50f, 0.025f), new Vector2(0.72f, 0.11f));
+        lastButton = FindOrCreateButton(panelRect, "LastButton", ">|", new Vector2(0.74f, 0.025f), new Vector2(0.95f, 0.11f));
         SetButtonBaseColor(closeButton, SecondaryButtonColor);
         SetButtonBaseColor(pinButton, SecondaryButtonColor);
         SetButtonBaseColor(firstButton, SecondaryButtonColor);
         SetButtonBaseColor(prevButton, SecondaryButtonColor);
         SetButtonBaseColor(resetViewButton, SecondaryButtonColor);
-        SetButtonBaseColor(bookmarkButton, SecondaryButtonColor);
         SetButtonBaseColor(nextButton, PrimaryButtonColor);
         SetButtonBaseColor(lastButton, SecondaryButtonColor);
 
@@ -510,7 +507,6 @@ public class SlidePopupWindow : MonoBehaviour
         if (firstButton != null) firstButton.onClick.AddListener(JumpToFirst);
         if (prevButton != null) prevButton.onClick.AddListener(Previous);
         if (resetViewButton != null) resetViewButton.onClick.AddListener(ResetView);
-        if (bookmarkButton != null) bookmarkButton.onClick.AddListener(SaveCurrentSlideBookmark);
         if (nextButton != null) nextButton.onClick.AddListener(Next);
         if (lastButton != null) lastButton.onClick.AddListener(JumpToLast);
 
@@ -537,36 +533,6 @@ public class SlidePopupWindow : MonoBehaviour
         }
 
         SetButtonBaseColor(pinButton, spatialWindow.IsPinned ? PrimaryButtonColor : SecondaryButtonColor);
-    }
-
-    private void SaveCurrentSlideBookmark()
-    {
-        if (!AppStateManager.IsAvailable)
-        {
-            return;
-        }
-
-        CourseStateSnapshot courseState = AppStateManager.Instance.CurrentCourse;
-        LessonStateSnapshot lessonState = AppStateManager.Instance.CurrentLesson;
-        if (string.IsNullOrWhiteSpace(courseState.courseId) || string.IsNullOrWhiteSpace(lessonState.lessonId))
-        {
-            return;
-        }
-
-        CourseData course = new CourseData { id = courseState.courseId, title = courseState.courseTitle };
-        LessonData lesson = new LessonData { id = lessonState.lessonId, title = lessonState.lessonTitle };
-        StudyBookmarkData bookmark = LocalStudyStateManager.BuildBookmark(
-            AppStateManager.Instance.CurrentUserId,
-            course,
-            lesson,
-            "slide",
-            "Slides",
-            lessonState.sectionIndex,
-            lessonState.lessonIndex,
-            slideIndex: currentSlideIndex);
-
-        bool saved = LocalStudyStateManager.ToggleBookmark(AppStateManager.Instance.CurrentUserId, bookmark);
-        ToastManager.ShowInfo(saved ? $"Bookmarked slide {currentSlideIndex + 1}." : $"Removed bookmark for slide {currentSlideIndex + 1}.", 2.6f);
     }
 
     private static void SetButtonBaseColor(Button button, Color color)

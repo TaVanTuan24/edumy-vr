@@ -33,6 +33,7 @@ public class ApiManager : MonoBehaviour
     public string LastStreamResolveErrorCode { get; private set; }
     public string LastStreamResolveErrorMessage { get; private set; }
     public long LastResponseStatusCode { get; private set; }
+    public string LastErrorResponseBody { get; private set; }
 
     public class ConnectionTestResult
     {
@@ -212,12 +213,67 @@ public class ApiManager : MonoBehaviour
         return false;
     }
 
+    public async Task<bool> SubmitQuizResultAsync(
+        string courseId,
+        string quizId,
+        int score,
+        int total,
+        string lessonName,
+        string lessonType,
+        int sectionIndex,
+        int lessonIndex,
+        string attemptId = null,
+        float durationSeconds = 0f,
+        bool? passed = null,
+        int? attemptNumber = null)
+    {
+        if (string.IsNullOrWhiteSpace(courseId) || string.IsNullOrWhiteSpace(quizId))
+        {
+            Debug.LogWarning("[ApiManager] SubmitQuizResultAsync missing courseId/quizId.");
+            return false;
+        }
+
+        QuizResultRequest payload = new QuizResultRequest
+        {
+            quizId = quizId,
+            score = Mathf.Max(0, score),
+            total = Mathf.Max(0, total),
+            attemptId = string.IsNullOrWhiteSpace(attemptId) ? string.Empty : attemptId,
+            durationSeconds = Mathf.Max(0f, durationSeconds),
+            passed = passed ?? (total > 0 && score >= Mathf.CeilToInt(total * 0.7f)),
+            attemptNumber = attemptNumber ?? 1,
+            lessonName = string.IsNullOrWhiteSpace(lessonName) ? string.Empty : lessonName,
+            lessonType = string.IsNullOrWhiteSpace(lessonType) ? "quiz" : lessonType.Trim().ToLowerInvariant(),
+            sectionIndex = Mathf.Max(0, sectionIndex),
+            lessonIndex = Mathf.Max(0, lessonIndex)
+        };
+
+        string body = JsonUtility.ToJson(payload);
+        string[] candidates = new[]
+        {
+            BuildUrl($"api/vr/courses/{courseId}/quiz-results"),
+            BuildUrl($"api/courses/{courseId}/quiz-results")
+        };
+
+        foreach (string url in candidates)
+        {
+            PostStatus status = await SendPostJsonRequest(url, body);
+            if (status == PostStatus.Success)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public async Task<string> ResolvePlayableStreamUrlAsync(string sourceUrl, string courseId, string lessonId, string preferredFormat = "m3u8")
     {
         if (string.IsNullOrWhiteSpace(sourceUrl)) return null;
 
         LastStreamResolveErrorCode = null;
         LastStreamResolveErrorMessage = null;
+        LastErrorResponseBody = null;
 
         string url = BuildUrl("api/vr/stream/resolve");
         StreamResolveRequest payload = new StreamResolveRequest
@@ -246,7 +302,9 @@ public class ApiManager : MonoBehaviour
         }
         else
         {
-            LastStreamResolveErrorMessage = "The backend did not return a playable stream.";
+            LastStreamResolveErrorMessage = string.IsNullOrWhiteSpace(LastErrorResponseBody)
+                ? "The backend did not return a playable stream."
+                : $"The backend did not return a playable stream. Response: {LastErrorResponseBody}";
         }
 
         return null;
@@ -566,6 +624,7 @@ public class ApiManager : MonoBehaviour
     {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
         LastResponseStatusCode = 0;
+        LastErrorResponseBody = null;
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
@@ -794,6 +853,7 @@ public class ApiManager : MonoBehaviour
             LastResponseStatusCode = statusCode;
             HandleUnauthorizedResponse(statusCode);
             PublishBackendStatusForResponse(statusCode, webRequest.error, url);
+            LastErrorResponseBody = responseBody;
             if (!string.IsNullOrWhiteSpace(responseBody))
             {
                 try

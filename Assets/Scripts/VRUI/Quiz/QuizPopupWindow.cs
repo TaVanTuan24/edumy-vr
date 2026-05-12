@@ -9,6 +9,17 @@ using System.Linq;
 [DisallowMultipleComponent]
 public class QuizPopupWindow : MonoBehaviour
 {
+    public class QuizCompletedResult
+    {
+        public string QuizId;
+        public string LessonTitle;
+        public string LessonType;
+        public int Score;
+        public int Total;
+        public int SectionIndex;
+        public int LessonIndex;
+    }
+
     private class QuizReviewEntry
     {
         public int questionIndex;
@@ -73,6 +84,13 @@ public class QuizPopupWindow : MonoBehaviour
     private float activeHeightOffset;
     private SpatialWindow spatialWindow;
     private bool reviewIncorrectOnly;
+    private string activeLessonId = string.Empty;
+    private string activeLessonTitle = string.Empty;
+    private string activeLessonType = "quiz";
+    private int activeSectionIndex = -1;
+    private int activeLessonIndex = -1;
+
+    public event Action<QuizCompletedResult> QuizCompleted;
 
     private void Awake()
     {
@@ -217,6 +235,7 @@ public class QuizPopupWindow : MonoBehaviour
         originalQuizQuestions.AddRange(activeQuizQuestions);
         reviewEntries.Clear();
         reviewIncorrectOnly = false;
+        CacheActiveLessonContext(lesson);
         if (enableDebugLogs)
         {
             Debug.Log($"[QuizPopupWindow] quiz source counts lesson={lesson.id} quizQuestions={SafeCount(lesson.quizQuestions)} questions={SafeCount(lesson.questions)} quizzes={SafeCount(lesson.quizzes)} timed={SafeCount(lesson.timedQuizzes)} interactive={SafeCount(lesson.interactiveQuizzes)} final={activeQuizQuestions.Count}");
@@ -857,6 +876,7 @@ public class QuizPopupWindow : MonoBehaviour
             prevButton.interactable = false;
         }
 
+        NotifyQuizCompleted(score, total);
         RenderReviewMode(false);
     }
 
@@ -1114,40 +1134,36 @@ public class QuizPopupWindow : MonoBehaviour
         explanation.overflowMode = TextOverflowModes.Overflow;
         explanation.color = new Color(0.27f, 0.39f, 0.56f, 1f);
 
-        Button bookmarkButton = FindOrCreateButton(rect, $"BookmarkButton_{entry.questionIndex}", "Save", new Vector2(0.79f, 0.04f), new Vector2(0.96f, 0.18f));
-        SetButtonBaseColor(bookmarkButton, SecondaryButtonColor);
-        bookmarkButton.onClick.RemoveAllListeners();
-        bookmarkButton.onClick.AddListener(() => SaveReviewQuestionBookmark(entry));
     }
 
-    private void SaveReviewQuestionBookmark(QuizReviewEntry entry)
+    private void CacheActiveLessonContext(LessonData lesson)
     {
-        if (entry == null || !AppStateManager.IsAvailable)
+        activeLessonId = lesson != null && !string.IsNullOrWhiteSpace(lesson.id) ? lesson.id.Trim() : string.Empty;
+        activeLessonTitle = lesson != null && !string.IsNullOrWhiteSpace(lesson.title) ? lesson.title.Trim() : "Quiz";
+        activeLessonType = lesson != null && !string.IsNullOrWhiteSpace(lesson.type) ? lesson.type.Trim().ToLowerInvariant() : "quiz";
+
+        activeSectionIndex = -1;
+        activeLessonIndex = -1;
+        if (AppStateManager.IsAvailable)
         {
-            return;
+            LessonStateSnapshot lessonState = AppStateManager.Instance.CurrentLesson;
+            activeSectionIndex = lessonState.sectionIndex;
+            activeLessonIndex = lessonState.lessonIndex;
         }
+    }
 
-        CourseStateSnapshot courseState = AppStateManager.Instance.CurrentCourse;
-        LessonStateSnapshot lessonState = AppStateManager.Instance.CurrentLesson;
-        if (string.IsNullOrWhiteSpace(courseState.courseId) || string.IsNullOrWhiteSpace(lessonState.lessonId))
+    private void NotifyQuizCompleted(int score, int total)
+    {
+        QuizCompleted?.Invoke(new QuizCompletedResult
         {
-            return;
-        }
-
-        CourseData course = new CourseData { id = courseState.courseId, title = courseState.courseTitle };
-        LessonData lesson = new LessonData { id = lessonState.lessonId, title = lessonState.lessonTitle };
-        StudyBookmarkData bookmark = LocalStudyStateManager.BuildBookmark(
-            AppStateManager.Instance.CurrentUserId,
-            course,
-            lesson,
-            "quiz",
-            "Quiz Review",
-            lessonState.sectionIndex,
-            lessonState.lessonIndex,
-            questionIndex: entry.questionIndex);
-
-        bool saved = LocalStudyStateManager.ToggleBookmark(AppStateManager.Instance.CurrentUserId, bookmark);
-        ToastManager.ShowInfo(saved ? $"Bookmarked question {entry.questionIndex + 1}." : $"Removed bookmark for question {entry.questionIndex + 1}.", 2.6f);
+            QuizId = activeLessonId,
+            LessonTitle = activeLessonTitle,
+            LessonType = activeLessonType,
+            Score = Mathf.Max(0, score),
+            Total = Mathf.Max(0, total),
+            SectionIndex = Mathf.Max(0, activeSectionIndex),
+            LessonIndex = Mathf.Max(0, activeLessonIndex)
+        });
     }
 
     private static void EnsurePanelChrome(Transform panel)

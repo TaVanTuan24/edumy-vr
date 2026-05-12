@@ -224,3 +224,19 @@ public class VRLoginPollResponse
     public string message;
     public VRLoginUserData user;
 }
+
+[Serializable]
+public class QuizResultRequest
+{
+    public string quizId;
+    public int score;
+    public int total;
+    public string attemptId;
+    public float durationSeconds;
+    public bool passed;
+    public int attemptNumber;
+    public string lessonName;
+    public string lessonType;
+    public int sectionIndex;
+    public int lessonIndex;
+}

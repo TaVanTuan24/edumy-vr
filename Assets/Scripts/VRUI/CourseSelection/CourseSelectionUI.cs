@@ -85,7 +85,6 @@ public class CourseSelectionUI : MonoBehaviour
     private VisualElement continueLearningCard;
     private VisualElement courseDiscoveryBar;
     private VisualElement courseFilterChipRow;
-    private VisualElement bookmarksListContainer;
     private VisualElement dashboardActionsRow;
     private ListView courseList;
     private TextField courseSearchField;
@@ -166,6 +165,11 @@ public class CourseSelectionUI : MonoBehaviour
         {
             quizPopupWindow = FindAnyObjectByType<QuizPopupWindow>();
         }
+        else
+        {
+            quizPopupWindow.QuizCompleted -= HandleQuizCompleted;
+            quizPopupWindow.QuizCompleted += HandleQuizCompleted;
+        }
 
         if (timedQuizPopupWindow == null)
         {
@@ -175,6 +179,12 @@ public class CourseSelectionUI : MonoBehaviour
         if (videoQuizScheduler == null)
         {
             videoQuizScheduler = FindAnyObjectByType<VideoQuizScheduler>();
+        }
+
+        if (quizPopupWindow != null)
+        {
+            quizPopupWindow.QuizCompleted -= HandleQuizCompleted;
+            quizPopupWindow.QuizCompleted += HandleQuizCompleted;
         }
 
         BuildUi();
@@ -783,10 +793,6 @@ public class CourseSelectionUI : MonoBehaviour
             new Color(0.18f, 0.38f, 0.16f, 1f),
             new Color(0.71f, 0.86f, 0.69f, 1f));
         dashboardActionsRow.Add(dashboardReviewQuizButton);
-
-        bookmarksListContainer = new VisualElement { name = "bookmarks-list-container" };
-        bookmarksListContainer.style.marginTop = 12f;
-        dashboardCard.Add(bookmarksListContainer);
 
         coursesPage.Add(dashboardCard);
     }
@@ -1658,7 +1664,6 @@ public class CourseSelectionUI : MonoBehaviour
                 course,
                 selected => _ = OpenSectionsPageAsync(selected),
                 false,
-                null,
                 null);
             _ = LoadThumbnailIntoAsync(card, course.thumbnailUrl, card.BindVersion);
         };
@@ -1765,104 +1770,6 @@ public class CourseSelectionUI : MonoBehaviour
             dashboardDetailsLabel.text = $"{recentCourseText}{recentLessonText}{currentCourseText}";
         }
 
-        RefreshBookmarksDashboard();
-    }
-
-    private void RefreshBookmarksDashboard()
-    {
-        if (bookmarksListContainer == null)
-        {
-            return;
-        }
-
-        bookmarksListContainer.Clear();
-
-        string userId = vrAuthManager != null ? vrAuthManager.UserId : string.Empty;
-        List<StudyBookmarkData> bookmarks = LocalStudyStateManager.GetBookmarks(userId)
-            .Where(IsDashboardBookmarkVisible)
-            .ToList();
-        if (bookmarks.Count == 0)
-        {
-            Label empty = new Label("Slide and quiz bookmarks will appear here after you save them.");
-            empty.style.whiteSpace = WhiteSpace.Normal;
-            empty.style.fontSize = 14f;
-            empty.style.color = new Color(0.42f, 0.49f, 0.6f, 1f);
-            bookmarksListContainer.Add(empty);
-            return;
-        }
-
-        Label title = new Label("Bookmarks");
-        title.style.unityFontStyleAndWeight = FontStyle.Bold;
-        title.style.fontSize = 18f;
-        title.style.color = new Color(0.15f, 0.23f, 0.37f, 1f);
-        title.style.marginBottom = 8f;
-        bookmarksListContainer.Add(title);
-
-        for (int i = 0; i < Mathf.Min(5, bookmarks.Count); i++)
-        {
-            StudyBookmarkData bookmark = bookmarks[i];
-            Button button = new Button(() => _ = OpenBookmarkAsync(bookmark));
-            button.text = BuildBookmarkLabel(bookmark);
-            button.style.minHeight = 44f;
-            button.style.marginBottom = 8f;
-            button.style.paddingLeft = 16f;
-            button.style.paddingRight = 16f;
-            button.style.whiteSpace = WhiteSpace.Normal;
-            button.style.backgroundColor = new Color(0.92f, 0.96f, 1f, 1f);
-            button.style.color = new Color(0.11f, 0.23f, 0.39f, 1f);
-            button.style.borderTopLeftRadius = 12f;
-            button.style.borderTopRightRadius = 12f;
-            button.style.borderBottomLeftRadius = 12f;
-            button.style.borderBottomRightRadius = 12f;
-            bookmarksListContainer.Add(button);
-        }
-    }
-
-    private string BuildBookmarkLabel(StudyBookmarkData bookmark)
-    {
-        if (bookmark == null)
-        {
-            return "Bookmark";
-        }
-
-        string label = string.IsNullOrWhiteSpace(bookmark.lessonTitle)
-            ? bookmark.courseTitle
-            : $"{bookmark.courseTitle} · {bookmark.lessonTitle}";
-
-        if (bookmark.timestampSeconds > 0d)
-        {
-            label += $" · {FormatDuration(bookmark.timestampSeconds)}";
-        }
-        else if (bookmark.slideIndex >= 0)
-        {
-            label += $" · Slide {bookmark.slideIndex + 1}";
-        }
-        else if (bookmark.questionIndex >= 0)
-        {
-            label += $" · Question {bookmark.questionIndex + 1}";
-        }
-
-        return label;
-    }
-
-    private static bool IsDashboardBookmarkVisible(StudyBookmarkData bookmark)
-    {
-        if (bookmark == null)
-        {
-            return false;
-        }
-
-        bool hasVideoTimestamp = bookmark.timestampSeconds > 0d
-            || string.Equals(bookmark.lessonType, "video", StringComparison.OrdinalIgnoreCase);
-        if (hasVideoTimestamp)
-        {
-            return false;
-        }
-
-        bool isLessonSaveBookmark = !string.IsNullOrWhiteSpace(bookmark.lessonId)
-            && bookmark.slideIndex < 0
-            && bookmark.questionIndex < 0;
-        return !isLessonSaveBookmark;
     }
 
     private void RefreshCourseListView()
@@ -1934,64 +1841,6 @@ public class CourseSelectionUI : MonoBehaviour
         bool isFavorite = LocalStudyStateManager.ToggleFavoriteCourse(userId, course.id);
         ToastManager.ShowInfo(isFavorite ? $"Added {course.title} to favorites." : $"Removed {course.title} from favorites.", 2.4f);
         RefreshCourseListView();
-    }
-
-    private void HandleCourseBookmarked(CourseData course)
-    {
-        if (course == null)
-        {
-            return;
-        }
-
-        string userId = vrAuthManager != null ? vrAuthManager.UserId : string.Empty;
-        StudyBookmarkData bookmark = LocalStudyStateManager.BuildBookmark(userId, course, null, "course", "Course", -1, -1);
-        bool saved = LocalStudyStateManager.ToggleBookmark(userId, bookmark);
-        ToastManager.ShowInfo(saved ? $"Saved bookmark for {course.title}." : $"Removed bookmark for {course.title}.", 2.6f);
-        RefreshDashboard();
-    }
-
-    private async Task OpenBookmarkAsync(StudyBookmarkData bookmark)
-    {
-        if (bookmark == null)
-        {
-            return;
-        }
-
-        CourseData course = courses.FirstOrDefault(c => c != null && string.Equals(c.id, bookmark.courseId, StringComparison.Ordinal));
-        if (course == null)
-        {
-            ToastManager.ShowWarning("This bookmarked course is no longer available.");
-            return;
-        }
-
-        await OpenSectionsPageAsync(course);
-
-        if (string.IsNullOrWhiteSpace(bookmark.lessonId))
-        {
-            ToastManager.ShowInfo($"Opened bookmarked course {course.title}.");
-            return;
-        }
-
-        LessonData lesson = activeLessons.FirstOrDefault(l => l != null && string.Equals(l.id, bookmark.lessonId, StringComparison.Ordinal));
-        if (lesson == null)
-        {
-            ToastManager.ShowWarning("This bookmarked lesson is no longer available.");
-            return;
-        }
-
-        pendingResumeLessonId = bookmark.lessonId;
-        pendingResumeVideoTimeSeconds = -1d;
-        OnLessonClicked(lesson);
-
-        if (bookmark.slideIndex >= 0 && slidePopupWindow != null)
-        {
-            slidePopupWindow.TrySetSlideIndex(bookmark.slideIndex);
-        }
-
-        if (bookmark.questionIndex >= 0 && quizPopupWindow != null)
-        {
-            quizPopupWindow.TrySetQuestionIndex(bookmark.questionIndex);
-        }
     }
 
     private async Task ResumeLastLessonAsync()
@@ -2318,6 +2167,43 @@ public class CourseSelectionUI : MonoBehaviour
         if (sectionsStatus != null)
         {
             sectionsStatus.text = "Unable to save progress to the server. Changes were rolled back.";
+        }
+    }
+
+    private async void HandleQuizCompleted(QuizPopupWindow.QuizCompletedResult result)
+    {
+        if (result == null || activeCourse == null || ApiManager.Instance == null)
+        {
+            return;
+        }
+
+        bool synced = await ApiManager.Instance.SubmitQuizResultAsync(
+            activeCourse.id,
+            result.QuizId,
+            result.Score,
+            result.Total,
+            result.LessonTitle,
+            result.LessonType,
+            result.SectionIndex,
+            result.LessonIndex);
+
+        if (HandleUnauthorizedApiState("Your session expired while saving quiz results. Please log in again."))
+        {
+            return;
+        }
+
+        if (synced)
+        {
+            if (sectionsStatus != null)
+            {
+                sectionsStatus.text = $"Quiz result saved: {result.Score}/{result.Total}";
+            }
+            return;
+        }
+
+        if (sectionsStatus != null)
+        {
+            sectionsStatus.text = "Quiz finished locally, but the result could not be saved to the server.";
         }
     }
 

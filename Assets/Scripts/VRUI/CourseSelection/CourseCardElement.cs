@@ -16,12 +16,10 @@ public partial class CourseCardElement : VisualElement
     private readonly VisualElement progressFill;
     private readonly Button openButton;
     private readonly Button favoriteButton;
-    private readonly Button bookmarkButton;
 
     private CourseData boundCourse;
     private Action openHandler;
     private Action<CourseData> favoriteToggleHandler;
-    private Action<CourseData> bookmarkHandler;
 
     public CourseCardElement()
     {
@@ -66,10 +64,6 @@ public partial class CourseCardElement : VisualElement
         favoriteButton.AddToClassList("course-card__mini-button");
         favoriteButton.clicked += HandleFavoriteClicked;
 
-        bookmarkButton = new Button();
-        bookmarkButton.AddToClassList("course-card__mini-button");
-        bookmarkButton.clicked += HandleBookmarkClicked;
-
         progressRow.Add(progressLabel);
         progressRow.Add(progressTrack);
 
@@ -89,7 +83,7 @@ public partial class CourseCardElement : VisualElement
         RegisterCallback<ClickEvent>(HandleCardClicked);
     }
 
-    public void Bind(CourseData course, Action<CourseData> onOpen, bool isFavorite, Action<CourseData> onFavoriteToggle, Action<CourseData> onBookmark)
+    public void Bind(CourseData course, Action<CourseData> onOpen, bool isFavorite, Action<CourseData> onFavoriteToggle)
     {
         BindVersion++;
         boundCourse = course;
@@ -117,9 +111,7 @@ public partial class CourseCardElement : VisualElement
 
         openHandler = () => onOpen?.Invoke(boundCourse);
         favoriteToggleHandler = onFavoriteToggle;
-        bookmarkHandler = onBookmark;
         favoriteButton.text = isFavorite ? "★" : "☆";
-        bookmarkButton.text = "Save";
     }
 
     public void SetThumbnail(Texture2D texture, int expectedBindVersion)
@@ -163,11 +155,6 @@ public partial class CourseCardElement : VisualElement
         favoriteToggleHandler?.Invoke(boundCourse);
     }
 
-    private void HandleBookmarkClicked()
-    {
-        bookmarkHandler?.Invoke(boundCourse);
-    }
-
     private void HandleCardClicked(ClickEvent evt)
     {
         VisualElement target = evt.target as VisualElement;
@@ -180,3 +167,6 @@ public partial class CourseCardElement : VisualElement
         openHandler?.Invoke();
     }
 }
+
+
+

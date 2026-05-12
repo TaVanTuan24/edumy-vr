@@ -6175,3 +6175,18 @@
 [2026-05-11T03:40:51.267Z] [DEBUG] log Relay->Editor communication is unblocked
 [2026-05-11T03:40:51.268Z] [INFO] log Unity client connected with ID: editor-3048-qlto06 (relay 1.0.12-build.91)
 [2026-05-11T03:40:51.268Z] [INFO] connection.established clientId=editor-3048-qlto06 port=9003
+[2026-05-11T03:59:33.464Z] [INFO] log Domain reload signal received from client editor-3048-qlto06
+[2026-05-11T03:59:33.489Z] [DEBUG] acp.queue.pause depth=0
+[2026-05-11T03:59:33.487Z] [DEBUG] log Relay->Editor communication is blocked
+[2026-05-11T03:59:37.425Z] [DEBUG] log Relay->Editor communication is blocked
+[2026-05-11T03:59:37.427Z] [DEBUG] acp.queue.pause depth=0
+[2026-05-11T03:59:37.429Z] [INFO] log Client disconnected - blocking and caching for recovery
+[2026-05-11T03:59:37.430Z] [WARN] connection.lost clientId=null
+[2026-05-11T03:59:37.433Z] [WARN] log Client disconnected - sessions will persist until auto-shutdown, reason: Client disconnected
+[2026-05-11T03:59:37.438Z] [INFO] log Auto-shutdown timer started due to client disconnection
+[2026-05-11T03:59:56.194Z] [DEBUG] log Relay->Editor communication is unblocked
+[2026-05-11T03:59:56.196Z] [INFO] log Unity client connected with ID: editor-3048-ondvvr (relay 1.0.12-build.91)
+[2026-05-11T03:59:56.197Z] [INFO] connection.established clientId=editor-3048-ondvvr port=9003
+[2026-05-11T04:00:38.933Z] [INFO] log Shutdown request received from client editor-3048-ondvvr
+[2026-05-11T04:00:38.939Z] [INFO] log Unity client requested immediate shutdown - shutting down now, reason: Shutdown requested by client
+[2026-05-11T04:00:38.948Z] [INFO] log Shutdown: Initiating graceful shutdown: Shutdown requested by client
