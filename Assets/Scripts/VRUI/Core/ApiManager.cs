@@ -53,12 +53,140 @@ public class ApiManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
             LoadAuthToken();
             AppStateManager.Instance.SetBackendStatus(BackendConnectionState.Unknown, baseUrl: BaseUrl);
-            
+            _ = CheckAndApplyFallbackAsync();
         }
         else
         {
             Destroy(gameObject);
         }
+    }
+
+    /// <summary>
+    /// Test connectivity to the production server. If unreachable, automatically
+    /// switch to local fallback (localhost:3000).
+    /// </summary>
+    public async Task<bool> CheckAndApplyFallbackAsync()
+    {
+        // Only attempt fallback if we are currently using the production URL
+        string currentUrl = BaseUrl;
+        string productionUrl = ApiConfig.ProductionUrl;
+
+        if (string.IsNullOrWhiteSpace(currentUrl) || string.IsNullOrWhiteSpace(productionUrl))
+        {
+            return false;
+        }
+
+        bool isUsingProduction = currentUrl.Equals(productionUrl, StringComparison.OrdinalIgnoreCase);
+        if (!isUsingProduction && !ApiConfig.IsFallbackActive)
+        {
+            // User has a custom override – don't interfere
+            return false;
+        }
+
+        if (ApiConfig.IsFallbackActive)
+        {
+            // Already on fallback, try to recover to production
+            bool productionOk = await ProbeSingleUrlAsync(productionUrl);
+            if (productionOk)
+            {
+                ApiConfig.ActivateProductionUrl();
+                Debug.Log("[ApiManager] Production server is back online. Switched back to production.");
+                return true;
+            }
+            return false;
+        }
+
+        // Check if production is reachable
+        bool isProductionReachable = await ProbeSingleUrlAsync(productionUrl);
+        if (isProductionReachable)
+        {
+            Debug.Log("[ApiManager] Production server is reachable.");
+            return true;
+        }
+
+        // Production is down – try local fallback
+        Debug.LogWarning("[ApiManager] Production server is unreachable. Trying local fallback...");
+        string localUrl = ApiConfig.LocalUrl;
+        bool isLocalReachable = await ProbeSingleUrlAsync(localUrl);
+
+        if (isLocalReachable)
+        {
+            ApiConfig.ActivateLocalFallback();
+            Debug.LogWarning($"[ApiManager] Switched to local fallback: {localUrl}");
+            return true;
+        }
+
+        Debug.LogError("[ApiManager] Both production and local fallback servers are unreachable.");
+        return false;
+    }
+
+    private async Task<bool> ProbeSingleUrlAsync(string baseUrl)
+    {
+        if (string.IsNullOrWhiteSpace(baseUrl)) return false;
+
+        foreach (string endpoint in ConnectionTestEndpoints)
+        {
+            string url = ApiConfig.BuildUrl(endpoint, baseUrl);
+            try
+            {
+                using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+                {
+                    webRequest.timeout = Mathf.Max(MinimumRequestTimeoutSeconds, 5);
+                    var operation = webRequest.SendWebRequest();
+                    while (!operation.isDone) await Task.Yield();
+
+                    long statusCode = webRequest.responseCode;
+                    bool reachable = statusCode > 0 && statusCode < 500;
+                    if (webRequest.result == UnityWebRequest.Result.Success || reachable)
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch
+            {
+                // Probe failed, continue to next endpoint
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// If a request to the current active URL fails with a connection error,
+    /// try switching to the fallback URL and retry the request.
+    /// Returns the URL to use for the retry, or null if no retry is possible.
+    /// </summary>
+    private async Task<string> TrySwitchToFallbackOnConnectionFailureAsync()
+    {
+        string currentUrl = BaseUrl;
+        string productionUrl = ApiConfig.ProductionUrl;
+
+        // If currently on production and it failed, try local
+        if (currentUrl.Equals(productionUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            string localUrl = ApiConfig.LocalUrl;
+            bool localOk = await ProbeSingleUrlAsync(localUrl);
+            if (localOk)
+            {
+                ApiConfig.ActivateLocalFallback();
+                Debug.LogWarning($"[ApiManager] Request failed on production. Switched to local fallback: {localUrl}");
+                return localUrl;
+            }
+        }
+        // If currently on local fallback and it failed, try production
+        else if (ApiConfig.IsFallbackActive)
+        {
+            bool prodOk = await ProbeSingleUrlAsync(productionUrl);
+            if (prodOk)
+            {
+                ApiConfig.ActivateProductionUrl();
+                Debug.LogWarning($"[ApiManager] Request failed on local fallback. Switched to production: {productionUrl}");
+                return productionUrl;
+            }
+        }
+
+        return null;
     }
 
     public void SetAuthToken(string token)
@@ -381,6 +509,35 @@ public class ApiManager : MonoBehaviour
         return CreateLoginPollErrorResponse("error", BuildVrAuthFailureMessage("Unable to verify the login code yet."));
     }
 
+    /// <summary>
+    /// Rebuild a full URL by replacing its base (scheme + host + port) with a new base URL,
+    /// preserving the original path and query string.
+    /// </summary>
+    private string RebuildUrlWithNewBase(string originalFullUrl, string newBaseUrl)
+    {
+        if (string.IsNullOrWhiteSpace(originalFullUrl) || string.IsNullOrWhiteSpace(newBaseUrl))
+        {
+            return originalFullUrl;
+        }
+
+        if (Uri.TryCreate(originalFullUrl, UriKind.Absolute, out Uri originalUri))
+        {
+            // Extract the path+query from the original URL and combine with new base
+            string pathAndQuery = originalUri.PathAndQuery;
+            string normalizedBase = newBaseUrl.TrimEnd('/');
+            return $"{normalizedBase}{pathAndQuery}";
+        }
+
+        // Fallback: try to replace the old base with the new base
+        string currentBase = BaseUrl;
+        if (!string.IsNullOrWhiteSpace(currentBase) && originalFullUrl.StartsWith(currentBase, StringComparison.OrdinalIgnoreCase))
+        {
+            return newBaseUrl.TrimEnd('/') + originalFullUrl.Substring(currentBase.Length);
+        }
+
+        return originalFullUrl;
+    }
+
     private string BuildUrl(string relativePath)
     {
         return ApiConfig.BuildUrl(relativePath);
@@ -622,6 +779,25 @@ public class ApiManager : MonoBehaviour
 
     private async Task<T> SendGetRequest<T>(string url)
     {
+        T result = await ExecuteGetRequest<T>(url);
+
+        // If connection failed (statusCode == 0), try fallback and retry once
+        if (LastResponseStatusCode == 0)
+        {
+            string fallbackUrl = await TrySwitchToFallbackOnConnectionFailureAsync();
+            if (fallbackUrl != null)
+            {
+                string retryUrl = RebuildUrlWithNewBase(url, fallbackUrl);
+                LogVerbose($"[ApiManager] Retrying GET on fallback: {retryUrl}");
+                result = await ExecuteGetRequest<T>(retryUrl);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<T> ExecuteGetRequest<T>(string url)
+    {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
         LastResponseStatusCode = 0;
         LastErrorResponseBody = null;
@@ -642,15 +818,12 @@ public class ApiManager : MonoBehaviour
                 
                 try 
                 {
-                    // Thử parse theo cấu trúc ApiResponse<T>
                     return JsonUtility.FromJson<T>(jsonResponse);
                 }
                 catch (System.Exception ex)
                 {
                     LogVerbose($"[ApiManager] JsonUtility fail. Checking if it's a raw array: {ex.Message}");
                     
-                    // Nếu là mảng JSON thuần túy (e.g. [{}, {}]), JsonUtility không parse được trực tiếp.
-                    // Cần bọc lại để parse.
                     if (jsonResponse.TrimStart().StartsWith("["))
                     {
                         string wrappedJson = "{\"success\":true,\"data\":" + jsonResponse + "}";
@@ -678,6 +851,25 @@ public class ApiManager : MonoBehaviour
     }
 
     private async Task<string> SendGetRawRequest(string url)
+    {
+        string result = await ExecuteGetRawRequest(url);
+
+        // If connection failed (statusCode == 0), try fallback and retry once
+        if (LastResponseStatusCode == 0)
+        {
+            string fallbackUrl = await TrySwitchToFallbackOnConnectionFailureAsync();
+            if (fallbackUrl != null)
+            {
+                string retryUrl = RebuildUrlWithNewBase(url, fallbackUrl);
+                LogVerbose($"[ApiManager] Retrying GET raw on fallback: {retryUrl}");
+                result = await ExecuteGetRawRequest(retryUrl);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<string> ExecuteGetRawRequest(string url)
     {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
         LastResponseStatusCode = 0;
@@ -728,6 +920,25 @@ public class ApiManager : MonoBehaviour
 
     private async Task<PostStatus> SendPostJsonRequest(string url, string jsonBody)
     {
+        PostStatus result = await ExecutePostJsonRequest(url, jsonBody);
+
+        // If connection failed (statusCode == 0), try fallback and retry once
+        if (LastResponseStatusCode == 0 && result == PostStatus.Failed)
+        {
+            string fallbackUrl = await TrySwitchToFallbackOnConnectionFailureAsync();
+            if (fallbackUrl != null)
+            {
+                string retryUrl = RebuildUrlWithNewBase(url, fallbackUrl);
+                LogVerbose($"[ApiManager] Retrying POST on fallback: {retryUrl}");
+                result = await ExecutePostJsonRequest(retryUrl, jsonBody);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<PostStatus> ExecutePostJsonRequest(string url, string jsonBody)
+    {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
         LastResponseStatusCode = 0;
 
@@ -761,6 +972,25 @@ public class ApiManager : MonoBehaviour
     }
 
     private async Task<T> SendGetRequestForObject<T>(string url)
+    {
+        T result = await ExecuteGetRequestForObject<T>(url);
+
+        // If connection failed (statusCode == 0), try fallback and retry once
+        if (LastResponseStatusCode == 0)
+        {
+            string fallbackUrl = await TrySwitchToFallbackOnConnectionFailureAsync();
+            if (fallbackUrl != null)
+            {
+                string retryUrl = RebuildUrlWithNewBase(url, fallbackUrl);
+                LogVerbose($"[ApiManager] Retrying GET object on fallback: {retryUrl}");
+                result = await ExecuteGetRequestForObject<T>(retryUrl);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<T> ExecuteGetRequestForObject<T>(string url)
     {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
         LastResponseStatusCode = 0;
@@ -815,6 +1045,25 @@ public class ApiManager : MonoBehaviour
     }
 
     private async Task<T> SendPostJsonRequestForResponse<T>(string url, string jsonBody)
+    {
+        T result = await ExecutePostJsonRequestForResponse<T>(url, jsonBody);
+
+        // If connection failed (statusCode == 0), try fallback and retry once
+        if (LastResponseStatusCode == 0)
+        {
+            string fallbackUrl = await TrySwitchToFallbackOnConnectionFailureAsync();
+            if (fallbackUrl != null)
+            {
+                string retryUrl = RebuildUrlWithNewBase(url, fallbackUrl);
+                LogVerbose($"[ApiManager] Retrying POST response on fallback: {retryUrl}");
+                result = await ExecutePostJsonRequestForResponse<T>(retryUrl, jsonBody);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<T> ExecutePostJsonRequestForResponse<T>(string url, string jsonBody)
     {
         if (errorTextDisplay != null) errorTextDisplay.gameObject.SetActive(false);
         LastResponseStatusCode = 0;

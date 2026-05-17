@@ -30,6 +30,12 @@
     -unity-font-style: bold;
     font-size: 44px;
     color: rgb(22, 34, 56);
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .screen-subtitle {
@@ -383,12 +389,14 @@
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
+    overflow: hidden;
 }
 
 .sections-header {
     flex-direction: row;
     align-items: center;
     margin-bottom: 14px;
+    overflow: hidden;
 }
 
 .sections-title {
@@ -396,15 +404,31 @@
     -unity-font-style: bold;
     font-size: 44px;
     color: rgb(33, 40, 48);
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .detail-header-left {
     flex-direction: row;
     align-items: center;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
-.detail-title {
+.detail-title,
+#sections-title {
     font-size: 34px;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .detail-subtitle {
@@ -464,6 +488,14 @@
     color: rgb(28, 43, 70);
 }
 
+.section-item__foldout > .unity-foldout__content > .unity-label,
+.section-item__foldout > .unity-foldout__toggle > .unity-label {
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .lesson-item {
     min-height: 84px;
     margin-top: 12px;
@@ -507,10 +539,16 @@
     flex-direction: row;
     align-items: center;
     flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .lesson-item__text-col {
     flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .lesson-item__right {
@@ -553,12 +591,20 @@
 .lesson-item__title {
     font-size: 20px;
     color: rgb(31, 45, 70);
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .lesson-item__subtitle {
     margin-top: 4px;
     font-size: 15px;
     color: rgb(111, 124, 145);
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .lesson-item__pill {

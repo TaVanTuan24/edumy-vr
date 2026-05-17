@@ -665,6 +665,9 @@ public class CourseSelectionUI : MonoBehaviour
             continueLearningTitleLabel.style.fontSize = 24f;
             continueLearningTitleLabel.style.color = new Color(0.12f, 0.2f, 0.32f, 1f);
             continueLearningTitleLabel.style.marginTop = 6f;
+            continueLearningTitleLabel.style.overflow = Overflow.Hidden;
+            continueLearningTitleLabel.style.textOverflow = TextOverflow.Ellipsis;
+            continueLearningTitleLabel.style.whiteSpace = WhiteSpace.NoWrap;
             continueLearningCard.Add(continueLearningTitleLabel);
 
             continueLearningSubtitleLabel = new Label(string.Empty);

@@ -5,13 +5,19 @@ public static class ApiConfig
 {
     private const string ResourcesAssetName = "BackendConfig";
     private const string ProductionBaseUrl = "https://edumy.onrender.com";
+    private const string LocalFallbackBaseUrl = "http://localhost:3000";
     private const string FallbackBaseUrl = ProductionBaseUrl;
 
     private static BackendConfig cachedConfig;
     private static bool missingConfigLogged;
+    private static string activeBaseUrl;
+    private static bool fallbackActivated;
 
-    public static string BaseUrl => ResolveBaseUrl();
+    public static string BaseUrl => activeBaseUrl ?? ResolveBaseUrl();
     public static string DefaultBaseUrl => NormalizeBaseUrl(LoadConfig()?.apiBaseUrl);
+    public static string ProductionUrl => NormalizeBaseUrl(ProductionBaseUrl);
+    public static string LocalUrl => NormalizeBaseUrl(LocalFallbackBaseUrl);
+    public static bool IsFallbackActive => fallbackActivated;
 
     public static string BuildUrl(string endpoint)
     {
@@ -120,6 +126,43 @@ public static class ApiConfig
 
         errorMessage = null;
         return true;
+    }
+
+    /// <summary>
+    /// Switch the active base URL to the local fallback (localhost:3000).
+    /// </summary>
+    public static void ActivateLocalFallback()
+    {
+        string localUrl = NormalizeBaseUrl(LocalFallbackBaseUrl);
+        if (!string.IsNullOrWhiteSpace(localUrl))
+        {
+            activeBaseUrl = localUrl;
+            fallbackActivated = true;
+            Debug.LogWarning($"[ApiConfig] Switched to local fallback: {localUrl}");
+        }
+    }
+
+    /// <summary>
+    /// Switch back to the production URL.
+    /// </summary>
+    public static void ActivateProductionUrl()
+    {
+        string prodUrl = NormalizeBaseUrl(ProductionBaseUrl);
+        if (!string.IsNullOrWhiteSpace(prodUrl))
+        {
+            activeBaseUrl = prodUrl;
+            fallbackActivated = false;
+            Debug.Log($"[ApiConfig] Switched to production: {prodUrl}");
+        }
+    }
+
+    /// <summary>
+    /// Reset to default resolution (override → config → production).
+    /// </summary>
+    public static void ResetActiveUrl()
+    {
+        activeBaseUrl = null;
+        fallbackActivated = false;
     }
 
     public static string NormalizeBaseUrl(string value)
