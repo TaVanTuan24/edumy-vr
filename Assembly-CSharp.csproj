@@ -92,6 +92,7 @@
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\CourseToggleController.cs" />
     <Compile Include="Assets\Scripts\VRUI\Core\AppRuntimeBootstrapper.cs" />
     <Compile Include="Assets\Scripts\VRUI\Core\ToastManager.cs" />
+    <Compile Include="Assets\Scripts\VRUI\Core\VRButtonHoverEffect.cs" />
     <Compile Include="Assets\Scripts\VRUI\Quiz\QuizPopupWindow.cs" />
     <Compile Include="Assets\VRTemplateAssets\Scripts\Callout.cs" />
     <Compile Include="Assets\Scripts\VRUI\CourseSelection\LessonSelectionController.cs" />

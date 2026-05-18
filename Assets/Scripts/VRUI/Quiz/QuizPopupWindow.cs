@@ -410,12 +410,12 @@ public class QuizPopupWindow : MonoBehaviour
         // VR-sized buttons: taller hit targets for XR ray interaction
         closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.78f, 0.89f), new Vector2(0.95f, 0.975f));
         pinButton = FindOrCreateButton(panelRect, "PinButton", "[Pin]", new Vector2(0.65f, 0.89f), new Vector2(0.77f, 0.975f));
-        prevButton = FindOrCreateButton(panelRect, "PrevButton", "Previous", new Vector2(0.43f, 0.025f), new Vector2(0.68f, 0.11f));
-        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.70f, 0.025f), new Vector2(0.95f, 0.11f));
-        reviewAllButton = FindOrCreateButton(panelRect, "ReviewAllButton", "Review All", new Vector2(0.05f, 0.025f), new Vector2(0.25f, 0.11f));
-        reviewIncorrectButton = FindOrCreateButton(panelRect, "ReviewWrongButton", "Wrong Only", new Vector2(0.27f, 0.025f), new Vector2(0.47f, 0.11f));
-        retryButton = FindOrCreateButton(panelRect, "RetryButton", "Retry Quiz", new Vector2(0.49f, 0.025f), new Vector2(0.69f, 0.11f));
-        retryIncorrectButton = FindOrCreateButton(panelRect, "RetryWrongButton", "Retry Wrong", new Vector2(0.71f, 0.025f), new Vector2(0.95f, 0.11f));
+        prevButton = FindOrCreateButton(panelRect, "PrevButton", "Previous", new Vector2(0.43f, -0.005f), new Vector2(0.68f, 0.145f));
+        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.70f, -0.005f), new Vector2(0.95f, 0.145f));
+        reviewAllButton = FindOrCreateButton(panelRect, "ReviewAllButton", "Review All", new Vector2(0.05f, -0.005f), new Vector2(0.25f, 0.145f));
+        reviewIncorrectButton = FindOrCreateButton(panelRect, "ReviewWrongButton", "Wrong Only", new Vector2(0.27f, -0.005f), new Vector2(0.47f, 0.145f));
+        retryButton = FindOrCreateButton(panelRect, "RetryButton", "Retry Quiz", new Vector2(0.49f, -0.005f), new Vector2(0.69f, 0.145f));
+        retryIncorrectButton = FindOrCreateButton(panelRect, "RetryWrongButton", "Retry Wrong", new Vector2(0.71f, -0.005f), new Vector2(0.95f, 0.145f));
         SetButtonBaseColor(closeButton, SecondaryButtonColor);
         SetButtonBaseColor(pinButton, SecondaryButtonColor);
         SetButtonBaseColor(prevButton, SecondaryButtonColor);
@@ -1223,6 +1223,8 @@ public class QuizPopupWindow : MonoBehaviour
         text.fontStyle = style;
         text.color = new Color(0.17f, 0.28f, 0.43f, 1f);
         text.alignment = alignment;
+        // Disable raycast on non-interactive labels so they don't block VR controller ray
+        text.raycastTarget = false;
         return text;
     }
 
@@ -1256,12 +1258,20 @@ public class QuizPopupWindow : MonoBehaviour
         text.fontSize = 28f;
         text.fontStyle = FontStyles.Bold;
         text.alignment = TextAlignmentOptions.Center;
+        // Disable raycast on button label so it doesn't block the button's Image from receiving VR ray
+        text.raycastTarget = false;
 
         RectTransform textRect = text.GetComponent<RectTransform>();
         textRect.anchorMin = Vector2.zero;
         textRect.anchorMax = Vector2.one;
         textRect.offsetMin = Vector2.zero;
         textRect.offsetMax = Vector2.zero;
+
+        // Add VR hover effect for controller ray interaction
+        if (existing.GetComponent<VRButtonHoverEffect>() == null)
+        {
+            existing.gameObject.AddComponent<VRButtonHoverEffect>();
+        }
 
         return button;
     }
@@ -1283,6 +1293,13 @@ public class QuizPopupWindow : MonoBehaviour
         colors.disabledColor = new Color(color.r, color.g, color.b, color.a * 0.55f);
         colors.fadeDuration = 0.08f;
         button.colors = colors;
+
+        // Sync hover effect original color when base color changes (e.g. pin toggle)
+        VRButtonHoverEffect hover = button.GetComponent<VRButtonHoverEffect>();
+        if (hover != null)
+        {
+            hover.SetOriginalColor(color);
+        }
     }
 
     private static Transform EnsureRectTransformRoot(Transform root)
@@ -1318,6 +1335,4 @@ public class QuizPopupWindow : MonoBehaviour
         return replacement.transform;
     }
 }
-
-
 

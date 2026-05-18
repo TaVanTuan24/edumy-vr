@@ -38,11 +38,8 @@ public class SlidePopupWindow : MonoBehaviour
     private RectTransform slideSurfaceRect;
     private Image slideSurfaceBackground;
     private Button closeButton;
-    private Button firstButton;
     private Button prevButton;
     private Button nextButton;
-    private Button lastButton;
-    private Button resetViewButton;
     private Button pinButton;
 
     private readonly List<SlidePageData> activeSlides = new List<SlidePageData>();
@@ -434,18 +431,19 @@ public class SlidePopupWindow : MonoBehaviour
         // VR-sized buttons: taller hit targets for XR ray interaction
         closeButton = FindOrCreateButton(panelRect, "CloseButton", "Close", new Vector2(0.78f, 0.89f), new Vector2(0.95f, 0.97f));
         pinButton = FindOrCreateButton(panelRect, "PinButton", "Pin", new Vector2(0.65f, 0.89f), new Vector2(0.77f, 0.97f));
-        firstButton = FindOrCreateButton(panelRect, "FirstButton", "|<", new Vector2(0.05f, 0.025f), new Vector2(0.14f, 0.11f));
-        prevButton = FindOrCreateButton(panelRect, "PrevButton", "Prev", new Vector2(0.16f, 0.025f), new Vector2(0.31f, 0.11f));
-        resetViewButton = FindOrCreateButton(panelRect, "ResetViewButton", "Reset", new Vector2(0.33f, 0.025f), new Vector2(0.48f, 0.11f));
-        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.50f, 0.025f), new Vector2(0.72f, 0.11f));
-        lastButton = FindOrCreateButton(panelRect, "LastButton", ">|", new Vector2(0.74f, 0.025f), new Vector2(0.95f, 0.11f));
+        prevButton = FindOrCreateButton(panelRect, "PrevButton", "Prev", new Vector2(0.05f, -0.005f), new Vector2(0.47f, 0.145f));
+        nextButton = FindOrCreateButton(panelRect, "NextButton", "Next", new Vector2(0.53f, -0.005f), new Vector2(0.95f, 0.145f));
         SetButtonBaseColor(closeButton, SecondaryButtonColor);
         SetButtonBaseColor(pinButton, SecondaryButtonColor);
-        SetButtonBaseColor(firstButton, SecondaryButtonColor);
         SetButtonBaseColor(prevButton, SecondaryButtonColor);
-        SetButtonBaseColor(resetViewButton, SecondaryButtonColor);
         SetButtonBaseColor(nextButton, PrimaryButtonColor);
-        SetButtonBaseColor(lastButton, SecondaryButtonColor);
+
+        // Remove legacy buttons that may exist from a previous layout
+        RemoveLegacyButton(panelRect, "FirstButton");
+        RemoveLegacyButton(panelRect, "ResetViewButton");
+        RemoveLegacyButton(panelRect, "LastButton");
+        RemoveLegacyButton(panelRect, "SaveButton");
+        RemoveLegacyButton(panelRect, "Save");
 
         EnsureSlideViewport(panelRect);
         currentSlideIndex = Mathf.Clamp(currentSlideIndex, 0, Mathf.Max(0, activeSlides.Count - 1));
@@ -466,27 +464,6 @@ public class SlidePopupWindow : MonoBehaviour
         Render();
     }
 
-    private void JumpToFirst()
-    {
-        if (activeSlides.Count == 0) return;
-        currentSlideIndex = 0;
-        Render();
-    }
-
-    private void JumpToLast()
-    {
-        if (activeSlides.Count == 0) return;
-        currentSlideIndex = Mathf.Max(0, activeSlides.Count - 1);
-        Render();
-    }
-
-    private void ResetView()
-    {
-        slideRenderVersion++;
-        Render();
-        ToastManager.ShowInfo("Slide view reset.", 2f);
-    }
-
     public void TrySetSlideIndex(int slideIndex)
     {
         if (activeSlides.Count == 0)
@@ -504,11 +481,8 @@ public class SlidePopupWindow : MonoBehaviour
 
         if (closeButton != null) closeButton.onClick.AddListener(HideWindow);
         if (pinButton != null) pinButton.onClick.AddListener(TogglePinnedState);
-        if (firstButton != null) firstButton.onClick.AddListener(JumpToFirst);
         if (prevButton != null) prevButton.onClick.AddListener(Previous);
-        if (resetViewButton != null) resetViewButton.onClick.AddListener(ResetView);
         if (nextButton != null) nextButton.onClick.AddListener(Next);
-        if (lastButton != null) lastButton.onClick.AddListener(JumpToLast);
 
         bindingsAdded = true;
         UpdatePinButtonState();
@@ -552,6 +526,13 @@ public class SlidePopupWindow : MonoBehaviour
         colors.disabledColor = new Color(color.r, color.g, color.b, color.a * 0.55f);
         colors.fadeDuration = 0.08f;
         button.colors = colors;
+
+        // Sync hover effect original color when base color changes (e.g. pin toggle)
+        VRButtonHoverEffect hover = button.GetComponent<VRButtonHoverEffect>();
+        if (hover != null)
+        {
+            hover.SetOriginalColor(color);
+        }
     }
 
     private void Render()
@@ -581,8 +562,6 @@ public class SlidePopupWindow : MonoBehaviour
 
         if (prevButton != null) prevButton.interactable = currentSlideIndex > 0;
         if (nextButton != null) nextButton.interactable = currentSlideIndex < total - 1;
-        if (firstButton != null) firstButton.interactable = currentSlideIndex > 0;
-        if (lastButton != null) lastButton.interactable = currentSlideIndex < total - 1;
     }
 
     private List<SlidePageData> BuildSlidesForLesson(LessonData lesson)
@@ -1068,6 +1047,8 @@ public class SlidePopupWindow : MonoBehaviour
         text.fontStyle = style;
         text.color = Color.white;
         text.alignment = TextAlignmentOptions.Left;
+        // Disable raycast on non-interactive labels so they don't block VR controller ray
+        text.raycastTarget = false;
         return text;
     }
 
@@ -1101,6 +1082,8 @@ public class SlidePopupWindow : MonoBehaviour
         text.fontSize = 24f;
         text.fontStyle = FontStyles.Bold;
         text.alignment = TextAlignmentOptions.Center;
+        // Disable raycast on button label so it doesn't block the button's Image from receiving VR ray
+        text.raycastTarget = false;
 
         RectTransform textRect = text.GetComponent<RectTransform>();
         textRect.anchorMin = Vector2.zero;
@@ -1108,7 +1091,29 @@ public class SlidePopupWindow : MonoBehaviour
         textRect.offsetMin = Vector2.zero;
         textRect.offsetMax = Vector2.zero;
 
+        // Add VR hover effect for controller ray interaction
+        if (existing.GetComponent<VRButtonHoverEffect>() == null)
+        {
+            existing.gameObject.AddComponent<VRButtonHoverEffect>();
+        }
+
         return button;
+    }
+
+    private static void RemoveLegacyButton(RectTransform parent, string name)
+    {
+        if (parent == null) return;
+        Transform existing = parent.Find(name);
+        if (existing == null) return;
+
+        if (Application.isPlaying)
+        {
+            UnityEngine.Object.Destroy(existing.gameObject);
+        }
+        else
+        {
+            UnityEngine.Object.DestroyImmediate(existing.gameObject);
+        }
     }
 
     private static void SetButtonColor(Button button, Color color)
@@ -1118,6 +1123,13 @@ public class SlidePopupWindow : MonoBehaviour
         if (image != null)
         {
             image.color = color;
+        }
+
+        // Sync hover effect original color when base color changes (e.g. pin toggle)
+        VRButtonHoverEffect hover = button.GetComponent<VRButtonHoverEffect>();
+        if (hover != null)
+        {
+            hover.SetOriginalColor(color);
         }
     }
 

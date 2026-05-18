@@ -32,16 +32,25 @@ public static class XRRuntimeUiHelper
             return;
         }
 
-        if (target.GetComponent<GraphicRaycaster>() == null)
+        GraphicRaycaster graphicRaycaster = target.GetComponent<GraphicRaycaster>();
+        if (graphicRaycaster == null)
         {
-            target.AddComponent<GraphicRaycaster>();
+            graphicRaycaster = target.AddComponent<GraphicRaycaster>();
         }
+        // When a WorldSpace canvas is flipped 180° to face the viewer, the graphics
+        // appear "reversed" from the ray's perspective. Setting ignoreReversedGraphics
+        // to false ensures XR controller rays can still interact with buttons.
+        graphicRaycaster.ignoreReversedGraphics = false;
 
         bool added = TryAddComponentByTypeName(target, TrackedDeviceGraphicRaycasterTypeName);
         if (added)
         {
             Debug.Log($"[XRRuntimeUiHelper] TrackedDeviceGraphicRaycaster added to '{target.name}'.");
         }
+
+        // Also disable ignoreReversedGraphics on TrackedDeviceGraphicRaycaster so XR
+        // controller pointer rays work correctly on flipped WorldSpace canvases.
+        DisableIgnoreReversedGraphics(target);
     }
 
     public static void EnsureEventSystemSupportsXR()
@@ -154,6 +163,30 @@ public static class XRRuntimeUiHelper
 
         target.AddComponent(type);
         return true;
+    }
+
+    /// <summary>
+    /// Disables ignoreReversedGraphics on TrackedDeviceGraphicRaycaster (if present)
+    /// so XR controller rays work on WorldSpace canvases that have been flipped 180°.
+    /// </summary>
+    private static void DisableIgnoreReversedGraphics(GameObject target)
+    {
+        if (target == null) return;
+
+        // TrackedDeviceGraphicRaycaster is resolved by name since it lives in XRI assembly
+        Type tdgrType = Type.GetType(TrackedDeviceGraphicRaycasterTypeName, false);
+        if (tdgrType == null) return;
+
+        Component raycaster = target.GetComponent(tdgrType);
+        if (raycaster == null) return;
+
+        // Use reflection to set ignoreReversedGraphics = false
+        var prop = tdgrType.GetProperty("ignoreReversedGraphics",
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        if (prop != null && prop.CanWrite)
+        {
+            prop.SetValue(raycaster, false);
+        }
     }
 
     /// <summary>
